@@ -44,6 +44,11 @@ class TaskCreate(BaseModel):
     due_date: Optional[str] = None
 
 
+class TaskActivityCreate(BaseModel):
+    text: str
+    author: str = "David"
+
+
 class TaskPatch(BaseModel):
     title: Optional[str] = None
     owner: Optional[str] = None
@@ -64,6 +69,7 @@ async def list_tasks():
 @router.post("/tasks")
 async def create_task(task: TaskCreate):
     store = _read_store()
+    now = _now_iso()
     row = {
         "id": str(uuid4()),
         "title": task.title,
@@ -72,8 +78,11 @@ async def create_task(task: TaskCreate):
         "priority": task.priority,
         "notes": task.notes,
         "due_date": task.due_date,
-        "created_at": _now_iso(),
-        "updated_at": _now_iso(),
+        "created_at": now,
+        "updated_at": now,
+        "activity": [
+            {"ts": now, "author": "David", "text": f"Task created ({task.status})"}
+        ],
     }
     store.setdefault("tasks", []).append(row)
     _write_store(store)
@@ -88,10 +97,32 @@ async def patch_task(task_id: str, patch: TaskPatch):
     if not row:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    for field, value in patch.model_dump(exclude_none=True).items():
-        row[field] = value
-    row["updated_at"] = _now_iso()
+    now = _now_iso()
+    activity = row.setdefault("activity", [])
 
+    for field, value in patch.model_dump(exclude_none=True).items():
+        prev = row.get(field)
+        row[field] = value
+        if prev != value:
+            activity.append({"ts": now, "author": "David", "text": f"{field} changed: {prev} → {value}"})
+
+    row["updated_at"] = now
+
+    _write_store(store)
+    return {"success": True, "item": row}
+
+
+@router.post("/tasks/{task_id}/activity")
+async def add_task_activity(task_id: str, body: TaskActivityCreate):
+    store = _read_store()
+    tasks: List[dict] = store.get("tasks", [])
+    row = next((t for t in tasks if t.get("id") == task_id), None)
+    if not row:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    now = _now_iso()
+    row.setdefault("activity", []).append({"ts": now, "author": body.author, "text": body.text})
+    row["updated_at"] = now
     _write_store(store)
     return {"success": True, "item": row}
 
@@ -143,6 +174,7 @@ async def bootstrap_tasks():
             "id": str(uuid4()),
             "created_at": now,
             "updated_at": now,
+            "activity": [{"ts": now, "author": "David", "text": "Bootstrapped task"}],
             **seed,
         }
         for seed in seeds

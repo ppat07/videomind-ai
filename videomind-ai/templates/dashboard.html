@@ -73,14 +73,23 @@
 
     function card(task) {
       const priorityColor = task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-yellow-600' : 'text-green-600';
+      const activity = (task.activity || []).slice(-3).map(a => `• ${a.author}: ${a.text}`).join('\n');
       return `
-        <article class="bg-white rounded border p-3 shadow-sm">
+        <article draggable="true" data-id="${task.id}" class="taskCard bg-white rounded border p-3 shadow-sm cursor-move">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs ${priorityColor} font-semibold uppercase">${task.priority}</span>
             <span class="text-xs bg-gray-100 px-2 py-1 rounded">${task.owner}</span>
           </div>
           <h3 class="font-semibold text-gray-900 mb-2">${task.title}</h3>
           <p class="text-xs text-gray-600 mb-3 whitespace-pre-line">${task.notes || ''}</p>
+          <details class="mb-2">
+            <summary class="text-xs text-gray-700 cursor-pointer">Recent activity</summary>
+            <pre class="text-xs whitespace-pre-wrap text-gray-600 mt-1">${activity || 'No activity yet'}</pre>
+            <div class="flex gap-2 mt-2">
+              <input class="activityInput border rounded px-2 py-1 text-xs w-full" data-id="${task.id}" placeholder="Add note..." />
+              <button class="addActivity text-xs bg-gray-900 text-white px-2 py-1 rounded" data-id="${task.id}">Add</button>
+            </div>
+          </details>
           <div class="flex items-center gap-2 flex-wrap">
             <select class="statusSelect border rounded px-2 py-1 text-xs" data-id="${task.id}">
               ${statuses.map(s => `<option value="${s.key}" ${task.status===s.key?'selected':''}>${s.label}</option>`).join('')}
@@ -102,9 +111,9 @@
       board.innerHTML = statuses.map(col => {
         const tasks = items.filter(t => t.status === col.key);
         return `
-          <div>
+          <div class="statusColumn" data-status="${col.key}">
             <h2 class="font-semibold text-gray-800 mb-2">${col.label} (${tasks.length})</h2>
-            <div class="space-y-3">${tasks.map(card).join('') || '<p class="text-xs text-gray-500">No tasks</p>'}</div>
+            <div class="space-y-3 min-h-[120px] bg-gray-100 rounded p-2">${tasks.map(card).join('') || '<p class="text-xs text-gray-500">No tasks</p>'}</div>
           </div>
         `;
       }).join('');
@@ -114,6 +123,37 @@
       });
       document.querySelectorAll('.ownerSelect').forEach(el => {
         el.addEventListener('change', () => updateTask(el.dataset.id, { owner: el.value }));
+      });
+
+      document.querySelectorAll('.addActivity').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const input = document.querySelector(`.activityInput[data-id="${id}"]`);
+          const text = (input?.value || '').trim();
+          if (!text) return;
+          await fetch(`/api/tasks/${id}/activity`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, author: 'David' })
+          });
+          if (input) input.value = '';
+          await render();
+        });
+      });
+
+      let draggedId = null;
+      document.querySelectorAll('.taskCard').forEach(card => {
+        card.addEventListener('dragstart', () => { draggedId = card.dataset.id; });
+      });
+
+      document.querySelectorAll('.statusColumn').forEach(col => {
+        col.addEventListener('dragover', (e) => e.preventDefault());
+        col.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          if (!draggedId) return;
+          await updateTask(draggedId, { status: col.dataset.status });
+          draggedId = null;
+        });
       });
     }
 
