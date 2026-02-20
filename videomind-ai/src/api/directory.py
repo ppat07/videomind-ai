@@ -24,6 +24,7 @@ async def list_directory_entries(
     category: Optional[str] = Query(default=None),
     difficulty: Optional[str] = Query(default=None),
     creator: Optional[str] = Query(default=None),
+    min_signal: Optional[int] = Query(default=None, ge=1, le=100),
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_database),
 ):
@@ -45,6 +46,9 @@ async def list_directory_entries(
 
     if creator:
         query = query.filter(DirectoryEntry.creator_name.ilike(f"%{creator}%"))
+
+    if min_signal is not None:
+        query = query.filter(DirectoryEntry.signal_score >= min_signal)
 
     rows = query.order_by(DirectoryEntry.created_at.desc()).limit(limit).all()
 

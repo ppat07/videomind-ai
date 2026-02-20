@@ -34,7 +34,7 @@
             <p id="batchResult" class="text-sm text-gray-700 mt-2"></p>
         </section>
 
-        <div class="bg-white rounded-lg shadow p-4 mb-6 grid md:grid-cols-5 gap-3">
+        <div class="bg-white rounded-lg shadow p-4 mb-3 grid md:grid-cols-6 gap-3">
             <input id="q" class="border rounded px-3 py-2 md:col-span-2" placeholder="Search title, tools, summary..." />
             <select id="category" class="border rounded px-3 py-2">
                 <option value="">All Categories</option>
@@ -51,7 +51,15 @@
                 <option>Intermediate</option>
                 <option>Advanced</option>
             </select>
+            <input id="minSignal" type="number" min="1" max="100" class="border rounded px-3 py-2" placeholder="Min signal" />
             <button id="searchBtn" class="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Filter</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+            <button class="quickFilter text-xs bg-gray-200 px-3 py-1 rounded" data-difficulty="Beginner">Beginner only</button>
+            <button class="quickFilter text-xs bg-gray-200 px-3 py-1 rounded" data-min-signal="90">90+ signal</button>
+            <button class="quickFilter text-xs bg-gray-200 px-3 py-1 rounded" data-category="Business Use Cases">Business Use Cases</button>
+            <button id="clearFilters" class="text-xs bg-gray-900 text-white px-3 py-1 rounded">Clear</button>
         </div>
 
         <div class="flex items-center justify-between mb-4">
@@ -70,11 +78,13 @@
             const q = document.getElementById('q').value.trim();
             const category = document.getElementById('category').value;
             const difficulty = document.getElementById('difficulty').value;
+            const minSignal = document.getElementById('minSignal').value;
 
             const params = new URLSearchParams();
             if (q) params.set('q', q);
             if (category) params.set('category', category);
             if (difficulty) params.set('difficulty', difficulty);
+            if (minSignal) params.set('min_signal', minSignal);
 
             const res = await fetch(`/api/directory?${params.toString()}`);
             const data = await res.json();
@@ -115,6 +125,24 @@
         }
 
         document.getElementById('searchBtn').addEventListener('click', loadEntries);
+
+        document.querySelectorAll('.quickFilter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.category) document.getElementById('category').value = btn.dataset.category;
+                if (btn.dataset.difficulty) document.getElementById('difficulty').value = btn.dataset.difficulty;
+                if (btn.dataset.minSignal) document.getElementById('minSignal').value = btn.dataset.minSignal;
+                loadEntries();
+            });
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', () => {
+            document.getElementById('q').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('difficulty').value = '';
+            document.getElementById('minSignal').value = '';
+            loadEntries();
+        });
+
         document.getElementById('seedBtn').addEventListener('click', async () => {
             const res = await fetch('/api/directory/seed', { method: 'POST' });
             const data = await res.json();
@@ -149,7 +177,10 @@
                 return;
             }
 
-            resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}. They will auto-publish after processing.`;
+            const createdLines = (data.created || []).slice(0, 8).map(i => `• queued: ${i.title || i.youtube_url}`).join('\n');
+            const skippedLines = (data.skipped || []).slice(0, 8).map(i => `• skipped: ${i.youtube_url} (${i.reason})`).join('\n');
+            resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}.\n${createdLines}${createdLines && skippedLines ? '\n' : ''}${skippedLines}`;
+            loadEntries();
         });
 
         loadEntries();
