@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Dashboard - {{ app_name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white border-b shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-5 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Mission Task Board</h1>
+        <p class="text-sm text-gray-600">Track what Paul and David are shipping.</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="/" class="text-sm bg-gray-200 px-3 py-2 rounded">Home</a>
+        <a href="/directory" class="text-sm bg-gray-900 text-white px-3 py-2 rounded">Directory</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <section class="bg-white rounded-lg shadow p-4 mb-6">
+      <div class="grid md:grid-cols-6 gap-3">
+        <input id="newTitle" class="border rounded px-3 py-2 md:col-span-2" placeholder="New task title" />
+        <select id="newOwner" class="border rounded px-3 py-2">
+          <option>Paul</option>
+          <option>David</option>
+        </select>
+        <select id="newPriority" class="border rounded px-3 py-2">
+          <option value="high">high</option>
+          <option value="medium" selected>medium</option>
+          <option value="low">low</option>
+        </select>
+        <input id="newDue" class="border rounded px-3 py-2" placeholder="Due date (optional)" />
+        <button id="addTask" class="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Add Task</button>
+      </div>
+      <p id="msg" class="text-xs text-gray-600 mt-2"></p>
+    </section>
+
+    <section class="grid md:grid-cols-4 gap-4" id="board"></section>
+  </main>
+
+  <script>
+    const statuses = [
+      { key: 'todo', label: 'Todo' },
+      { key: 'doing', label: 'Doing' },
+      { key: 'blocked', label: 'Blocked' },
+      { key: 'done', label: 'Done' }
+    ];
+
+    async function fetchTasks() {
+      const res = await fetch('/api/tasks');
+      return res.json();
+    }
+
+    async function bootstrapIfNeeded() {
+      const data = await fetchTasks();
+      if ((data.count || 0) === 0) {
+        await fetch('/api/tasks/bootstrap', { method: 'POST' });
+      }
+    }
+
+    async function updateTask(id, patch) {
+      await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+      await render();
+    }
+
+    function card(task) {
+      const priorityColor = task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-yellow-600' : 'text-green-600';
+      return `
+        <article class="bg-white rounded border p-3 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs ${priorityColor} font-semibold uppercase">${task.priority}</span>
+            <span class="text-xs bg-gray-100 px-2 py-1 rounded">${task.owner}</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-2">${task.title}</h3>
+          <p class="text-xs text-gray-600 mb-3 whitespace-pre-line">${task.notes || ''}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <select class="statusSelect border rounded px-2 py-1 text-xs" data-id="${task.id}">
+              ${statuses.map(s => `<option value="${s.key}" ${task.status===s.key?'selected':''}>${s.label}</option>`).join('')}
+            </select>
+            <select class="ownerSelect border rounded px-2 py-1 text-xs" data-id="${task.id}">
+              <option ${task.owner==='Paul'?'selected':''}>Paul</option>
+              <option ${task.owner==='David'?'selected':''}>David</option>
+            </select>
+          </div>
+        </article>
+      `;
+    }
+
+    async function render() {
+      const board = document.getElementById('board');
+      const data = await fetchTasks();
+      const items = data.items || [];
+
+      board.innerHTML = statuses.map(col => {
+        const tasks = items.filter(t => t.status === col.key);
+        return `
+          <div>
+            <h2 class="font-semibold text-gray-800 mb-2">${col.label} (${tasks.length})</h2>
+            <div class="space-y-3">${tasks.map(card).join('') || '<p class="text-xs text-gray-500">No tasks</p>'}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.statusSelect').forEach(el => {
+        el.addEventListener('change', () => updateTask(el.dataset.id, { status: el.value }));
+      });
+      document.querySelectorAll('.ownerSelect').forEach(el => {
+        el.addEventListener('change', () => updateTask(el.dataset.id, { owner: el.value }));
+      });
+    }
+
+    document.getElementById('addTask').addEventListener('click', async () => {
+      const title = document.getElementById('newTitle').value.trim();
+      const owner = document.getElementById('newOwner').value;
+      const priority = document.getElementById('newPriority').value;
+      const due_date = document.getElementById('newDue').value.trim() || null;
+      const msg = document.getElementById('msg');
+
+      if (!title) {
+        msg.textContent = 'Add a task title first.';
+        return;
+      }
+
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, owner, priority, due_date, status: 'todo' })
+      });
+
+      document.getElementById('newTitle').value = '';
+      msg.textContent = 'Task added.';
+      await render();
+    });
+
+    (async () => {
+      await bootstrapIfNeeded();
+      await render();
+    })();
+  </script>
+</body>
+</html>

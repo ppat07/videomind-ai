@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables
-from api import health, process, directory
+from api import health, process, directory, tasks
 
 # Create FastAPI app
 app = FastAPI(
@@ -37,6 +37,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(health.router, prefix="/health", tags=["Health"])
 app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
+app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
 
 
 @app.on_event("startup")
@@ -71,6 +72,15 @@ async def directory_page(request: Request):
     """Serve the AI training directory page."""
     return templates.TemplateResponse(
         "directory.html",
+        {"request": request, "app_name": settings.app_name}
+    )
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+async def dashboard_page(request: Request):
+    """Serve task dashboard page."""
+    return templates.TemplateResponse(
+        "dashboard.html",
         {"request": request, "app_name": settings.app_name}
     )
 
