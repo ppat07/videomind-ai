@@ -2,7 +2,7 @@
 Main processing endpoints for VideoMind AI.
 Handles video submission and processing orchestration.
 """
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
@@ -233,6 +233,53 @@ async def submit_batch_videos_for_processing(
         "skipped": skipped,
         "message": "Batch submitted. Directory entries will auto-publish when jobs complete."
     }
+
+
+@router.get("/jobs/health", response_model=dict)
+async def jobs_health(db: Session = Depends(get_database)):
+    """Quick health summary of processing jobs."""
+    statuses = [
+        ProcessingStatus.PENDING.value,
+        ProcessingStatus.DOWNLOADING.value,
+        ProcessingStatus.TRANSCRIBING.value,
+        ProcessingStatus.ENHANCING.value,
+        ProcessingStatus.COMPLETED.value,
+        ProcessingStatus.FAILED.value,
+    ]
+
+    counts = {}
+    for s in statuses:
+        counts[s] = db.query(VideoJob).filter(VideoJob.status == s).count()
+
+    latest_failed = db.query(VideoJob).filter(VideoJob.status == ProcessingStatus.FAILED.value).order_by(VideoJob.created_at.desc()).limit(5).all()
+
+    return {
+        "counts": counts,
+        "latest_failed": [
+            {
+                "id": j.id,
+                "youtube_url": j.youtube_url,
+                "error_message": j.error_message,
+                "created_at": j.created_at.isoformat() if j.created_at else None,
+            }
+            for j in latest_failed
+        ]
+    }
+
+
+@router.post("/jobs/retry-failed", response_model=dict)
+async def retry_failed_jobs(limit: int = Query(default=10, ge=1, le=100), db: Session = Depends(get_database)):
+    """Requeue recent failed jobs for retry."""
+    failed = db.query(VideoJob).filter(VideoJob.status == ProcessingStatus.FAILED.value).order_by(VideoJob.created_at.desc()).limit(limit).all()
+
+    retried = []
+    for j in failed:
+        j.status = ProcessingStatus.PENDING.value
+        j.error_message = None
+        retried.append({"job_id": j.id, "youtube_url": j.youtube_url})
+
+    db.commit()
+    return {"success": True, "retried": len(retried), "items": retried}
 
 
 @router.get("/status/{job_id}", response_model=VideoJobStatus)

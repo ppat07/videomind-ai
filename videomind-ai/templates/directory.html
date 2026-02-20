@@ -19,6 +19,18 @@
 
     <main class="max-w-6xl mx-auto px-4 py-8">
         <section class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-semibold text-gray-900">Jobs Health</h2>
+                <div class="flex items-center gap-2">
+                    <button id="refreshJobs" class="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Refresh</button>
+                    <button id="retryFailed" class="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Retry failed (10)</button>
+                </div>
+            </div>
+            <div id="jobsCounts" class="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm"></div>
+            <div id="jobsFailures" class="mt-3 text-xs text-gray-700 whitespace-pre-line"></div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow p-4 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-2">Batch ingest via VideoMind pipeline</h2>
             <p class="text-sm text-gray-600 mb-3">Paste YouTube URLs (one per line). We’ll process transcripts + summaries and auto-publish to this directory.</p>
             <div class="grid md:grid-cols-4 gap-3 mb-3">
@@ -74,6 +86,27 @@
         const cardsEl = document.getElementById('cards');
         const countText = document.getElementById('countText');
 
+        async function loadJobsHealth() {
+            const countsEl = document.getElementById('jobsCounts');
+            const failuresEl = document.getElementById('jobsFailures');
+            const res = await fetch('/api/jobs/health');
+            const data = await res.json();
+            const c = data.counts || {};
+
+            const labels = ['pending','downloading','transcribing','enhancing','completed','failed'];
+            countsEl.innerHTML = labels.map(k => `
+                <div class="border rounded p-2 bg-gray-50">
+                    <div class="text-gray-500 uppercase text-[10px]">${k}</div>
+                    <div class="font-semibold text-gray-900">${c[k] ?? 0}</div>
+                </div>
+            `).join('');
+
+            const failed = data.latest_failed || [];
+            failuresEl.textContent = failed.length
+              ? 'Recent failed jobs:\n' + failed.map(f => `• ${f.youtube_url} (${(f.error_message || 'no error').slice(0,80)})`).join('\n')
+              : 'No recent failures 🎉';
+        }
+
         async function loadEntries() {
             const q = document.getElementById('q').value.trim();
             const category = document.getElementById('category').value;
@@ -125,6 +158,13 @@
         }
 
         document.getElementById('searchBtn').addEventListener('click', loadEntries);
+        document.getElementById('refreshJobs').addEventListener('click', loadJobsHealth);
+        document.getElementById('retryFailed').addEventListener('click', async () => {
+            const res = await fetch('/api/jobs/retry-failed?limit=10', { method: 'POST' });
+            const data = await res.json();
+            alert(`Retried ${data.retried || 0} failed jobs`);
+            loadJobsHealth();
+        });
 
         document.querySelectorAll('.quickFilter').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -181,9 +221,11 @@
             const skippedLines = (data.skipped || []).slice(0, 8).map(i => `• skipped: ${i.youtube_url} (${i.reason})`).join('\n');
             resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}.\n${createdLines}${createdLines && skippedLines ? '\n' : ''}${skippedLines}`;
             loadEntries();
+            loadJobsHealth();
         });
 
         loadEntries();
+        loadJobsHealth();
     </script>
 </body>
 </html>
