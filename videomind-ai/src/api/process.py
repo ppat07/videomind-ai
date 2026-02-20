@@ -5,6 +5,8 @@ Handles video submission and processing orchestration.
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime
+from pydantic import BaseModel, EmailStr
+from typing import List
 
 from database import get_database
 from models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
@@ -17,6 +19,13 @@ from utils.directory_mapper import infer_category, infer_difficulty, make_5_bull
 from config import settings
 
 router = APIRouter()
+
+
+class BatchVideoJobCreate(BaseModel):
+    """Schema for batch video submission."""
+    youtube_urls: List[str]
+    email: EmailStr
+    tier: str = "basic"
 
 
 def upsert_directory_entry_from_job(db: Session, job: VideoJob):
@@ -138,6 +147,75 @@ async def submit_video_for_processing(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.post("/process/batch", response_model=dict)
+async def submit_batch_videos_for_processing(
+    batch_data: BatchVideoJobCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_database)
+):
+    """Submit multiple video URLs for batch processing and auto-directory publish."""
+    created = []
+    skipped = []
+
+    if batch_data.tier not in {"basic", "detailed", "bulk"}:
+        raise HTTPException(status_code=400, detail="tier must be one of: basic, detailed, bulk")
+
+    for raw_url in batch_data.youtube_urls:
+        url = (raw_url or "").strip()
+        if not url:
+            continue
+
+        is_valid, result = validate_video_url(url)
+        if not is_valid:
+            skipped.append({"youtube_url": url, "reason": f"invalid_url: {result}"})
+            continue
+
+        existing = db.query(VideoJob).filter(VideoJob.youtube_url == url).first()
+        if existing and existing.status in [ProcessingStatus.PENDING.value, ProcessingStatus.DOWNLOADING.value, ProcessingStatus.TRANSCRIBING.value, ProcessingStatus.ENHANCING.value, ProcessingStatus.COMPLETED.value]:
+            skipped.append({"youtube_url": url, "reason": f"already_exists:{existing.status}", "job_id": existing.id})
+            continue
+
+        success, video_info = youtube_service.get_video_info(url)
+        if not success:
+            skipped.append({"youtube_url": url, "reason": video_info.get("error", "video_info_failed")})
+            continue
+
+        tier_prices = {
+            "basic": settings.basic_tier_price,
+            "detailed": settings.detailed_tier_price,
+            "bulk": settings.bulk_tier_price
+        }
+        estimated_cost = tier_prices.get(batch_data.tier, settings.basic_tier_price) / 100.0
+
+        job_id = generate_job_id()
+        db_job = VideoJob(
+            id=job_id,
+            youtube_url=url,
+            email=batch_data.email,
+            tier=batch_data.tier,
+            status=ProcessingStatus.PENDING.value,
+            video_metadata=video_info,
+            cost=estimated_cost,
+            created_at=datetime.utcnow()
+        )
+        db.add(db_job)
+        created.append({"job_id": job_id, "youtube_url": url, "title": video_info.get("title")})
+
+    db.commit()
+
+    for item in created:
+        background_tasks.add_task(process_video_background, item["job_id"])
+
+    return {
+        "success": True,
+        "created_count": len(created),
+        "skipped_count": len(skipped),
+        "created": created,
+        "skipped": skipped,
+        "message": "Batch submitted. Directory entries will auto-publish when jobs complete."
+    }
 
 
 @router.get("/status/{job_id}", response_model=VideoJobStatus)

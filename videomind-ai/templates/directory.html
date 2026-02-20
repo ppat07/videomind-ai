@@ -18,6 +18,22 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-8">
+        <section class="bg-white rounded-lg shadow p-4 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-2">Batch ingest via VideoMind pipeline</h2>
+            <p class="text-sm text-gray-600 mb-3">Paste YouTube URLs (one per line). We’ll process transcripts + summaries and auto-publish to this directory.</p>
+            <div class="grid md:grid-cols-4 gap-3 mb-3">
+                <input id="batchEmail" class="border rounded px-3 py-2 md:col-span-2" placeholder="results email" />
+                <select id="batchTier" class="border rounded px-3 py-2">
+                    <option value="basic">basic</option>
+                    <option value="detailed">detailed</option>
+                    <option value="bulk">bulk</option>
+                </select>
+                <button id="batchBtn" class="bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700">Queue Batch</button>
+            </div>
+            <textarea id="batchUrls" rows="5" class="border rounded w-full px-3 py-2" placeholder="https://www.youtube.com/watch?v=...\nhttps://www.youtube.com/watch?v=..."></textarea>
+            <p id="batchResult" class="text-sm text-gray-700 mt-2"></p>
+        </section>
+
         <div class="bg-white rounded-lg shadow p-4 mb-6 grid md:grid-cols-5 gap-3">
             <input id="q" class="border rounded px-3 py-2 md:col-span-2" placeholder="Search title, tools, summary..." />
             <select id="category" class="border rounded px-3 py-2">
@@ -87,6 +103,36 @@
             const data = await res.json();
             alert(`Seeded ${data.created} entries`);
             loadEntries();
+        });
+
+        document.getElementById('batchBtn').addEventListener('click', async () => {
+            const urls = document.getElementById('batchUrls').value
+                .split('\n')
+                .map(s => s.trim())
+                .filter(Boolean);
+            const email = document.getElementById('batchEmail').value.trim();
+            const tier = document.getElementById('batchTier').value;
+            const resultEl = document.getElementById('batchResult');
+
+            if (!email || urls.length === 0) {
+                resultEl.textContent = 'Add email + at least one URL.';
+                return;
+            }
+
+            resultEl.textContent = 'Queueing...';
+            const res = await fetch('/api/process/batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ youtube_urls: urls, email, tier })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                resultEl.textContent = `Failed: ${data.detail || 'unknown error'}`;
+                return;
+            }
+
+            resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}. They will auto-publish after processing.`;
         });
 
         loadEntries();
