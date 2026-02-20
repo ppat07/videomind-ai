@@ -31,5 +31,11 @@ class DirectoryEntry(Base):
     signal_score = Column(Integer, nullable=False, default=70)
     processing_status = Column(String, nullable=False, default="processed", index=True)
 
+    # Agent-teaching outputs
+    teaches_agent_to = Column(Text, nullable=True)
+    prompt_template = Column(Text, nullable=True)
+    execution_checklist = Column(Text, nullable=True)
+    agent_training_script = Column(Text, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -8,6 +8,12 @@ from sqlalchemy.orm import Session
 
 from database import get_database
 from models.directory import DirectoryEntry
+from utils.directory_mapper import (
+    build_teaches_agent_to,
+    build_prompt_template,
+    build_execution_checklist,
+    build_agent_training_script,
+)
 
 router = APIRouter()
 
@@ -57,6 +63,10 @@ async def list_directory_entries(
                 "best_for": r.best_for,
                 "signal_score": r.signal_score,
                 "processing_status": r.processing_status,
+                "teaches_agent_to": r.teaches_agent_to,
+                "prompt_template": r.prompt_template,
+                "execution_checklist": r.execution_checklist,
+                "agent_training_script": r.agent_training_script,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows
@@ -79,6 +89,10 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
             "best_for": "New users who want fast setup without mistakes",
             "signal_score": 82,
             "processing_status": "reviewed",
+            "teaches_agent_to": "Execute setup and onboarding workflows quickly.",
+            "prompt_template": "Implement a fast setup workflow for OpenClaw with clear commands and validation steps.",
+            "execution_checklist": "[ ] Confirm prerequisites\n[ ] Configure auth\n[ ] Verify model\n[ ] Run first task\n[ ] Validate output",
+            "agent_training_script": "TRAINING SCRIPT: Setup & onboarding workflow with clear commands and validation.",
         },
         {
             "title": "You NEED to do this with OpenClaw immediately!",
@@ -91,6 +105,10 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
             "best_for": "Users who want fastest first ROI",
             "signal_score": 80,
             "processing_status": "reviewed",
+            "teaches_agent_to": "Execute repeatable automation workflows quickly.",
+            "prompt_template": "Build a repeatable automation workflow from this tutorial and include copy/paste commands.",
+            "execution_checklist": "[ ] Define objective\n[ ] Configure tools\n[ ] Run workflow\n[ ] Validate result\n[ ] Document reusable steps",
+            "agent_training_script": "TRAINING SCRIPT: Automation workflow execution with validation and documentation.",
         },
         {
             "title": "Making $$$ with OpenClaw",
@@ -103,6 +121,10 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
             "best_for": "Founders/solopreneurs turning automation into revenue",
             "signal_score": 86,
             "processing_status": "reviewed",
+            "teaches_agent_to": "Implement business-focused AI workflows that drive revenue outcomes.",
+            "prompt_template": "Create a monetization-focused execution plan with steps, prompts, and KPI checks.",
+            "execution_checklist": "[ ] Define revenue objective\n[ ] Build workflow\n[ ] Launch test\n[ ] Measure KPI\n[ ] Iterate",
+            "agent_training_script": "TRAINING SCRIPT: Business workflow implementation focused on measurable outcomes.",
         },
     ]
 
@@ -116,3 +138,64 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
 
     db.commit()
     return {"success": True, "created": created}
+
+
+@router.get("/directory/export/agent-training")
+async def export_agent_training(
+    category: Optional[str] = Query(default=None),
+    difficulty: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    db: Session = Depends(get_database),
+):
+    """Export training-ready payloads for agent teaching."""
+    query = db.query(DirectoryEntry)
+
+    if category:
+        query = query.filter(DirectoryEntry.category_primary == category)
+    if difficulty:
+        query = query.filter(DirectoryEntry.difficulty == difficulty)
+
+    rows = query.order_by(DirectoryEntry.signal_score.desc(), DirectoryEntry.created_at.desc()).limit(limit).all()
+
+    return {
+        "count": len(rows),
+        "items": [
+            {
+                "title": r.title,
+                "video_url": r.video_url,
+                "creator_name": r.creator_name,
+                "category_primary": r.category_primary,
+                "difficulty": r.difficulty,
+                "teaches_agent_to": r.teaches_agent_to,
+                "prompt_template": r.prompt_template,
+                "execution_checklist": r.execution_checklist,
+                "agent_training_script": r.agent_training_script,
+                "signal_score": r.signal_score,
+            }
+            for r in rows
+        ]
+    }
+
+
+@router.post("/directory/backfill-agent-scripts")
+async def backfill_agent_scripts(db: Session = Depends(get_database)):
+    """Fill agent-training fields for existing entries."""
+    rows = db.query(DirectoryEntry).all()
+    updated = 0
+
+    for r in rows:
+        if r.teaches_agent_to and r.prompt_template and r.execution_checklist and r.agent_training_script:
+            continue
+
+        category = r.category_primary or "Automation Workflows"
+        tools = r.tools_mentioned or "OpenClaw, VideoMind AI"
+        bullets = r.summary_5_bullets or "• Review source video"
+
+        r.teaches_agent_to = build_teaches_agent_to(category)
+        r.prompt_template = build_prompt_template(r.title, category, tools)
+        r.execution_checklist = build_execution_checklist(category)
+        r.agent_training_script = build_agent_training_script(r.title, bullets, r.execution_checklist)
+        updated += 1
+
+    db.commit()
+    return {"success": True, "updated": updated}

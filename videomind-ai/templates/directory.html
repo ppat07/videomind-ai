@@ -89,12 +89,29 @@
                     <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">${item.title}</h3>
                     <p class="text-sm text-gray-600 mb-2">Creator: ${item.creator_name || 'Unknown'}</p>
                     <p class="text-sm text-gray-700 whitespace-pre-line mb-3">${item.summary_5_bullets || ''}</p>
-                    <div class="flex items-center justify-between">
+                    <p class="text-xs text-gray-600 mb-2"><b>Teaches agent:</b> ${item.teaches_agent_to || 'N/A'}</p>
+                    <details class="mb-3">
+                      <summary class="text-xs text-gray-700 cursor-pointer">Agent training script</summary>
+                      <pre class="mt-2 text-xs bg-gray-50 border rounded p-2 whitespace-pre-wrap">${item.agent_training_script || ''}</pre>
+                    </details>
+                    <div class="flex items-center justify-between gap-2">
                         <span class="text-xs text-gray-500">Signal ${item.signal_score || 0}/100</span>
-                        <a href="${item.video_url}" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Watch →</a>
+                        <div class="flex items-center gap-2">
+                          <button class="copyPromptBtn text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300" data-prompt="${encodeURIComponent(item.prompt_template || '')}">Copy Prompt</button>
+                          <a href="${item.video_url}" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Watch →</a>
+                        </div>
                     </div>
                 </article>
             `).join('') || `<div class="col-span-full bg-white border rounded p-6 text-center text-gray-600">No entries yet. Click <b>Seed starter entries</b> to load your first 3 videos.</div>`;
+
+            document.querySelectorAll('.copyPromptBtn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const prompt = decodeURIComponent(btn.getAttribute('data-prompt') || '');
+                    await navigator.clipboard.writeText(prompt);
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy Prompt', 1200);
+                });
+            });
         }
 
         document.getElementById('searchBtn').addEventListener('click', loadEntries);

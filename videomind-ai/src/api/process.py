@@ -15,7 +15,16 @@ from services.youtube_service import youtube_service
 from services.transcription_service import transcription_service
 from utils.validators import validate_video_url, validate_email
 from utils.helpers import generate_job_id
-from utils.directory_mapper import infer_category, infer_difficulty, make_5_bullets, infer_signal_score
+from utils.directory_mapper import (
+    infer_category,
+    infer_difficulty,
+    make_5_bullets,
+    infer_signal_score,
+    build_teaches_agent_to,
+    build_prompt_template,
+    build_execution_checklist,
+    build_agent_training_script,
+)
 from config import settings
 
 router = APIRouter()
@@ -45,6 +54,10 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
     bullets = make_5_bullets(summary, key_points)
     tools = ", ".join(topics[:6]) if topics else "OpenClaw, VideoMind AI"
     score = infer_signal_score(enhanced, transcript)
+    teaches_agent_to = build_teaches_agent_to(category)
+    prompt_template = build_prompt_template(title, category, tools)
+    execution_checklist = build_execution_checklist(category)
+    agent_training_script = build_agent_training_script(title, bullets, execution_checklist)
 
     existing = db.query(DirectoryEntry).filter(DirectoryEntry.video_url == job.youtube_url).first()
     payload = {
@@ -59,6 +72,10 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
         "best_for": f"People learning {category.lower()} workflows",
         "signal_score": score,
         "processing_status": "processed",
+        "teaches_agent_to": teaches_agent_to,
+        "prompt_template": prompt_template,
+        "execution_checklist": execution_checklist,
+        "agent_training_script": agent_training_script,
     }
 
     if existing:

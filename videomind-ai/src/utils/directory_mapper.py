@@ -64,3 +64,38 @@ def infer_signal_score(ai_enhanced: Dict[str, Any], transcript: Dict[str, Any]) 
     if wc > 2500:
         score += 5
     return max(1, min(100, score))
+
+
+def build_teaches_agent_to(category: str) -> str:
+    return f"Execute {category.lower()} workflows with reliable, repeatable steps."
+
+
+def build_prompt_template(title: str, category: str, tools: str) -> str:
+    return (
+        f"You are implementing lessons from: {title}.\\n"
+        f"Category: {category}.\\n"
+        f"Tools: {tools or 'OpenClaw, VideoMind AI'}.\\n"
+        "Goal: produce an actionable plan with commands, checkpoints, and output format.\\n"
+        "Return: (1) step-by-step plan, (2) copy/paste commands, (3) validation checklist."
+    )
+
+
+def build_execution_checklist(category: str) -> str:
+    return "\\n".join([
+        f"[ ] Confirm objective for {category}",
+        "[ ] Verify required tools/auth are available",
+        "[ ] Run the workflow step-by-step",
+        "[ ] Capture output artifacts (links/files/results)",
+        "[ ] Validate results against success criteria",
+    ])
+
+
+def build_agent_training_script(title: str, summary_bullets: str, checklist: str) -> str:
+    return (
+        f"TRAINING SCRIPT: {title}\\n\\n"
+        "What to learn:\\n"
+        f"{summary_bullets or '- Review source video and transcript'}\\n\\n"
+        "How to execute:\\n"
+        f"{checklist}\\n\\n"
+        "When done, report: objective, steps executed, outcome, blockers, and next action."
+    )
