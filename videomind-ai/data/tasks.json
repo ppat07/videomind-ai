@@ -1,0 +1,50 @@
+{
+  "tasks": [
+    {
+      "id": "290e42f1-ae21-4e47-a416-4d4e57f6f5a5",
+      "created_at": "2026-02-20T20:00:36.748077+00:00",
+      "updated_at": "2026-02-20T20:00:36.748077+00:00",
+      "title": "Scale AI training directory to 100+ quality videos",
+      "owner": "David",
+      "status": "doing",
+      "priority": "high",
+      "notes": "Use batch ingest + quality filters; prioritize OpenClaw + AI workflow creators.",
+      "due_date": null
+    },
+    {
+      "id": "d5625474-35a5-41f5-b163-927afcbb133b",
+      "created_at": "2026-02-20T20:00:36.748077+00:00",
+      "updated_at": "2026-02-21T16:37:00.000000+00:00",
+      "title": "Create YouTube Data API key and connect metadata enrichment",
+      "owner": "Paul",
+      "status": "done",
+      "priority": "high",
+      "notes": "Needed for richer channel metadata and better content targeting.",
+      "due_date": null,
+      "activity": []
+    },
+    {
+      "id": "d0c6652a-8b42-4dd7-8990-960e86799dc2",
+      "created_at": "2026-02-20T20:00:36.748077+00:00",
+      "updated_at": "2026-02-20T20:00:36.748077+00:00",
+      "title": "Choose email stack (Beehiiv or ConvertKit) for weekly digest",
+      "owner": "Paul",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Goal: launch digest quickly with minimal ops overhead.",
+      "due_date": null
+    },
+    {
+      "id": "97bea2a4-f53a-407d-a8bc-7e73f4cede02",
+      "created_at": "2026-02-20T20:00:36.748077+00:00",
+      "updated_at": "2026-02-20T20:00:36.748077+00:00",
+      "title": "Build public launch plan (hosting + domain)",
+      "owner": "David",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Use existing domain if available. Keep launch lightweight.",
+      "due_date": null
+    }
+  ],
+  "updated_at": "2026-02-20T20:03:37.200811+00:00"
+}
