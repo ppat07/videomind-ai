@@ -4,12 +4,14 @@ Handles all environment variables and application settings.
 """
 import os
 from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import validator
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     
     # App Configuration
     app_name: str = "VideoMind AI"
@@ -58,9 +60,6 @@ class Settings(BaseSettings):
         os.makedirs(v, exist_ok=True)
         return v
     
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
 
 # Global settings instance
