@@ -31,9 +31,13 @@ class Settings(BaseSettings):
     static_files_path: str = "./static/"
     download_base_url: str = "http://localhost:8000/api/download"
     
-    # Email Configuration
+    # Email / Newsletter Configuration
     sendgrid_api_key: Optional[str] = None
     from_email: str = "noreply@videomind.ai"
+    mailchimp_api_key: Optional[str] = None
+    mailchimp_audience_id: Optional[str] = None
+    mailchimp_server_prefix: Optional[str] = None
+    mailchimp_tag: str = "videomind"
     
     # Payment Processing
     stripe_publishable_key: Optional[str] = None

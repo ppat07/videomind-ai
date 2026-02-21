@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables
-from api import health, process, directory, tasks
+from api import health, process, directory, tasks, newsletter
 
 # Create FastAPI app
 app = FastAPI(
@@ -38,6 +38,7 @@ app.include_router(health.router, prefix="/health", tags=["Health"])
 app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
 app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
+app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
 
 
 @app.on_event("startup")

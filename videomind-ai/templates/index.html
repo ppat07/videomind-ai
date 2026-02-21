@@ -126,6 +126,16 @@
             </form>
         </div>
 
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Get the weekly AI workflow digest</h3>
+            <p class="text-gray-600 text-sm mb-4">Top high-signal workflow videos from the directory, once a week.</p>
+            <div class="grid md:grid-cols-4 gap-3">
+                <input id="newsletterEmail" type="email" placeholder="you@email.com" class="border rounded px-3 py-2 md:col-span-3" />
+                <button id="newsletterBtn" class="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Subscribe</button>
+            </div>
+            <p id="newsletterMsg" class="text-sm text-gray-700 mt-2"></p>
+        </section>
+
         <!-- Features Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow-md p-6">
@@ -190,6 +200,24 @@
 
         // Initialize default selection
         document.querySelector('input[name="tier"]:checked').dispatchEvent(new Event('change'));
+
+        document.getElementById('newsletterBtn').addEventListener('click', async () => {
+            const email = (document.getElementById('newsletterEmail').value || '').trim();
+            const msg = document.getElementById('newsletterMsg');
+            if (!email) {
+                msg.textContent = 'Enter an email first.';
+                return;
+            }
+
+            msg.textContent = 'Subscribing...';
+            const res = await fetch('/api/newsletter/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            msg.textContent = res.ok ? 'Subscribed ✅' : `Failed: ${data.detail || 'unknown error'}`;
+        });
 
         // Handle form submission
         document.getElementById('processForm').addEventListener('submit', async function(e) {
