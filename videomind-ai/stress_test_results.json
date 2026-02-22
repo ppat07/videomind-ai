@@ -1,0 +1,38 @@
+{
+  "\ud83d\udcca Basic Directory Load": {
+    "success": true,
+    "time": 0.013895988464355469,
+    "error": null,
+    "has_data": true
+  },
+  "\ud83d\udcc4 Pagination Performance": {
+    "success": true,
+    "time": 0.04000592231750488,
+    "error": null,
+    "has_data": true
+  },
+  "\ud83d\udd0d Filtering Performance": {
+    "success": true,
+    "time": 0.05565905570983887,
+    "error": null,
+    "has_data": true
+  },
+  "\ud83d\udd0d Search Performance": {
+    "success": true,
+    "time": 0.03640294075012207,
+    "error": null,
+    "has_data": true
+  },
+  "\u26a1 Concurrent Requests": {
+    "success": false,
+    "time": 0.029033899307250977,
+    "error": null,
+    "has_data": true
+  },
+  "\ud83d\udcc8 Large Page Load": {
+    "success": false,
+    "time": 0.007395029067993164,
+    "error": null,
+    "has_data": true
+  }
+}
