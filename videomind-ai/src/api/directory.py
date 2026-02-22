@@ -26,6 +26,7 @@ router = APIRouter()
 @router.get("/directory")
 async def list_directory_entries(
     q: Optional[str] = Query(default=None),
+    content_type: Optional[str] = Query(default=None),
     category: Optional[str] = Query(default=None),
     difficulty: Optional[str] = Query(default=None),
     creator: Optional[str] = Query(default=None),
@@ -44,6 +45,13 @@ async def list_directory_entries(
             (DirectoryEntry.summary_5_bullets.ilike(q_like)) |
             (DirectoryEntry.tools_mentioned.ilike(q_like))
         )
+
+    if content_type:
+        from models.directory import ContentType
+        if content_type == "video":
+            query = query.filter(DirectoryEntry.content_type == ContentType.VIDEO)
+        elif content_type == "article":
+            query = query.filter(DirectoryEntry.content_type == ContentType.ARTICLE)
 
     if category:
         query = query.filter(DirectoryEntry.category_primary == category)
@@ -81,13 +89,17 @@ async def list_directory_entries(
             {
                 "id": r.id,
                 "title": r.title,
-                "video_url": r.video_url,
+                "video_url": r.video_url,  # Legacy field
+                "source_url": r.source_url or r.video_url,  # New unified URL field
+                "content_type": r.content_type.value if r.content_type else "video",
                 "creator_name": r.creator_name,
                 "category_primary": r.category_primary,
                 "difficulty": r.difficulty,
                 "tools_mentioned": r.tools_mentioned,
                 "summary_5_bullets": r.summary_5_bullets,
                 "best_for": r.best_for,
+                "word_count": r.word_count,
+                "reading_time_minutes": r.reading_time_minutes,
                 "signal_score": r.signal_score,
                 "processing_status": r.processing_status,
                 "teaches_agent_to": r.teaches_agent_to,

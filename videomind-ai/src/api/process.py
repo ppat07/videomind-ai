@@ -1,18 +1,19 @@
 """
 Main processing endpoints for VideoMind AI.
-Handles video submission and processing orchestration.
+Handles video and article submission and processing orchestration.
 """
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, HttpUrl
 from typing import List
 
 from database import get_database
 from models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
-from models.directory import DirectoryEntry
+from models.directory import DirectoryEntry, ContentType
 from services.youtube_service import youtube_service
 from services.transcription_service import transcription_service
+from services.article_service import article_processor
 from utils.validators import validate_video_url, validate_email
 from utils.helpers import generate_job_id
 from utils.directory_mapper import (
@@ -35,6 +36,18 @@ class BatchVideoJobCreate(BaseModel):
     youtube_urls: List[str]
     email: EmailStr
     tier: str = "basic"
+
+
+class ArticleJobCreate(BaseModel):
+    """Schema for article processing submission."""
+    article_url: HttpUrl
+    email: EmailStr
+
+
+class BatchArticleJobCreate(BaseModel):
+    """Schema for batch article submission."""
+    article_urls: List[HttpUrl]
+    email: EmailStr
 
 
 def upsert_directory_entry_from_job(db: Session, job: VideoJob):
@@ -567,6 +580,216 @@ async def process_video_background(job_id: str):
             db.commit()
         
         print(f"❌ Job {job_id} failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+    finally:
+        db.close()
+
+
+def upsert_directory_entry_from_article(db: Session, article_data: dict, article_url: str):
+    """Create/update a searchable directory entry from processed article data."""
+    
+    # Check if article already exists
+    existing = db.query(DirectoryEntry).filter(DirectoryEntry.source_url == article_url).first()
+    
+    payload = {
+        "title": article_data['title'],
+        "source_url": article_url,
+        "content_type": ContentType.ARTICLE,
+        "creator_name": article_data.get('author'),
+        "category_primary": article_data.get('category_primary', 'Other'),
+        "difficulty": article_data.get('difficulty', 'Intermediate'),
+        "tools_mentioned": article_data.get('tools_mentioned', ''),
+        "summary_5_bullets": article_data.get('summary_5_bullets', ''),
+        "best_for": article_data.get('best_for', 'AI/automation practitioners'),
+        "article_content": article_data['content'][:8000],  # Store truncated content
+        "word_count": article_data['word_count'],
+        "reading_time_minutes": article_data['reading_time_minutes'],
+        "signal_score": article_data.get('signal_score', 70),
+        "processing_status": "processed",
+        "teaches_agent_to": article_data.get('teaches_agent_to', ''),
+        "prompt_template": article_data.get('prompt_template', ''),
+        "execution_checklist": article_data.get('execution_checklist', ''),
+        "agent_training_script": article_data.get('agent_training_script', ''),
+    }
+
+    if existing:
+        # Update existing entry
+        for k, v in payload.items():
+            setattr(existing, k, v)
+        existing.updated_at = datetime.utcnow()
+    else:
+        # Create new entry
+        db.add(DirectoryEntry(**payload))
+    
+    db.commit()
+
+
+@router.post("/process/article", response_model=dict)
+async def submit_article_for_processing(
+    article_data: ArticleJobCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_database)
+):
+    """
+    Submit an article URL for processing and directory inclusion.
+    
+    Args:
+        article_data: Article processing request data
+        background_tasks: FastAPI background tasks
+        db: Database session
+        
+    Returns:
+        Processing response with status
+    """
+    try:
+        # Validate email
+        if not validate_email(article_data.email):
+            raise HTTPException(status_code=400, detail="Invalid email address")
+        
+        article_url = str(article_data.article_url)
+        
+        # Check if article already exists in directory
+        existing = db.query(DirectoryEntry).filter(DirectoryEntry.source_url == article_url).first()
+        if existing:
+            return {
+                "success": True,
+                "message": "Article already exists in directory",
+                "entry_id": existing.id,
+                "status": "already_processed"
+            }
+        
+        # Start background processing
+        background_tasks.add_task(process_article_background, article_url, article_data.email)
+        
+        return {
+            "success": True,
+            "message": "Article submitted for processing",
+            "article_url": article_url,
+            "status": "processing_started"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Article submission failed: {str(e)}")
+
+
+@router.post("/process/articles/batch", response_model=dict) 
+async def submit_articles_batch(
+    batch_data: BatchArticleJobCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_database)
+):
+    """
+    Submit multiple articles for batch processing.
+    
+    Args:
+        batch_data: Batch article processing request
+        background_tasks: FastAPI background tasks
+        db: Database session
+        
+    Returns:
+        Batch processing response
+    """
+    try:
+        if not validate_email(batch_data.email):
+            raise HTTPException(status_code=400, detail="Invalid email address")
+            
+        if len(batch_data.article_urls) > 20:
+            raise HTTPException(status_code=400, detail="Maximum 20 articles per batch")
+        
+        article_urls = [str(url) for url in batch_data.article_urls]
+        
+        # Check for existing articles
+        existing_count = 0
+        new_articles = []
+        
+        for url in article_urls:
+            existing = db.query(DirectoryEntry).filter(DirectoryEntry.source_url == url).first()
+            if existing:
+                existing_count += 1
+            else:
+                new_articles.append(url)
+        
+        # Start batch processing for new articles
+        if new_articles:
+            background_tasks.add_task(process_articles_batch_background, new_articles, batch_data.email)
+        
+        return {
+            "success": True,
+            "message": f"Batch processing started for {len(new_articles)} new articles",
+            "total_submitted": len(article_urls),
+            "new_articles": len(new_articles),
+            "already_processed": existing_count,
+            "status": "batch_processing_started"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Batch submission failed: {str(e)}")
+
+
+def process_article_background(article_url: str, email: str):
+    """Background task to process a single article."""
+    from database import SessionLocal
+    
+    db = SessionLocal()
+    
+    try:
+        print(f"🔄 Processing article: {article_url}")
+        
+        # Process article with AI
+        article_data = article_processor.process_article(article_url)
+        
+        # Add to directory
+        upsert_directory_entry_from_article(db, article_data, article_url)
+        
+        print(f"✅ Article processed successfully: {article_data['title']}")
+        
+        # Note: Email notification could be added here if needed
+        
+    except Exception as e:
+        print(f"❌ Article processing failed for {article_url}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+    finally:
+        db.close()
+
+
+def process_articles_batch_background(article_urls: List[str], email: str):
+    """Background task to process multiple articles."""
+    from database import SessionLocal
+    
+    db = SessionLocal()
+    
+    processed_count = 0
+    failed_count = 0
+    
+    try:
+        print(f"🔄 Processing batch of {len(article_urls)} articles")
+        
+        for article_url in article_urls:
+            try:
+                # Process each article
+                article_data = article_processor.process_article(article_url)
+                
+                # Add to directory
+                upsert_directory_entry_from_article(db, article_data, article_url)
+                
+                processed_count += 1
+                print(f"✅ Processed ({processed_count}/{len(article_urls)}): {article_data['title']}")
+                
+            except Exception as e:
+                failed_count += 1
+                print(f"❌ Failed to process {article_url}: {str(e)}")
+                continue
+        
+        print(f"🎉 Batch processing complete! {processed_count} successful, {failed_count} failed")
+        
+        # Note: Email notification with summary could be added here
+        
+    except Exception as e:
+        print(f"❌ Batch processing failed: {str(e)}")
         import traceback
         traceback.print_exc()
         
