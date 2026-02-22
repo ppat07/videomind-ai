@@ -1,0 +1,40 @@
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Video/Audio Processing  
+yt-dlp==2023.12.30
+ffmpeg-python==0.2.0
+
+# AI APIs
+openai==1.6.1
+requests==2.31.0
+
+# Database & Storage
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# Utils & Validation
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Background Processing
+celery==5.3.4
+redis==5.0.1
+
+# Email & Notifications
+sendgrid==6.11.0
+
+# Payment Processing
+stripe==7.8.0
+
+# File Handling
+python-multipart==0.0.6
+aiofiles==23.2.1
+
+# Testing
+pytest==7.4.3
+httpx==0.25.2
