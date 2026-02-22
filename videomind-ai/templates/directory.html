@@ -49,7 +49,7 @@
             <p id="batchResult" class="text-sm text-gray-700 mt-2"></p>
         </section>
 
-        <div class="bg-white rounded-lg shadow p-4 mb-3 grid md:grid-cols-6 gap-3">
+        <div class="bg-white rounded-lg shadow p-4 mb-3 grid md:grid-cols-7 gap-3">
             <input id="q" class="border rounded px-3 py-2 md:col-span-2" placeholder="Search title, tools, summary..." />
             <select id="category" class="border rounded px-3 py-2">
                 <option value="">All Categories</option>
@@ -67,6 +67,12 @@
                 <option>Advanced</option>
             </select>
             <input id="minSignal" type="number" min="1" max="100" class="border rounded px-3 py-2" placeholder="Min signal" />
+            <select id="sortBy" class="border rounded px-3 py-2">
+                <option value="newest">Newest</option>
+                <option value="signal_desc">Signal: High → Low</option>
+                <option value="signal_asc">Signal: Low → High</option>
+                <option value="oldest">Oldest</option>
+            </select>
             <button id="searchBtn" class="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Filter</button>
         </div>
 
@@ -79,15 +85,25 @@
 
         <div class="flex items-center justify-between mb-4">
             <p id="countText" class="text-gray-600">Loading...</p>
-            <button id="seedBtn" class="text-sm bg-gray-900 text-white px-3 py-2 rounded hover:bg-black">Seed starter entries</button>
+            <div class="flex items-center gap-2">
+                <button id="exportCsvBtn" class="text-sm bg-emerald-600 text-white px-3 py-2 rounded hover:bg-emerald-700">Export CSV</button>
+                <button id="seedBtn" class="text-sm bg-gray-900 text-white px-3 py-2 rounded hover:bg-black">Seed starter entries</button>
+            </div>
         </div>
 
         <div id="cards" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div class="mt-5 flex items-center justify-center">
+            <button id="loadMoreBtn" class="hidden bg-gray-900 text-white px-4 py-2 rounded hover:bg-black">Load more</button>
+        </div>
     </main>
 
     <script>
         const cardsEl = document.getElementById('cards');
         const countText = document.getElementById('countText');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+
+        let currentPage = 1;
+        const pageSize = 24;
 
         async function loadJobsHealth() {
             const countsEl = document.getElementById('jobsCounts');
@@ -110,23 +126,8 @@
               : 'No recent failures 🎉';
         }
 
-        async function loadEntries() {
-            const q = document.getElementById('q').value.trim();
-            const category = document.getElementById('category').value;
-            const difficulty = document.getElementById('difficulty').value;
-            const minSignal = document.getElementById('minSignal').value;
-
-            const params = new URLSearchParams();
-            if (q) params.set('q', q);
-            if (category) params.set('category', category);
-            if (difficulty) params.set('difficulty', difficulty);
-            if (minSignal) params.set('min_signal', minSignal);
-
-            const res = await fetch(`/api/directory?${params.toString()}`);
-            const data = await res.json();
-
-            countText.textContent = `${data.count} entries`;
-            cardsEl.innerHTML = (data.items || []).map(item => `
+        function renderCards(items, append = false) {
+            const html = (items || []).map(item => `
                 <article class="bg-white rounded-lg border p-4 shadow-sm">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${item.category_primary}</span>
@@ -148,19 +149,57 @@
                         </div>
                     </div>
                 </article>
-            `).join('') || `<div class="col-span-full bg-white border rounded p-6 text-center text-gray-600">No entries yet. Click <b>Seed starter entries</b> to load your first 3 videos.</div>`;
+            `).join('');
+
+            if (append) {
+                cardsEl.insertAdjacentHTML('beforeend', html);
+            } else {
+                cardsEl.innerHTML = html || `<div class="col-span-full bg-white border rounded p-6 text-center text-gray-600">No entries yet. Click <b>Seed starter entries</b> to load your first 3 videos.</div>`;
+            }
 
             document.querySelectorAll('.copyPromptBtn').forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.onclick = async () => {
                     const prompt = decodeURIComponent(btn.getAttribute('data-prompt') || '');
                     await navigator.clipboard.writeText(prompt);
                     btn.textContent = 'Copied!';
                     setTimeout(() => btn.textContent = 'Copy Prompt', 1200);
-                });
+                };
             });
         }
 
-        document.getElementById('searchBtn').addEventListener('click', loadEntries);
+        function collectFilterParams() {
+            const q = document.getElementById('q').value.trim();
+            const category = document.getElementById('category').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const minSignal = document.getElementById('minSignal').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            const params = new URLSearchParams();
+            if (q) params.set('q', q);
+            if (category) params.set('category', category);
+            if (difficulty) params.set('difficulty', difficulty);
+            if (minSignal) params.set('min_signal', minSignal);
+            params.set('sort_by', sortBy);
+            return params;
+        }
+
+        async function loadEntries({ append = false } = {}) {
+            const params = collectFilterParams();
+            params.set('page', currentPage);
+            params.set('limit', pageSize);
+
+            const res = await fetch(`/api/directory?${params.toString()}`);
+            const data = await res.json();
+
+            countText.textContent = `${data.total_count ?? data.count} total entries`;
+            renderCards(data.items || [], append);
+            loadMoreBtn.classList.toggle('hidden', !data.has_more);
+        }
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            currentPage = 1;
+            loadEntries();
+        });
         document.getElementById('refreshJobs').addEventListener('click', loadJobsHealth);
         document.getElementById('retryFailed').addEventListener('click', async () => {
             const res = await fetch('/api/jobs/retry-failed?limit=10', { method: 'POST' });
@@ -174,6 +213,7 @@
                 if (btn.dataset.category) document.getElementById('category').value = btn.dataset.category;
                 if (btn.dataset.difficulty) document.getElementById('difficulty').value = btn.dataset.difficulty;
                 if (btn.dataset.minSignal) document.getElementById('minSignal').value = btn.dataset.minSignal;
+                currentPage = 1;
                 loadEntries();
             });
         });
@@ -183,13 +223,22 @@
             document.getElementById('category').value = '';
             document.getElementById('difficulty').value = '';
             document.getElementById('minSignal').value = '';
+            document.getElementById('sortBy').value = 'newest';
+            currentPage = 1;
             loadEntries();
+        });
+
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            const params = collectFilterParams();
+            params.set('limit', '5000');
+            window.open(`/api/directory/export/csv?${params.toString()}`, '_blank');
         });
 
         document.getElementById('seedBtn').addEventListener('click', async () => {
             const res = await fetch('/api/directory/seed', { method: 'POST' });
             const data = await res.json();
             alert(`Seeded ${data.created} entries`);
+            currentPage = 1;
             loadEntries();
         });
 
@@ -223,8 +272,14 @@
             const createdLines = (data.created || []).slice(0, 8).map(i => `• queued: ${i.title || i.youtube_url}`).join('\n');
             const skippedLines = (data.skipped || []).slice(0, 8).map(i => `• skipped: ${i.youtube_url} (${i.reason})`).join('\n');
             resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}.\n${createdLines}${createdLines && skippedLines ? '\n' : ''}${skippedLines}`;
+            currentPage = 1;
             loadEntries();
             loadJobsHealth();
+        });
+
+        loadMoreBtn.addEventListener('click', async () => {
+            currentPage += 1;
+            await loadEntries({ append: true });
         });
 
         loadEntries();

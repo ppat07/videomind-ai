@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Status - {{ app_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ app_name }}</h1>
+                    <p class="text-gray-600 mt-1">Processing Status</p>
+                </div>
+                <div>
+                    <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Process Another Video
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Status Card -->
+        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+            <div class="text-center">
+                <!-- Job ID -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">Job Status</h2>
+                    <p class="text-sm text-gray-500">Job ID: <span class="font-mono">{{ job_id }}</span></p>
+                </div>
+
+                <!-- Status Display -->
+                <div id="statusContainer" class="mb-8">
+                    <!-- Loading state (default) -->
+                    <div id="loadingState" class="text-center">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Loading Status...</h3>
+                        <p class="text-gray-600">Checking your job status...</p>
+                    </div>
+
+                    <!-- Status content (populated by JavaScript) -->
+                    <div id="statusContent" class="hidden">
+                        <div id="statusIcon" class="mb-4">
+                            <!-- Icons will be inserted here -->
+                        </div>
+                        <h3 id="statusTitle" class="text-lg font-semibold text-gray-900 mb-2"></h3>
+                        <p id="statusMessage" class="text-gray-600 mb-4"></p>
+                        <div id="progressBar" class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="progressFill" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Error state -->
+                    <div id="errorState" class="hidden text-center">
+                        <div class="text-red-600 mb-4">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-red-900 mb-2">Processing Failed</h3>
+                        <p id="errorMessage" class="text-red-600 mb-4"></p>
+                        <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                            Try Another Video
+                        </a>
+                    </div>
+
+                    <!-- Completed state -->
+                    <div id="completedState" class="hidden text-center">
+                        <div class="text-green-600 mb-4">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-green-900 mb-2">Processing Complete!</h3>
+                        <p class="text-gray-600 mb-6">Your video has been processed successfully.</p>
+                        
+                        <!-- Download Links -->
+                        <div id="downloadLinks" class="space-y-3">
+                            <!-- Download buttons will be inserted here -->
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t">
+                            <p class="text-sm text-gray-500 mb-4">
+                                Check your email for download links, or download directly below.
+                            </p>
+                            <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                Process Another Video
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Steps -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Processing Steps</h3>
+            <div class="space-y-4">
+                <div id="step1" class="flex items-center">
+                    <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4">
+                        <div id="step1-icon" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Download Audio</p>
+                        <p class="text-sm text-gray-500">Extracting audio from YouTube video</p>
+                    </div>
+                </div>
+
+                <div id="step2" class="flex items-center">
+                    <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4">
+                        <div id="step2-icon" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Transcribe</p>
+                        <p class="text-sm text-gray-500">Creating accurate transcript with AI</p>
+                    </div>
+                </div>
+
+                <div id="step3" class="flex items-center">
+                    <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4">
+                        <div id="step3-icon" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">AI Enhancement</p>
+                        <p class="text-sm text-gray-500">Generating summaries and Q&A pairs</p>
+                    </div>
+                </div>
+
+                <div id="step4" class="flex items-center">
+                    <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4">
+                        <div id="step4-icon" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Prepare Downloads</p>
+                        <p class="text-sm text-gray-500">Formatting and packaging your results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const jobId = "{{ job_id }}";
+        let pollInterval;
+
+        // Status update functions
+        function updateStepStatus(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            const icon = document.getElementById(`step${stepNumber}-icon`);
+            const border = step.querySelector('.w-8');
+            
+            if (status === 'active') {
+                border.classList.add('border-blue-500');
+                border.classList.remove('border-gray-300', 'border-green-500');
+                icon.classList.add('bg-blue-500', 'animate-pulse');
+                icon.classList.remove('bg-gray-300', 'bg-green-500');
+            } else if (status === 'completed') {
+                border.classList.add('border-green-500');
+                border.classList.remove('border-gray-300', 'border-blue-500');
+                icon.classList.add('bg-green-500');
+                icon.classList.remove('bg-gray-300', 'bg-blue-500', 'animate-pulse');
+                // Add checkmark
+                icon.innerHTML = '<svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>';
+            }
+        }
+
+        function updateProgress(status) {
+            const progressFill = document.getElementById('progressFill');
+            const progressMap = {
+                'pending': 0,
+                'downloading': 25,
+                'transcribing': 50,
+                'enhancing': 75,
+                'completed': 100,
+                'failed': 0
+            };
+            
+            const progress = progressMap[status] || 0;
+            progressFill.style.width = `${progress}%`;
+            
+            // Update step indicators
+            if (progress >= 25) updateStepStatus(1, progress > 25 ? 'completed' : 'active');
+            if (progress >= 50) updateStepStatus(2, progress > 50 ? 'completed' : 'active');
+            if (progress >= 75) updateStepStatus(3, progress > 75 ? 'completed' : 'active');
+            if (progress >= 100) updateStepStatus(4, 'completed');
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await axios.get(`/api/status/${jobId}`);
+                const data = response.data;
+                
+                // Hide loading state
+                document.getElementById('loadingState').classList.add('hidden');
+                
+                if (data.status === 'completed') {
+                    // Show completed state
+                    document.getElementById('statusContent').classList.add('hidden');
+                    document.getElementById('completedState').classList.remove('hidden');
+                    
+                    // Add download links if available
+                    if (data.download_links) {
+                        const linksContainer = document.getElementById('downloadLinks');
+                        linksContainer.innerHTML = '';
+                        
+                        Object.entries(data.download_links).forEach(([format, link]) => {
+                            const button = document.createElement('a');
+                            button.href = link;
+                            button.className = 'inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors mr-4 mb-2';
+                            button.textContent = `Download ${format.charAt(0).toUpperCase() + format.slice(1)}`;
+                            linksContainer.appendChild(button);
+                        });
+                    }
+                    
+                    clearInterval(pollInterval);
+                    
+                } else if (data.status === 'failed') {
+                    // Show error state
+                    document.getElementById('statusContent').classList.add('hidden');
+                    document.getElementById('errorState').classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = data.error_message || 'Unknown error occurred';
+                    
+                    clearInterval(pollInterval);
+                    
+                } else {
+                    // Show processing state
+                    document.getElementById('statusContent').classList.remove('hidden');
+                    document.getElementById('statusTitle').textContent = getStatusTitle(data.status);
+                    document.getElementById('statusMessage').textContent = data.progress_message || 'Processing...';
+                    
+                    updateProgress(data.status);
+                }
+                
+            } catch (error) {
+                console.error('Error checking status:', error);
+                
+                // Show error state
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = 'Failed to check job status. Please refresh the page.';
+                
+                clearInterval(pollInterval);
+            }
+        }
+
+        function getStatusTitle(status) {
+            const titles = {
+                'pending': 'Queued for Processing',
+                'downloading': 'Downloading Audio',
+                'transcribing': 'Creating Transcript',
+                'enhancing': 'AI Enhancement',
+                'completed': 'Processing Complete',
+                'failed': 'Processing Failed'
+            };
+            
+            return titles[status] || 'Processing';
+        }
+
+        // Start polling for status updates
+        checkStatus(); // Initial check
+        pollInterval = setInterval(checkStatus, 2000); // Check every 2 seconds
+
+        // Stop polling when user leaves the page
+        window.addEventListener('beforeunload', () => {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        });
+    </script>
+</body>
+</html>

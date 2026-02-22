@@ -2,8 +2,13 @@
 Directory endpoints for browsing training entries.
 """
 from typing import Optional
+import csv
+import io
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_database
@@ -25,7 +30,9 @@ async def list_directory_entries(
     difficulty: Optional[str] = Query(default=None),
     creator: Optional[str] = Query(default=None),
     min_signal: Optional[int] = Query(default=None, ge=1, le=100),
-    limit: int = Query(default=50, ge=1, le=200),
+    sort_by: str = Query(default="newest", pattern="^(newest|oldest|signal_desc|signal_asc)$"),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=24, ge=1, le=200),
     db: Session = Depends(get_database),
 ):
     query = db.query(DirectoryEntry)
@@ -50,10 +57,26 @@ async def list_directory_entries(
     if min_signal is not None:
         query = query.filter(DirectoryEntry.signal_score >= min_signal)
 
-    rows = query.order_by(DirectoryEntry.created_at.desc()).limit(limit).all()
+    total_count = query.with_entities(func.count(DirectoryEntry.id)).scalar() or 0
+
+    if sort_by == "oldest":
+        query = query.order_by(DirectoryEntry.created_at.asc())
+    elif sort_by == "signal_desc":
+        query = query.order_by(DirectoryEntry.signal_score.desc(), DirectoryEntry.created_at.desc())
+    elif sort_by == "signal_asc":
+        query = query.order_by(DirectoryEntry.signal_score.asc(), DirectoryEntry.created_at.desc())
+    else:
+        query = query.order_by(DirectoryEntry.created_at.desc())
+
+    offset = (page - 1) * limit
+    rows = query.offset(offset).limit(limit).all()
 
     return {
         "count": len(rows),
+        "total_count": total_count,
+        "page": page,
+        "limit": limit,
+        "has_more": (offset + len(rows)) < total_count,
         "items": [
             {
                 "id": r.id,
@@ -76,6 +99,98 @@ async def list_directory_entries(
             for r in rows
         ],
     }
+
+
+@router.get("/directory/export/csv")
+async def export_directory_csv(
+    q: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None),
+    difficulty: Optional[str] = Query(default=None),
+    creator: Optional[str] = Query(default=None),
+    min_signal: Optional[int] = Query(default=None, ge=1, le=100),
+    sort_by: str = Query(default="signal_desc", pattern="^(newest|oldest|signal_desc|signal_asc)$"),
+    limit: int = Query(default=1000, ge=1, le=5000),
+    db: Session = Depends(get_database),
+):
+    """Export filtered directory entries as CSV for offline review/outreach."""
+    query = db.query(DirectoryEntry)
+
+    if q:
+        q_like = f"%{q}%"
+        query = query.filter(
+            (DirectoryEntry.title.ilike(q_like)) |
+            (DirectoryEntry.summary_5_bullets.ilike(q_like)) |
+            (DirectoryEntry.tools_mentioned.ilike(q_like))
+        )
+
+    if category:
+        query = query.filter(DirectoryEntry.category_primary == category)
+
+    if difficulty:
+        query = query.filter(DirectoryEntry.difficulty == difficulty)
+
+    if creator:
+        query = query.filter(DirectoryEntry.creator_name.ilike(f"%{creator}%"))
+
+    if min_signal is not None:
+        query = query.filter(DirectoryEntry.signal_score >= min_signal)
+
+    if sort_by == "oldest":
+        query = query.order_by(DirectoryEntry.created_at.asc())
+    elif sort_by == "signal_desc":
+        query = query.order_by(DirectoryEntry.signal_score.desc(), DirectoryEntry.created_at.desc())
+    elif sort_by == "signal_asc":
+        query = query.order_by(DirectoryEntry.signal_score.asc(), DirectoryEntry.created_at.desc())
+    else:
+        query = query.order_by(DirectoryEntry.created_at.desc())
+
+    rows = query.limit(limit).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "title",
+        "video_url",
+        "creator_name",
+        "category_primary",
+        "difficulty",
+        "signal_score",
+        "tools_mentioned",
+        "summary_5_bullets",
+        "best_for",
+        "teaches_agent_to",
+        "prompt_template",
+        "execution_checklist",
+        "created_at",
+    ])
+
+    for r in rows:
+        writer.writerow([
+            r.title,
+            r.video_url,
+            r.creator_name,
+            r.category_primary,
+            r.difficulty,
+            r.signal_score,
+            r.tools_mentioned,
+            r.summary_5_bullets,
+            r.best_for,
+            r.teaches_agent_to,
+            r.prompt_template,
+            r.execution_checklist,
+            r.created_at.isoformat() if r.created_at else "",
+        ])
+
+    csv_data = output.getvalue()
+    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="videomind-directory-{timestamp}.csv"'
+        },
+    )
 
 
 @router.post("/directory/seed")
