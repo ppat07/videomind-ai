@@ -11,6 +11,8 @@ from fastapi.responses import HTMLResponse
 from config import settings
 from database import create_tables
 from api import health, process, directory, tasks, newsletter
+from datetime import datetime
+import os
 
 # Create FastAPI app
 app = FastAPI(
@@ -19,6 +21,14 @@ app = FastAPI(
     version=settings.app_version,
     debug=settings.debug
 )
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": os.getenv("RENDER", "unknown")
+    }
 
 # Add CORS middleware
 app.add_middleware(
