@@ -73,10 +73,16 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
     agent_training_script = build_agent_training_script(title, bullets, execution_checklist)
 
     existing = db.query(DirectoryEntry).filter(DirectoryEntry.video_url == job.youtube_url).first()
+    
+    # Fix datetime formatting issue by explicitly setting proper datetime values
+    current_time = datetime.utcnow()
+    
     payload = {
         "source_job_id": job.id,
         "title": title,
         "video_url": job.youtube_url,
+        "source_url": job.youtube_url,  # Ensure source_url is set for consistency
+        "content_type": ContentType.VIDEO,  # Explicitly set content type
         "creator_name": creator,
         "category_primary": category,
         "difficulty": difficulty,
@@ -89,11 +95,15 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
         "prompt_template": prompt_template,
         "execution_checklist": execution_checklist,
         "agent_training_script": agent_training_script,
+        "created_at": current_time,
+        "updated_at": current_time
     }
 
     if existing:
         for k, v in payload.items():
-            setattr(existing, k, v)
+            if k != "created_at":  # Don't overwrite creation time on updates
+                setattr(existing, k, v)
+        existing.updated_at = current_time
     else:
         db.add(DirectoryEntry(**payload))
 
@@ -124,6 +134,40 @@ async def submit_video_for_processing(
         # Validate email
         if not validate_email(job_data.email):
             raise HTTPException(status_code=400, detail="Invalid email address")
+        
+        video_url = str(job_data.youtube_url)
+        
+        # Enhanced deduplication: Check both VideoJob and DirectoryEntry tables
+        # 1. Check if there's an active/completed VideoJob for this URL
+        existing_job = db.query(VideoJob).filter(VideoJob.youtube_url == video_url).first()
+        if existing_job and existing_job.status in [
+            ProcessingStatus.PENDING.value, 
+            ProcessingStatus.DOWNLOADING.value, 
+            ProcessingStatus.TRANSCRIBING.value, 
+            ProcessingStatus.ENHANCING.value, 
+            ProcessingStatus.COMPLETED.value
+        ]:
+            return {
+                "success": True,
+                "message": f"Video is already being processed or completed (Job ID: {existing_job.id})",
+                "job_id": existing_job.id,
+                "status": f"existing_job_{existing_job.status}",
+                "note": "You can reprocess failed videos, but active/completed ones are skipped to avoid duplicates"
+            }
+        
+        # 2. Check if video already exists in the directory (maybe processed elsewhere)
+        existing_directory = db.query(DirectoryEntry).filter(
+            (DirectoryEntry.video_url == video_url) | (DirectoryEntry.source_url == video_url)
+        ).first()
+        if existing_directory:
+            return {
+                "success": True, 
+                "message": "Video already exists in directory - no reprocessing needed",
+                "entry_id": existing_directory.id,
+                "status": "already_in_directory",
+                "directory_title": existing_directory.title,
+                "note": "This video has already been processed and added to the training directory"
+            }
         
         # Get video information first
         success, video_info = youtube_service.get_video_info(str(job_data.youtube_url))

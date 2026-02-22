@@ -6,33 +6,65 @@ from typing import Dict, Any, List
 
 CATEGORIES = [
     "Setup & Onboarding",
-    "Automation Workflows",
+    "Automation Workflows", 
     "Tooling & Integrations",
     "Business Use Cases",
     "Debugging & Fixes",
     "Prompts & Templates",
+    "General Content",  # For non-AI/automation content
+    "Entertainment",    # Videos, reviews, discussions
+    "Educational",      # Tutorials, explanations
+    "News & Updates",   # Industry news, product updates
+    "Reviews & Opinions" # Product reviews, commentary
 ]
 
 
 def _contains_any(text: str, terms: List[str]) -> bool:
+    """Check if any terms appear as whole words in text to avoid substring false positives."""
+    import re
     t = (text or "").lower()
-    return any(term in t for term in terms)
+    for term in terms:
+        # Use word boundaries for short terms that could be substrings
+        if len(term) <= 3:
+            pattern = r'\b' + re.escape(term) + r'\b'
+            if re.search(pattern, t):
+                return True
+        else:
+            # For longer terms, simple substring match is fine
+            if term in t:
+                return True
+    return False
 
 
 def infer_category(title: str, summary: str, topics: List[str] = None) -> str:
     corpus = " ".join([title or "", summary or "", " ".join(topics or [])]).lower()
 
-    if _contains_any(corpus, ["setup", "install", "onboard", "getting started"]):
+    # AI/Automation-specific categories (highest priority)
+    if _contains_any(corpus, ["setup", "install", "onboard", "getting started", "configuration"]):
         return "Setup & Onboarding"
-    if _contains_any(corpus, ["debug", "error", "fix", "troubleshoot"]):
-        return "Debugging & Fixes"
-    if _contains_any(corpus, ["prompt", "template"]):
+    if _contains_any(corpus, ["debug", "error", "fix", "troubleshoot", "problem", "issue"]):
+        return "Debugging & Fixes"  
+    if _contains_any(corpus, ["prompt", "template", "system prompt", "prompt engineering"]):
         return "Prompts & Templates"
-    if _contains_any(corpus, ["notion", "api", "mcp", "integration", "tool"]):
+    if _contains_any(corpus, ["notion", "api", "mcp", "integration", "tool", "webhook", "automation", "workflow", "ai agent", "openclaw"]):
         return "Tooling & Integrations"
-    if _contains_any(corpus, ["money", "revenue", "sales", "business", "make $"]):
+    if _contains_any(corpus, ["money", "revenue", "sales", "business", "make $", "profit", "roi", "entrepreneur"]):
         return "Business Use Cases"
-    return "Automation Workflows"
+    if _contains_any(corpus, ["automation", "workflow", "agent", "ai", "artificial intelligence", "machine learning"]):
+        return "Automation Workflows"
+    
+    # Non-AI/Automation categories (broader content)
+    if _contains_any(corpus, ["review", "opinion", "thoughts on", "reaction", "commentary", "analysis"]):
+        return "Reviews & Opinions"
+    if _contains_any(corpus, ["news", "update", "announcement", "release", "breaking"]):
+        return "News & Updates"
+    if _contains_any(corpus, ["tutorial", "how to", "learn", "course", "education", "explanation", "guide"]):
+        return "Educational"
+    if _contains_any(corpus, ["funny", "entertainment", "meme", "comedy", "fun", "gaming", "music", "movie", "cat", "dog", "compilation", "viral", "hilarious"]):
+        return "Entertainment"
+    
+    # Default for any content that doesn't fit specific categories
+    return "General Content"
 
 
 def infer_difficulty(transcript_word_count: int) -> str:
