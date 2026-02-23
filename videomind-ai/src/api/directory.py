@@ -12,7 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_database
-from src.models.directory import DirectoryEntry
+from models.directory import DirectoryEntry
 from utils.directory_mapper import (
     build_teaches_agent_to,
     build_prompt_template,

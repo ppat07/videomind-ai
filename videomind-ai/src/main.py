@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables
-from src.api import health, process, directory, tasks, newsletter, jobs
+from api import health, process, directory, tasks, newsletter, jobs
 from datetime import datetime
 import os
 
