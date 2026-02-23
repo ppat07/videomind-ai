@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables
-from api import health, process, directory, tasks, newsletter
+from src.api import health, process, directory, tasks, newsletter, jobs
 from datetime import datetime
 import os
 
@@ -49,6 +49,7 @@ app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
 app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
+app.include_router(jobs.router, prefix="/api", tags=["Job Management"])
 
 
 @app.on_event("startup")
@@ -92,6 +93,15 @@ async def dashboard_page(request: Request):
     """Serve task dashboard page."""
     return templates.TemplateResponse(
         "dashboard.html",
+        {"request": request, "app_name": settings.app_name}
+    )
+
+
+@app.get("/jobs", response_class=HTMLResponse, include_in_schema=False)
+async def jobs_page(request: Request):
+    """Serve job management page."""
+    return templates.TemplateResponse(
+        "jobs.html",
         {"request": request, "app_name": settings.app_name}
     )
 

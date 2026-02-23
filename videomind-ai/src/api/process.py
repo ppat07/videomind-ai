@@ -9,10 +9,10 @@ from pydantic import BaseModel, EmailStr, HttpUrl
 from typing import List
 
 from database import get_database
-from models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
-from models.directory import DirectoryEntry, ContentType
-from services.youtube_service import youtube_service
-from services.transcription_service import transcription_service
+from src.models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
+from src.models.directory import DirectoryEntry, ContentType
+from src.services.youtube_service import youtube_service
+from src.services.transcription_service import transcription_service
 from services.article_service import article_processor
 from utils.validators import validate_video_url, validate_email
 from utils.helpers import generate_job_id

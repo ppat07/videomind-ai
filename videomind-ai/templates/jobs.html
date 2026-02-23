@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Management - {{ app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50" x-data="jobManager()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">{{ app_name }} - Job Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-blue-600 hover:text-blue-800">← Back to Home</a>
+                    <a href="/directory" class="text-blue-600 hover:text-blue-800">Directory</a>
+                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Tasks</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- System Health Overview -->
+        <div class="mb-8">
+            <div class="bg-white rounded-lg shadow p-6" x-data="{ loading: true }" x-init="loadStats().then(() => loading = false)">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">System Health</h2>
+                    <button @click="loadStats()" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Refresh
+                    </button>
+                </div>
+                
+                <div x-show="loading" class="text-center py-4">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+                
+                <div x-show="!loading" x-cloak class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600" x-text="stats.total_jobs"></div>
+                        <div class="text-sm text-gray-600">Total Jobs</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600" x-text="stats.completed"></div>
+                        <div class="text-sm text-gray-600">Completed</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-red-600" x-text="stats.failed"></div>
+                        <div class="text-sm text-gray-600">Failed</div>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-yellow-600" x-text="stats.pending"></div>
+                        <div class="text-sm text-gray-600">Pending</div>
+                    </div>
+                    <div class="bg-orange-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-orange-600" x-text="stats.stuck_downloads"></div>
+                        <div class="text-sm text-gray-600">Stuck</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-purple-600" x-text="stats.recent_failures"></div>
+                        <div class="text-sm text-gray-600">Recent Fails</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mb-6 flex flex-wrap gap-3">
+            <button @click="cleanupStuckJobs()" 
+                    class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
+                    :disabled="loading">
+                🔄 Cleanup Stuck Jobs
+            </button>
+            <button @click="retryFailedJobs()" 
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                    :disabled="loading">
+                🔁 Retry Failed Jobs
+            </button>
+            <button @click="loadFailedJobs()" 
+                    class="px-4 py-2 bg-gray-500 text-white rounded hover:gray-600">
+                📋 Load Failed Jobs
+            </button>
+            <button @click="loadStuckJobs()" 
+                    class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+                ⏰ Load Stuck Jobs
+            </button>
+        </div>
+
+        <!-- Status Messages -->
+        <div x-show="message" x-cloak class="mb-4">
+            <div :class="messageType === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700'" 
+                 class="border-l-4 p-4" x-text="message"></div>
+        </div>
+
+        <!-- Jobs List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Job Details</h3>
+                <p class="text-sm text-gray-500">Review failed and stuck jobs for debugging and retry</p>
+            </div>
+            
+            <div x-show="jobs.length === 0 && !loading" x-cloak class="p-6 text-center text-gray-500">
+                No jobs loaded. Use the buttons above to load failed or stuck jobs.
+            </div>
+            
+            <div x-show="loading" class="p-6 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+            
+            <div x-show="jobs.length > 0" x-cloak class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Video URL</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Retry Count</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="job in jobs" :key="job.id">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900" x-text="job.id.substring(0, 8) + '...'"></td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <a :href="job.youtube_url" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                        <span x-text="job.youtube_url.length > 40 ? job.youtube_url.substring(0, 40) + '...' : job.youtube_url"></span>
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span :class="getStatusColor(job.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" x-text="job.status"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="job.retry_count"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(job.updated_at)"></td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <span x-text="job.error_message ? (job.error_message.length > 50 ? job.error_message.substring(0, 50) + '...' : job.error_message) : 'N/A'"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @click="retryJob(job.id)" 
+                                            class="text-blue-600 hover:text-blue-900 mr-3">
+                                        Retry
+                                    </button>
+                                    <button @click="deleteJob(job.id)" 
+                                            class="text-red-600 hover:text-red-900"
+                                            onclick="return confirm('Are you sure you want to delete this job?')">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function jobManager() {
+            return {
+                stats: {},
+                jobs: [],
+                loading: false,
+                message: '',
+                messageType: 'success',
+
+                async loadStats() {
+                    try {
+                        const response = await fetch('/api/jobs/stats');
+                        this.stats = await response.json();
+                    } catch (error) {
+                        this.showMessage('Failed to load statistics', 'error');
+                    }
+                },
+
+                async loadFailedJobs() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/jobs/failed');
+                        this.jobs = await response.json();
+                        this.showMessage(`Loaded ${this.jobs.length} failed jobs`, 'success');
+                    } catch (error) {
+                        this.showMessage('Failed to load failed jobs', 'error');
+                    }
+                    this.loading = false;
+                },
+
+                async loadStuckJobs() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/jobs/stuck');
+                        this.jobs = await response.json();
+                        this.showMessage(`Loaded ${this.jobs.length} stuck jobs`, 'success');
+                    } catch (error) {
+                        this.showMessage('Failed to load stuck jobs', 'error');
+                    }
+                    this.loading = false;
+                },
+
+                async retryJob(jobId) {
+                    try {
+                        const response = await fetch(`/api/jobs/${jobId}/retry`, {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            this.showMessage(`Job ${jobId.substring(0, 8)} queued for retry`, 'success');
+                            // Refresh the current list
+                            if (this.jobs.length > 0) {
+                                const job = this.jobs.find(j => j.id === jobId);
+                                if (job) {
+                                    job.status = 'pending';
+                                    job.retry_count = (job.retry_count || 0) + 1;
+                                }
+                            }
+                            this.loadStats();
+                        } else {
+                            this.showMessage(`Failed to retry job: ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Failed to retry job', 'error');
+                    }
+                },
+
+                async deleteJob(jobId) {
+                    try {
+                        const response = await fetch(`/api/jobs/${jobId}`, {
+                            method: 'DELETE'
+                        });
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            this.showMessage(`Job ${jobId.substring(0, 8)} deleted`, 'success');
+                            this.jobs = this.jobs.filter(j => j.id !== jobId);
+                            this.loadStats();
+                        } else {
+                            this.showMessage('Failed to delete job', 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Failed to delete job', 'error');
+                    }
+                },
+
+                async cleanupStuckJobs() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/jobs/cleanup-stuck', {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+                        
+                        this.showMessage(`Cleaned up ${result.successful_retries} stuck jobs`, 'success');
+                        this.loadStats();
+                        
+                        // Refresh current list if showing stuck jobs
+                        if (this.jobs.length > 0 && this.jobs[0].status !== 'failed') {
+                            this.loadStuckJobs();
+                        }
+                    } catch (error) {
+                        this.showMessage('Failed to cleanup stuck jobs', 'error');
+                    }
+                    this.loading = false;
+                },
+
+                async retryFailedJobs() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/jobs/retry-failed', {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+                        
+                        this.showMessage(`Retried ${result.successful_retries} of ${result.total_attempted} failed jobs`, 'success');
+                        this.loadStats();
+                        
+                        // Refresh failed jobs list
+                        this.loadFailedJobs();
+                    } catch (error) {
+                        this.showMessage('Failed to retry failed jobs', 'error');
+                    }
+                    this.loading = false;
+                },
+
+                showMessage(text, type = 'success') {
+                    this.message = text;
+                    this.messageType = type;
+                    setTimeout(() => {
+                        this.message = '';
+                    }, 5000);
+                },
+
+                getStatusColor(status) {
+                    const colors = {
+                        'completed': 'bg-green-100 text-green-800',
+                        'failed': 'bg-red-100 text-red-800',
+                        'pending': 'bg-yellow-100 text-yellow-800',
+                        'downloading': 'bg-blue-100 text-blue-800',
+                        'transcribing': 'bg-purple-100 text-purple-800',
+                        'enhancing': 'bg-indigo-100 text-indigo-800'
+                    };
+                    return colors[status] || 'bg-gray-100 text-gray-800';
+                },
+
+                formatDate(dateString) {
+                    return new Date(dateString).toLocaleString();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
