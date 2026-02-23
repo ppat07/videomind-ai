@@ -33,7 +33,7 @@ def _ensure_directory_columns():
     # Column definitions for missing columns
     required_columns = {
         "source_url": "TEXT",
-        "content_type": "TEXT DEFAULT 'video'", 
+        "content_type": "TEXT DEFAULT 'VIDEO'", 
         "article_content": "TEXT",
         "word_count": "INTEGER DEFAULT 0",
         "reading_time_minutes": "INTEGER DEFAULT 0",
@@ -65,6 +65,14 @@ def _ensure_directory_columns():
                         print(f"✅ Added column: {col}")
                     except Exception as e:
                         print(f"⚠️ Could not add column {col}: {e}")
+            
+            # Fix enum values - ensure content_type uses proper enum values
+            try:
+                conn.execute(text("UPDATE directory_entries SET content_type = 'VIDEO' WHERE content_type = 'video'"))
+                conn.execute(text("UPDATE directory_entries SET content_type = 'ARTICLE' WHERE content_type = 'article'"))
+                print("✅ Fixed content_type enum values")
+            except Exception as e:
+                print(f"⚠️ Could not fix enum values: {e}")
     except Exception as e:
         print(f"⚠️ Migration error: {e}")
         # Don't fail app startup for migration errors
