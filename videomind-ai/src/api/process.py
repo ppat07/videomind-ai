@@ -14,7 +14,7 @@ from models.directory import DirectoryEntry, ContentType
 from services.youtube_service import youtube_service
 from services.transcription_service import transcription_service
 from services.article_service import article_processor
-from utils.validators import validate_video_url, validate_email
+from utils.validators import validate_video_url, validate_email, sanitize_video_url
 from utils.helpers import generate_job_id
 from utils.directory_mapper import (
     infer_category,
@@ -56,17 +56,40 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
     transcript = job.transcript or {}
     enhanced = job.ai_enhanced or {}
 
-    title = video_meta.get("title") or f"Training Video ({job.id[:8]})"
-    creator = video_meta.get("uploader") or "Unknown Creator"
+    # Check for YouTube Data API enriched metadata
+    youtube_data = video_meta.get("youtube_data_api", {})
+    channel_data = video_meta.get("channel_data", {})
+    engagement_metrics = video_meta.get("engagement_metrics", {})
+    
+    # Use enriched data when available, fallback to original
+    title = youtube_data.get("title") or video_meta.get("title") or f"Training Video ({job.id[:8]})"
+    creator = channel_data.get("title") or youtube_data.get("channel_title") or video_meta.get("uploader") or "Unknown Creator"
+    
+    # Enhanced metadata for better categorization
+    description = youtube_data.get("description", "")[:500]  # Use first 500 chars
+    tags = youtube_data.get("tags", [])
+    view_count = youtube_data.get("view_count", video_meta.get("view_count", 0))
+    like_count = youtube_data.get("like_count", 0)
+    subscriber_count = channel_data.get("subscriber_count", 0) if channel_data else 0
+    
     summary = enhanced.get("summary") or "Transcript processed and ready for training use."
     key_points = enhanced.get("key_points") or []
     topics = enhanced.get("topics") or []
 
-    category = infer_category(title, summary, topics)
+    # Enhanced category inference using tags and description
+    category = infer_category(title, summary, topics, description, tags)
     difficulty = infer_difficulty(transcript.get("word_count") or 0)
     bullets = make_5_bullets(summary, key_points)
     tools = ", ".join(topics[:6]) if topics else "OpenClaw, VideoMind AI"
-    score = infer_signal_score(enhanced, transcript)
+    
+    # Enhanced signal score using engagement metrics
+    base_score = infer_signal_score(enhanced, transcript)
+    engagement_bonus = min(20, engagement_metrics.get("engagement_score", 0) / 2)  # Cap at 20 bonus points
+    popularity_bonus = min(10, (view_count / 10000))  # 1 point per 10k views, cap at 10
+    subscriber_bonus = min(10, (subscriber_count / 100000))  # 1 point per 100k subs, cap at 10
+    
+    enriched_score = min(100, base_score + engagement_bonus + popularity_bonus + subscriber_bonus)
+    
     teaches_agent_to = build_teaches_agent_to(category)
     prompt_template = build_prompt_template(title, category, tools)
     execution_checklist = build_execution_checklist(category)
@@ -241,9 +264,16 @@ async def submit_batch_videos_for_processing(
         if not url:
             continue
 
+        # Sanitize URL first (remove timestamp and tracking parameters)
+        url = sanitize_video_url(url)
+        
         is_valid, result = validate_video_url(url)
         if not is_valid:
-            skipped.append({"youtube_url": url, "reason": f"invalid_url: {result}"})
+            skipped.append({
+                "youtube_url": url, 
+                "reason": f"invalid_url: {result}",
+                "error_type": "validation_failed"
+            })
             continue
 
         existing = db.query(VideoJob).filter(VideoJob.youtube_url == url).first()
@@ -253,7 +283,15 @@ async def submit_batch_videos_for_processing(
 
         success, video_info = youtube_service.get_video_info(url)
         if not success:
-            skipped.append({"youtube_url": url, "reason": video_info.get("error", "video_info_failed")})
+            error_msg = video_info.get("error", "video_info_failed")
+            error_type = "youtube_blocked" if "blocked" in error_msg.lower() or "bot" in error_msg.lower() else "video_info_failed"
+            
+            skipped.append({
+                "youtube_url": url, 
+                "reason": error_msg,
+                "error_type": error_type,
+                "suggestion": "Try a different video or wait before retrying" if error_type == "youtube_blocked" else None
+            })
             continue
 
         tier_prices = {
@@ -282,13 +320,41 @@ async def submit_batch_videos_for_processing(
     for item in created:
         background_tasks.add_task(process_video_background, item["job_id"])
 
+    # Generate user-friendly summary message
+    summary_parts = []
+    if len(created) > 0:
+        summary_parts.append(f"Queued {len(created)} videos")
+    if len(skipped) > 0:
+        summary_parts.append(f"Skipped {len(skipped)}")
+        
+        # Count error types for better messaging
+        error_counts = {}
+        for skip in skipped:
+            error_type = skip.get("error_type", "unknown")
+            error_counts[error_type] = error_counts.get(error_type, 0) + 1
+        
+        # Add specific error details
+        error_details = []
+        if "youtube_blocked" in error_counts:
+            error_details.append(f"{error_counts['youtube_blocked']} blocked by YouTube")
+        if "validation_failed" in error_counts:
+            error_details.append(f"{error_counts['validation_failed']} invalid URLs")
+        if "video_info_failed" in error_counts:
+            error_details.append(f"{error_counts['video_info_failed']} couldn't access video info")
+            
+        if error_details:
+            summary_parts.append(f"• {' • '.join(error_details)}")
+    
+    main_message = ". ".join(summary_parts) + "."
+    
     return {
         "success": True,
         "created_count": len(created),
         "skipped_count": len(skipped),
         "created": created,
         "skipped": skipped,
-        "message": "Batch submitted. Directory entries will auto-publish when jobs complete."
+        "message": main_message,
+        "detailed_message": "Directory entries will auto-publish when jobs complete." if len(created) > 0 else None
     }
 
 
@@ -433,11 +499,13 @@ async def process_video_background(job_id: str):
     """
     Background task to process a video job with REAL AI processing.
     Uses YouTube Transcript API for YouTube videos, Whisper for others.
+    NOW WITH YOUTUBE DATA API ENRICHMENT!
     
     Args:
         job_id: Unique job identifier
     """
     from database import SessionLocal
+    from services.youtube_data_service import youtube_data_service
     
     db = SessionLocal()
     try:
@@ -447,6 +515,34 @@ async def process_video_background(job_id: str):
             return
         
         print(f"🚀 Starting real processing for job {job_id}")
+        
+        # Step 0: YouTube Data API Metadata Enrichment (NEW!)
+        enriched_metadata = None
+        if youtube_data_service.is_available():
+            print(f"🎯 Enriching metadata with YouTube Data API...")
+            
+            success, enriched_data = youtube_data_service.get_enriched_video_data(job.youtube_url)
+            if success:
+                enriched_metadata = enriched_data
+                
+                # Update job's video metadata with enriched data
+                original_metadata = job.video_metadata or {}
+                original_metadata.update({
+                    "youtube_data_api": enriched_data["video"],
+                    "channel_data": enriched_data["channel"],
+                    "engagement_metrics": enriched_data["engagement_metrics"],
+                    "enriched_at": enriched_data["enrichment_timestamp"]
+                })
+                job.video_metadata = original_metadata
+                db.commit()
+                
+                print(f"✅ Metadata enriched: {enriched_data['video']['title']} | {enriched_data['video']['view_count']:,} views | {enriched_data['engagement_metrics']['engagement_score']:.1f}% engagement")
+                if enriched_data["channel"]:
+                    print(f"📢 Channel: {enriched_data['channel']['title']} | {enriched_data['channel']['subscriber_count']:,} subscribers")
+            else:
+                print(f"⚠️ YouTube Data API enrichment failed: {enriched_data.get('error', 'Unknown error')}")
+        else:
+            print(f"ℹ️ YouTube Data API not configured - skipping metadata enrichment")
         
         # Determine processing method
         processing_method = youtube_service.determine_processing_method(job.youtube_url)

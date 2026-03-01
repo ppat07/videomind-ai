@@ -11,8 +11,14 @@ src_path = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_path))
 
 import os
-os.environ.setdefault("SECRET_KEY", "demo-key-for-testing")
+os.environ.setdefault("SECRET_KEY", "demo-key-for-testing") 
 os.environ.setdefault("OPENAI_API_KEY", "demo-key")
+
+# Use production database URL if provided
+if "DATABASE_URL" not in os.environ:
+    # You can set this to your Supabase URL for production seeding
+    # os.environ["DATABASE_URL"] = "your-supabase-url"
+    pass
 
 def bulk_add_video_jobs():
     """Add multiple video job entries to reach 100+ total."""

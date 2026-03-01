@@ -36,8 +36,8 @@ def _contains_any(text: str, terms: List[str]) -> bool:
     return False
 
 
-def infer_category(title: str, summary: str, topics: List[str] = None) -> str:
-    corpus = " ".join([title or "", summary or "", " ".join(topics or [])]).lower()
+def infer_category(title: str, summary: str, topics: List[str] = None, description: str = "", tags: List[str] = None) -> str:
+    corpus = " ".join([title or "", summary or "", " ".join(topics or []), description or "", " ".join(tags or [])]).lower()
 
     # AI/Automation-specific categories (highest priority)
     if _contains_any(corpus, ["setup", "install", "onboard", "getting started", "configuration"]):

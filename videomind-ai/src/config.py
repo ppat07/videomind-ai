@@ -3,6 +3,7 @@ VideoMind AI Configuration
 Handles all environment variables and application settings.
 """
 import os
+from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import validator
@@ -11,7 +12,14 @@ from pydantic import validator
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=[
+            ".env", 
+            "../.env", 
+            str(Path(__file__).parent.parent / ".env")
+        ], 
+        extra="ignore"
+    )
     
     # App Configuration
     app_name: str = "VideoMind AI"

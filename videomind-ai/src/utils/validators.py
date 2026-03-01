@@ -3,7 +3,68 @@ Validation utilities for VideoMind AI.
 """
 import re
 from typing import Optional, Tuple
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+
+
+def sanitize_video_url(url: str) -> str:
+    """
+    Sanitize video URL by removing unnecessary parameters.
+    
+    Args:
+        url: Original video URL
+        
+    Returns:
+        Cleaned URL with only essential parameters
+    """
+    try:
+        parsed = urlparse(url.strip())
+        
+        # YouTube URL cleaning
+        if 'youtube.com' in parsed.netloc or 'youtu.be' in parsed.netloc:
+            query_params = parse_qs(parsed.query)
+            
+            # Keep only essential YouTube parameters
+            essential_params = {}
+            if 'v' in query_params:
+                essential_params['v'] = query_params['v']
+            if 'list' in query_params and 'playlist' not in url.lower():
+                # Only keep playlist if it's explicitly a playlist URL
+                pass
+            
+            # Remove timestamp parameters (t, start) - they're not needed for full video processing
+            # Remove tracking parameters (feature, si, etc.)
+            
+            # Rebuild clean URL
+            clean_query = urlencode(essential_params, doseq=True)
+            clean_url = urlunparse((
+                parsed.scheme or 'https',
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                clean_query,
+                ''  # Remove fragment
+            ))
+            
+            return clean_url
+        
+        # Rumble URL cleaning
+        elif 'rumble.com' in parsed.netloc:
+            # Rumble URLs are usually clean, just remove fragments
+            return urlunparse((
+                parsed.scheme or 'https',
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                ''  # Remove fragment
+            ))
+        
+        # For other URLs, basic cleaning
+        return url.strip()
+        
+    except Exception:
+        # If parsing fails, return original URL
+        return url.strip()
 
 
 def validate_video_url(url: str) -> Tuple[bool, Optional[str]]:
@@ -73,6 +134,22 @@ def validate_youtube_url(url: str) -> Tuple[bool, Optional[str]]:
     if is_valid and isinstance(result, dict):
         return True, result.get("video_id")
     return False, result
+
+
+def extract_video_id_from_url(url: str) -> Optional[str]:
+    """
+    Extract video ID from a YouTube URL.
+    
+    Args:
+        url: YouTube URL
+        
+    Returns:
+        Video ID if found, None otherwise
+    """
+    is_valid, result = validate_video_url(url)
+    if is_valid and isinstance(result, dict) and result.get("platform") == "youtube":
+        return result.get("video_id")
+    return None
 
 
 def extract_video_info(url: str) -> dict:

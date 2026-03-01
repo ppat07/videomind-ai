@@ -27,14 +27,17 @@ class YouTubeService:
         self.temp_dir.mkdir(exist_ok=True)
         self.ffmpeg_location = self._find_ffmpeg_location()
         
-        # Anti-detection user agents (rotate randomly)
+        # Enhanced anti-detection user agents (rotate randomly)
         self.user_agents = [
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15'
         ]
+        
+        # Cookie storage for session persistence
+        self.cookies_file = self.temp_dir / "youtube_cookies.txt"
     
     def _find_ffmpeg_location(self) -> Optional[str]:
         """Find ffmpeg installation location."""
@@ -99,22 +102,32 @@ class YouTubeService:
                 'Pragma': 'no-cache',
             },
             
-            # Enhanced extractor arguments
+            # Enhanced extractor arguments for bot bypass
             'extractor_args': {
                 'youtube': {
                     'skip': ['hls', 'dash'],  # Skip problematic formats
-                    'player_skip': ['configs', 'webpage'],
-                    'player_client': ['android', 'web'],  # Use multiple clients
+                    'player_skip': [],  # Don't skip configs to appear more legitimate
+                    'player_client': ['android', 'ios', 'web'],  # Use mobile clients to bypass
+                    'innertube_host': 'www.youtube.com',
+                    'innertube_key': None,  # Let yt-dlp discover
                 },
                 'youtubetab': {
-                    'skip': ['webpage']
+                    'skip': []
                 }
             },
             
-            # Throttling and delays for anti-detection
-            'sleep_interval_requests': random.uniform(1, 3),  # Random delay between requests
-            'sleep_interval': random.uniform(0.5, 2),         # Random delay between operations
-            'sleep_interval_subtitles': random.uniform(1, 2),
+            # Cookie handling for session persistence
+            'cookiefile': str(self.cookies_file) if self.cookies_file.exists() else None,
+            'cookiesfrombrowser': ('chrome',) if not self.cookies_file.exists() else None,
+            
+            # Enhanced throttling and delays for bot detection avoidance
+            'sleep_interval_requests': random.uniform(3, 6),  # Even longer delay to simulate human interaction
+            'sleep_interval': random.uniform(2, 4),           # Further increasing delays to mimic human activity
+            'sleep_interval_subtitles': random.uniform(2, 4),
+            
+            # Additional anti-detection measures
+            'ignoreerrors': False,  # Don't ignore errors, handle them properly
+            'extract_flat': False,  # Full extraction for better legitimacy
             
             # Additional anti-bot measures
             'geo_bypass': True,
@@ -177,11 +190,28 @@ class YouTubeService:
         return True
     
     def _retry_with_backoff(self, func, max_retries: int = 3, base_delay: float = 1.0):
-        """Retry function with exponential backoff."""
+        """Retry function with exponential backoff and YouTube-specific handling."""
         for attempt in range(max_retries):
             try:
                 return func()
             except Exception as e:
+                error_str = str(e).lower()
+                
+                # Check for YouTube bot detection
+                if any(phrase in error_str for phrase in [
+                    'sign in to confirm', 'not a bot', 'confirm your age',
+                    'http error 403', 'forbidden', 'captcha'
+                ]):
+                    if attempt < max_retries - 1:
+                        # Use longer delays for bot detection
+                        delay = base_delay * (3 ** attempt) + random.uniform(5, 15)
+                        print(f"YouTube bot detection - waiting {delay:.1f}s before retry {attempt + 2}")
+                        time.sleep(delay)
+                        continue
+                    else:
+                        # Last attempt failed - provide helpful error
+                        raise Exception(f"YouTube blocked access after {max_retries} attempts. Try using YouTube Transcript API instead.")
+                
                 if attempt == max_retries - 1:
                     raise e
                 
