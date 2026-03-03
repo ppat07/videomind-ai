@@ -557,13 +557,9 @@ class YouTubeService:
             Tuple of (success, result_dict)
         """
         try:
-            # Get video info first
-            success, video_info = self.get_video_info(url)
-            if not success:
-                return False, video_info
-            
-            # Extract YouTube video ID
-            video_id = video_info.get("video_id")
+            # Extract video ID directly from URL (avoids yt-dlp bot detection)
+            from utils.validators import extract_video_id_from_url
+            video_id = extract_video_id_from_url(url)
             if not video_id:
                 return False, {"error": "Could not extract video ID from YouTube URL"}
             
