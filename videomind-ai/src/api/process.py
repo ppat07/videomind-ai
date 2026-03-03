@@ -234,7 +234,8 @@ async def submit_video_for_processing(
         db.refresh(db_job)
         
         # Check if payment is required (Stripe is configured)
-        if settings.stripe_secret_key and settings.stripe_publishable_key:
+        # TEMPORARILY DISABLED FOR TESTING
+        if False and settings.stripe_secret_key and settings.stripe_publishable_key:
             # Payment required - redirect to payment page
             return {
                 "success": True,
