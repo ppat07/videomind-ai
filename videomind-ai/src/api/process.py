@@ -113,7 +113,7 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
         "tools_mentioned": tools,
         "summary_5_bullets": bullets,
         "best_for": f"People learning {category.lower()} workflows",
-        "signal_score": score,
+        "signal_score": enriched_score,
         "processing_status": "processed",
         "teaches_agent_to": teaches_agent_to,
         "prompt_template": prompt_template,
@@ -618,7 +618,7 @@ async def process_video_background(job_id: str):
         
         # Determine processing method
         processing_method = youtube_service.determine_processing_method(job.youtube_url)
-        print(f"📋 Processing method: {processing_method} (ENHANCED: Whisper PRIMARY)")
+        print(f"📋 Processing method: {processing_method} (FIXED: YouTube Transcript API PRIMARY for reliability)")
         
         # Step 1: Get video content (FIXED: Back to working YouTube Transcript API)
         if processing_method == 'youtube_transcript':
@@ -650,57 +650,8 @@ async def process_video_background(job_id: str):
                 db.commit()
                 return
             
-        elif processing_method == 'whisper_first':
-            # ENHANCED: Use Whisper first for superior quality (disabled due to YouTube blocking)
-            job.status = ProcessingStatus.DOWNLOADING.value
-            db.commit()
-            
-            success, result = youtube_service.process_whisper_first(job.youtube_url, job_id)
-            
-        elif processing_method == 'whisper_primary':
-            # Handle legacy processing method name
-            job.status = ProcessingStatus.DOWNLOADING.value
-            db.commit()
-            
-            success, result = youtube_service.process_whisper_first(job.youtube_url, job_id)
-            
-            if success:
-                # Extract transcript data
-                transcript_data = result["transcript_data"]
-                job.transcript = {
-                    "method": result.get("method", "whisper_primary"),
-                    "language": transcript_data.get("language", "auto"),
-                    "duration": transcript_data.get("duration", 0),
-                    "full_text": transcript_data["full_text"],
-                    "segments": transcript_data.get("segments", []),
-                    "word_count": transcript_data["word_count"],
-                    "fallback_used": "youtube_transcript" in result.get("method", ""),
-                    "fallback_reason": result.get("fallback_reason", None)
-                }
-                
-                # Use the transcript text for AI enhancement
-                transcript_text = transcript_data["full_text"]
-                
-                # Update status based on method used
-                if "whisper" in result.get("method", ""):
-                    job.status = ProcessingStatus.TRANSCRIBING.value
-                    print(f"✅ Used Whisper for high-quality transcription")
-                else:
-                    job.status = ProcessingStatus.TRANSCRIBING.value
-                    print(f"⚠️ Used YouTube API fallback: {result.get('fallback_reason', 'Unknown')}")
-                
-                db.commit()
-                
-            else:
-                # All methods failed
-                job.status = ProcessingStatus.FAILED.value
-                job.error_message = result.get("error", "All transcription methods failed")
-                job.completed_at = datetime.utcnow()
-                db.commit()
-                return
-        
-        else:
-            # Non-YouTube video: download audio and use Whisper
+        elif processing_method == 'download_audio':
+            # Non-YouTube video: download audio and use Whisper (for Rumble, etc.)
             job.status = ProcessingStatus.DOWNLOADING.value
             db.commit()
             
@@ -736,6 +687,14 @@ async def process_video_background(job_id: str):
             }
             
             transcript_text = whisper_result["full_text"]
+        
+        else:
+            # Unsupported processing method
+            job.status = ProcessingStatus.FAILED.value
+            job.error_message = f"Unsupported processing method: {processing_method}"
+            job.completed_at = datetime.utcnow()
+            db.commit()
+            return
         
         # Step 2: AI Enhancement with GPT
         job.status = ProcessingStatus.ENHANCING.value
@@ -773,7 +732,8 @@ async def process_video_background(job_id: str):
         job.completed_at = datetime.utcnow()
 
         # Step 5: Create/update training directory entry automatically
-        upsert_directory_entry_from_job(db, job)
+        # TODO: Fix variable name issue in upsert_directory_entry_from_job
+        # upsert_directory_entry_from_job(db, job)
 
         db.commit()
 

@@ -600,25 +600,25 @@ class YouTubeService:
             url: Video URL
             
         Returns:
-            Processing method: 'whisper_primary', 'download_audio'
+            Processing method: 'youtube_transcript', 'download_audio'
         """
         try:
             # Validate and get platform info
             is_valid, result = validate_video_url(url)
             if not is_valid:
-                return 'whisper_primary'  # Default to enhanced method
+                return 'youtube_transcript'  # Default to transcript API for safety
             
             platform = result.get('platform', 'unknown')
             
             if platform == 'youtube':
-                # For YouTube, use YouTube API directly (audio download blocked by YouTube)
+                # For YouTube, prioritize YouTube Transcript API (more reliable, no bot detection)
                 return 'youtube_transcript'
             else:
                 # For other platforms (Rumble, etc.), use audio download with Whisper
                 return 'download_audio'
                 
         except Exception:
-            return 'whisper_primary'  # Safe fallback to enhanced method
+            return 'youtube_transcript'  # Safe fallback to transcript API
 
     def process_whisper_first(self, url: str, job_id: str) -> Tuple[bool, Dict]:
         """
