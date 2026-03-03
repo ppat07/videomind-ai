@@ -327,7 +327,13 @@ async def submit_batch_videos_for_processing(
             skipped.append({"youtube_url": url, "reason": f"already_exists:{existing.status}", "job_id": existing.id})
             continue
 
-        success, video_info = youtube_service.get_video_info(url)
+        # Try YouTube Data API first for video info (avoids bot detection)
+        if youtube_data_service.is_available():
+            success, video_info = youtube_data_service.get_basic_video_info(url)
+        else:
+            # Fallback to yt-dlp method
+            success, video_info = youtube_service.get_video_info(url)
+            
         if not success:
             error_msg = video_info.get("error", "video_info_failed")
             error_type = "youtube_blocked" if "blocked" in error_msg.lower() or "bot" in error_msg.lower() else "video_info_failed"
@@ -336,7 +342,7 @@ async def submit_batch_videos_for_processing(
                 "youtube_url": url, 
                 "reason": error_msg,
                 "error_type": error_type,
-                "suggestion": "Try a different video or wait before retrying" if error_type == "youtube_blocked" else None
+                "suggestion": "Try using YouTube Data API with proper authentication" if error_type == "youtube_blocked" else None
             })
             continue
 

@@ -228,6 +228,47 @@ class YouTubeDataService:
         
         return True, channel_info
     
+    def get_basic_video_info(self, url: str) -> Tuple[bool, Dict]:
+        """
+        Get basic video information using YouTube Data API (compatible with yt-dlp format).
+        This replaces the yt-dlp get_video_info call to avoid bot detection.
+        
+        Args:
+            url: YouTube URL
+            
+        Returns:
+            Tuple of (success, video_info_dict) in yt-dlp compatible format
+        """
+        try:
+            video_id = extract_video_id_from_url(url)
+            if not video_id:
+                return False, {"error": "Could not extract video ID from URL"}
+            
+            success, video_data = self.get_video_info(video_id)
+            if not success:
+                return False, video_data
+            
+            # Convert to yt-dlp compatible format
+            video_info = {
+                "id": video_data["id"],
+                "title": video_data["snippet"]["title"],
+                "description": video_data["snippet"]["description"],
+                "duration": self._parse_duration(video_data["contentDetails"]["duration"]),
+                "view_count": int(video_data["statistics"].get("viewCount", 0)),
+                "upload_date": video_data["snippet"]["publishedAt"][:10].replace("-", ""),
+                "uploader": video_data["snippet"]["channelTitle"],
+                "uploader_id": video_data["snippet"]["channelId"],
+                "channel_id": video_data["snippet"]["channelId"],
+                "thumbnail": video_data["snippet"]["thumbnails"]["high"]["url"],
+                "webpage_url": url,
+                "success": True
+            }
+            
+            return True, video_info
+            
+        except Exception as e:
+            return False, {"error": f"YouTube Data API error: {str(e)}"}
+
     def get_enriched_video_data(self, youtube_url: str) -> Tuple[bool, Dict]:
         """
         Get comprehensive video and channel data from YouTube Data API.
