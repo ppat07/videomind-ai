@@ -2,16 +2,18 @@
 VideoMind AI - Main FastAPI Application
 Turn any video into AI training data.
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from config import settings
-from database import create_tables
-from api import health, process, directory, tasks, newsletter, jobs
+from database import create_tables, get_database
+from api import health, process, directory, tasks, newsletter, jobs, queue_management
+from models.video import VideoJob, ProcessingTier
 from datetime import datetime
+from sqlalchemy.orm import Session
 import os
 
 # Create FastAPI app
@@ -41,7 +43,7 @@ app.add_middleware(
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="src/templates")
 
 # Include API routers
 app.include_router(health.router, prefix="/health", tags=["Health"])
@@ -50,6 +52,11 @@ app.include_router(directory.router, prefix="/api", tags=["Directory"])
 app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
 app.include_router(jobs.router, prefix="/api", tags=["Job Management"])
+app.include_router(queue_management.router, prefix="/api/queue", tags=["Queue Management"])
+
+# Import and include payments router
+from api import payments
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
 
 @app.on_event("startup")
@@ -103,6 +110,43 @@ async def jobs_page(request: Request):
     return templates.TemplateResponse(
         "jobs.html",
         {"request": request, "app_name": settings.app_name}
+    )
+
+
+@app.get("/queue", response_class=HTMLResponse, include_in_schema=False)
+async def queue_dashboard_page(request: Request):
+    """Serve queue monitoring dashboard."""
+    return templates.TemplateResponse(
+        "queue_dashboard.html",
+        {"request": request, "app_name": settings.app_name}
+    )
+
+
+@app.get("/payment/{job_id}", response_class=HTMLResponse, include_in_schema=False)
+async def payment_page(request: Request, job_id: str, db: Session = Depends(get_database)):
+    """Serve the payment page for a specific job."""
+    # Get job details
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Get pricing for tier
+    from api.payments import PRICING_TIERS
+    amount_cents = PRICING_TIERS.get(ProcessingTier(job.tier), PRICING_TIERS[ProcessingTier.BASIC])
+    amount_dollars = amount_cents / 100
+    
+    return templates.TemplateResponse(
+        "payment.html",
+        {
+            "request": request, 
+            "app_name": settings.app_name,
+            "job_id": job_id,
+            "video_url": job.youtube_url,
+            "tier": job.tier,
+            "email": job.email,
+            "amount": amount_dollars,
+            "stripe_publishable_key": settings.stripe_publishable_key or ""
+        }
     )
 
 

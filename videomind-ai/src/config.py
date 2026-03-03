@@ -57,8 +57,14 @@ class Settings(BaseSettings):
     
     # Processing Limits
     max_video_duration_minutes: int = 120
-    max_concurrent_jobs: int = 5
+    max_concurrent_jobs: int = 100  # Increased for Redis queue system
     file_cleanup_days: int = 7
+    
+    # Queue System Configuration
+    queue_worker_count: int = 5  # Default worker count
+    queue_max_retries: int = 3
+    queue_job_timeout_seconds: int = 1800  # 30 minutes
+    queue_batch_priority: str = "low"  # Priority for batch jobs
     
     # Pricing Configuration (in cents)
     basic_tier_price: int = 300  # $3.00

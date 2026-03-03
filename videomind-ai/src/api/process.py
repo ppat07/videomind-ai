@@ -27,6 +27,7 @@ from utils.directory_mapper import (
     build_agent_training_script,
 )
 from config import settings
+from services.job_queue import job_queue, JobPriority
 
 router = APIRouter()
 
@@ -223,22 +224,67 @@ async def submit_video_for_processing(
         db.commit()
         db.refresh(db_job)
         
-        # Start background processing
-        background_tasks.add_task(process_video_background, job_id)
-        
-        return {
-            "success": True,
-            "job_id": job_id,
-            "message": "Video submitted for processing",
-            "video_info": {
-                "title": video_info.get("title"),
-                "duration": video_info.get("duration_formatted"),
-                "uploader": video_info.get("uploader")
-            },
-            "estimated_cost": estimated_cost,
-            "tier": job_data.tier,
-            "status": ProcessingStatus.PENDING.value
-        }
+        # Check if payment is required (Stripe is configured)
+        if settings.stripe_secret_key and settings.stripe_publishable_key:
+            # Payment required - redirect to payment page
+            return {
+                "success": True,
+                "job_id": job_id,
+                "message": "Video prepared for processing. Complete payment to start processing.",
+                "payment_required": True,
+                "payment_url": f"/payment/{job_id}",
+                "video_info": {
+                    "title": video_info.get("title"),
+                    "duration": video_info.get("duration_formatted"),
+                    "uploader": video_info.get("uploader")
+                },
+                "estimated_cost": estimated_cost,
+                "tier": job_data.tier,
+                "status": "payment_required"
+            }
+        else:
+            # No payment required - start processing via queue system
+            success = await job_queue.enqueue_job(
+                job_id=job_id,
+                priority=JobPriority.NORMAL,
+                metadata={
+                    "tier": job_data.tier,
+                    "email": job_data.email,
+                    "video_title": video_info.get("title"),
+                    "video_duration": video_info.get("duration"),
+                }
+            )
+            
+            if success:
+                message = "Video queued for processing"
+                if job_queue.available:
+                    queue_stats = await job_queue.get_queue_stats()
+                    total_queued = queue_stats.get("total_queued", 0)
+                    if total_queued > 0:
+                        message += f" ({total_queued} jobs ahead in queue)"
+                else:
+                    # Fallback to direct processing if queue not available
+                    background_tasks.add_task(process_video_background, job_id)
+                    message = "Video submitted for processing (direct mode)"
+            else:
+                # Fallback to direct processing
+                background_tasks.add_task(process_video_background, job_id)
+                message = "Video submitted for processing (fallback mode)"
+            
+            return {
+                "success": True,
+                "job_id": job_id,
+                "message": message,
+                "payment_required": False,
+                "video_info": {
+                    "title": video_info.get("title"),
+                    "duration": video_info.get("duration_formatted"),
+                    "uploader": video_info.get("uploader")
+                },
+                "estimated_cost": 0.0,
+                "tier": job_data.tier,
+                "status": ProcessingStatus.PENDING.value
+            }
         
     except HTTPException:
         raise
@@ -317,8 +363,28 @@ async def submit_batch_videos_for_processing(
 
     db.commit()
 
+    # Queue jobs for processing with bulk priority
+    queued_count = 0
     for item in created:
-        background_tasks.add_task(process_video_background, item["job_id"])
+        success = await job_queue.enqueue_job(
+            job_id=item["job_id"],
+            priority=JobPriority.LOW,  # Bulk jobs get lower priority
+            metadata={
+                "tier": batch_data.tier,
+                "email": batch_data.email,
+                "video_title": item.get("title"),
+                "batch_processing": True
+            }
+        )
+        
+        if success:
+            queued_count += 1
+        else:
+            # Fallback to direct processing if queue fails
+            background_tasks.add_task(process_video_background, item["job_id"])
+    
+    if queued_count > 0:
+        print(f"📦 Batch: Queued {queued_count}/{len(created)} jobs via Redis queue")
 
     # Generate user-friendly summary message
     summary_parts = []

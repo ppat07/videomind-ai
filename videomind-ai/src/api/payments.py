@@ -1,0 +1,275 @@
+"""
+Payment processing endpoints for VideoMind AI.
+Handles Stripe payment intents and webhooks for video processing purchases.
+"""
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from sqlalchemy.orm import Session
+from datetime import datetime
+from pydantic import BaseModel
+from typing import Dict, Any
+import stripe
+import json
+
+from database import get_database
+from models.video import VideoJob, ProcessingTier
+from config import settings
+
+# Configure Stripe
+if settings.stripe_secret_key:
+    stripe.api_key = settings.stripe_secret_key
+
+router = APIRouter()
+
+# Pricing configuration (in cents)
+PRICING_TIERS = {
+    ProcessingTier.BASIC: 300,     # $3.00 - transcript + summary + 5 Q&As
+    ProcessingTier.DETAILED: 500,  # $5.00 - enhanced + 10 Q&As
+    ProcessingTier.BULK: 200,      # $2.00 - bulk discount (5+ videos)
+}
+
+class PaymentIntentRequest(BaseModel):
+    """Request to create a payment intent."""
+    job_id: str
+    tier: ProcessingTier
+    email: str
+
+class PaymentIntentResponse(BaseModel):
+    """Response containing payment intent details."""
+    client_secret: str
+    amount: int
+    currency: str = "usd"
+
+@router.post("/create-payment-intent", response_model=PaymentIntentResponse)
+async def create_payment_intent(
+    request: PaymentIntentRequest,
+    db: Session = Depends(get_database)
+):
+    """
+    Create a Stripe payment intent for video processing.
+    
+    Args:
+        request: Payment intent request with job_id and tier
+        db: Database session
+        
+    Returns:
+        PaymentIntentResponse with client_secret for frontend
+        
+    Raises:
+        HTTPException: If Stripe not configured or job not found
+    """
+    if not settings.stripe_secret_key:
+        raise HTTPException(
+            status_code=503, 
+            detail="Payment processing is not configured"
+        )
+    
+    # Verify job exists
+    job = db.query(VideoJob).filter(VideoJob.id == request.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Get pricing for tier
+    amount = PRICING_TIERS.get(request.tier, PRICING_TIERS[ProcessingTier.BASIC])
+    
+    try:
+        # Create Stripe payment intent
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency="usd",
+            metadata={
+                "job_id": request.job_id,
+                "email": request.email,
+                "tier": request.tier.value,
+                "service": "video_processing"
+            },
+            receipt_email=request.email,
+            description=f"VideoMind AI - {request.tier.value.title()} video processing"
+        )
+        
+        # Update job with payment intent ID
+        job.payment_intent_id = intent.id
+        job.cost = amount / 100  # Store in dollars
+        db.commit()
+        
+        return PaymentIntentResponse(
+            client_secret=intent.client_secret,
+            amount=amount
+        )
+        
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Payment error: {str(e)}")
+
+@router.post("/webhook")
+async def stripe_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_database)
+):
+    """
+    Handle Stripe webhook events for payment processing.
+    
+    Args:
+        request: Raw webhook request from Stripe
+        background_tasks: FastAPI background tasks
+        db: Database session
+        
+    Returns:
+        Success response for Stripe
+        
+    Raises:
+        HTTPException: If webhook validation fails
+    """
+    if not settings.stripe_webhook_secret:
+        raise HTTPException(
+            status_code=503,
+            detail="Webhook validation is not configured"
+        )
+    
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    try:
+        # Verify webhook signature
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.stripe_webhook_secret
+        )
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    
+    # Handle payment success
+    if event["type"] == "payment_intent.succeeded":
+        background_tasks.add_task(
+            handle_payment_success,
+            event["data"]["object"],
+            db
+        )
+    
+    # Handle payment failure
+    elif event["type"] == "payment_intent.payment_failed":
+        background_tasks.add_task(
+            handle_payment_failure,
+            event["data"]["object"],
+            db
+        )
+    
+    return {"status": "success"}
+
+async def handle_payment_success(payment_intent: Dict[str, Any], db: Session):
+    """
+    Handle successful payment by starting video processing.
+    
+    Args:
+        payment_intent: Stripe payment intent object
+        db: Database session
+    """
+    job_id = payment_intent["metadata"].get("job_id")
+    if not job_id:
+        return
+    
+    # Update job status to paid and trigger processing
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+    if job:
+        job.status = "paid"  # Custom status indicating payment received
+        db.commit()
+        
+        # Import here to avoid circular imports
+        from services.video_processor import start_processing
+        await start_processing(job_id, db)
+
+async def handle_payment_failure(payment_intent: Dict[str, Any], db: Session):
+    """
+    Handle failed payment by updating job status.
+    
+    Args:
+        payment_intent: Stripe payment intent object
+        db: Database session
+    """
+    job_id = payment_intent["metadata"].get("job_id")
+    if not job_id:
+        return
+    
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+    if job:
+        job.status = "payment_failed"
+        job.error_message = "Payment processing failed"
+        db.commit()
+
+@router.get("/pricing")
+async def get_pricing():
+    """
+    Get current pricing information for all tiers.
+    
+    Returns:
+        Dict with pricing for each tier in dollars
+    """
+    return {
+        tier.value: {
+            "price_usd": amount / 100,
+            "price_cents": amount,
+            "features": get_tier_features(tier)
+        }
+        for tier, amount in PRICING_TIERS.items()
+    }
+
+def get_tier_features(tier: ProcessingTier) -> Dict[str, Any]:
+    """Get feature list for a processing tier."""
+    features = {
+        ProcessingTier.BASIC: [
+            "Full transcript with timestamps",
+            "AI-generated summary",
+            "5 practice Q&As",
+            "JSON and PDF downloads"
+        ],
+        ProcessingTier.DETAILED: [
+            "Full transcript with timestamps", 
+            "Enhanced AI summary with insights",
+            "10 practice Q&As with explanations",
+            "Key concept extraction",
+            "Learning objectives",
+            "JSON, PDF, and text downloads"
+        ],
+        ProcessingTier.BULK: [
+            "Same as Basic tier",
+            "Bulk discount for 5+ videos",
+            "Priority processing",
+            "API access included"
+        ]
+    }
+    return features.get(tier, [])
+
+@router.get("/payment-status/{job_id}")
+async def get_payment_status(job_id: str, db: Session = Depends(get_database)):
+    """
+    Get payment status for a specific job.
+    
+    Args:
+        job_id: Video job identifier
+        db: Database session
+        
+    Returns:
+        Payment status information
+        
+    Raises:
+        HTTPException: If job not found
+    """
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    payment_status = "unpaid"
+    if job.payment_intent_id:
+        try:
+            intent = stripe.PaymentIntent.retrieve(job.payment_intent_id)
+            payment_status = intent.status
+        except stripe.error.StripeError:
+            payment_status = "error"
+    
+    return {
+        "job_id": job_id,
+        "payment_status": payment_status,
+        "amount": job.cost,
+        "tier": job.tier,
+        "processing_status": job.status
+    }

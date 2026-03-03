@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - Complete Payment</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-gray-900">{{ app_name }}</h1>
+            <p class="text-gray-600 mt-2">Complete your video processing payment</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-2xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md p-8">
+            
+            <!-- Order Summary -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Video URL:</span>
+                        <span class="font-mono text-sm" id="videoUrl">{{ video_url }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Processing Tier:</span>
+                        <span class="font-semibold capitalize" id="tierDisplay">{{ tier }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Features:</span>
+                        <div class="text-right">
+                            <ul id="featureList" class="text-sm text-gray-600">
+                                <!-- Features will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>Total:</span>
+                        <span id="totalAmount">${{ amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <form id="payment-form">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Payment Information</h3>
+                    <div id="card-element" class="p-4 border border-gray-300 rounded-lg">
+                        <!-- Stripe Elements will create form elements here -->
+                    </div>
+                    <div id="card-errors" role="alert" class="mt-2 text-red-600 text-sm"></div>
+                </div>
+
+                <!-- Email Confirmation -->
+                <div class="mb-6">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address (for results delivery)
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        value="{{ email }}" 
+                        readonly
+                        class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md"
+                    >
+                </div>
+
+                <button 
+                    id="submit-payment" 
+                    type="submit"
+                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    <span id="button-text">Complete Payment</span>
+                    <span id="spinner" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                    </span>
+                </button>
+            </form>
+
+            <!-- Payment Success/Error Messages -->
+            <div id="payment-result" class="mt-6 hidden">
+                <div id="success-message" class="hidden p-4 bg-green-100 text-green-800 rounded-lg">
+                    <h4 class="font-semibold">Payment Successful!</h4>
+                    <p class="mt-2">Your video is now being processed. You'll receive an email with the results when it's complete.</p>
+                    <div class="mt-4">
+                        <a href="/jobs" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                            Track Progress
+                        </a>
+                    </div>
+                </div>
+                
+                <div id="error-message" class="hidden p-4 bg-red-100 text-red-800 rounded-lg">
+                    <h4 class="font-semibold">Payment Failed</h4>
+                    <p class="mt-2" id="error-text">Something went wrong. Please try again.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-8 text-center">
+            <a href="/" class="text-blue-600 hover:text-blue-800">← Back to Home</a>
+        </div>
+    </main>
+
+    <script>
+        // Get job details from URL parameters or template context
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('job_id') || '{{ job_id }}';
+        const tier = '{{ tier }}';
+        const amount = {{ amount }};
+        const email = '{{ email }}';
+
+        // Initialize Stripe
+        const stripe = Stripe('{{ stripe_publishable_key }}');
+        const elements = stripe.elements();
+
+        // Create card element
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                        color: '#aab7c4',
+                    },
+                },
+                invalid: {
+                    color: '#9e2146',
+                },
+            },
+        });
+
+        cardElement.mount('#card-element');
+
+        // Handle card validation errors
+        cardElement.on('change', ({error}) => {
+            const displayError = document.getElementById('card-errors');
+            if (error) {
+                displayError.textContent = error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        // Load pricing information and populate features
+        async function loadPricingInfo() {
+            try {
+                const response = await axios.get('/api/payments/pricing');
+                const tierInfo = response.data[tier];
+                
+                if (tierInfo) {
+                    const featureList = document.getElementById('featureList');
+                    featureList.innerHTML = '';
+                    tierInfo.features.forEach(feature => {
+                        const li = document.createElement('li');
+                        li.textContent = '• ' + feature;
+                        featureList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load pricing info:', error);
+            }
+        }
+
+        // Handle form submission
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            setLoading(true);
+
+            try {
+                // Create payment intent
+                const paymentResponse = await axios.post('/api/payments/create-payment-intent', {
+                    job_id: jobId,
+                    tier: tier,
+                    email: email
+                });
+
+                const { client_secret } = paymentResponse.data;
+
+                // Confirm payment with Stripe
+                const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            email: email,
+                        },
+                    }
+                });
+
+                if (error) {
+                    showError(error.message);
+                } else if (paymentIntent.status === 'succeeded') {
+                    showSuccess();
+                }
+            } catch (error) {
+                showError(error.response?.data?.detail || 'Payment processing failed');
+            }
+            
+            setLoading(false);
+        });
+
+        function setLoading(loading) {
+            const button = document.getElementById('submit-payment');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+            
+            if (loading) {
+                button.disabled = true;
+                buttonText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+            } else {
+                button.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('payment-result').classList.remove('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('payment-form').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('payment-result').classList.remove('hidden');
+            document.getElementById('error-message').classList.remove('hidden');
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('error-text').textContent = message;
+        }
+
+        // Load pricing info on page load
+        loadPricingInfo();
+    </script>
+</body>
+</html>
