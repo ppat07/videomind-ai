@@ -118,7 +118,8 @@ class YouTubeService:
             
             # Cookie handling for session persistence
             'cookiefile': str(self.cookies_file) if self.cookies_file.exists() else None,
-            'cookiesfrombrowser': ('chrome',) if not self.cookies_file.exists() else None,
+            # Disable browser cookie loading on server environments
+            'cookiesfrombrowser': None,
             
             # Enhanced throttling and delays for bot detection avoidance
             'sleep_interval_requests': random.uniform(3, 6),  # Even longer delay to simulate human interaction
