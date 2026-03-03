@@ -12,6 +12,7 @@ from database import get_database
 from models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
 from models.directory import DirectoryEntry, ContentType
 from services.youtube_service import youtube_service
+from services.youtube_data_service import YouTubeDataService
 from services.transcription_service import transcription_service
 from services.article_service import article_processor
 from utils.validators import validate_video_url, validate_email, sanitize_video_url
@@ -193,8 +194,18 @@ async def submit_video_for_processing(
                 "note": "This video has already been processed and added to the training directory"
             }
         
-        # Get video information first
-        success, video_info = youtube_service.get_video_info(str(job_data.youtube_url))
+        # Get video information first (FIXED: Use YouTube Data API to avoid bot detection)
+        youtube_data_service = YouTubeDataService()
+        
+        if youtube_data_service.is_available():
+            # Use YouTube Data API to avoid bot detection
+            success, video_info = youtube_data_service.get_basic_video_info(str(job_data.youtube_url))
+            print(f"✅ Used YouTube Data API for video info (avoiding bot detection)")
+        else:
+            # Fallback to yt-dlp method only if Data API unavailable
+            success, video_info = youtube_service.get_video_info(str(job_data.youtube_url))
+            print(f"⚠️ Fallback to yt-dlp for video info (YouTube Data API unavailable)")
+            
         if not success:
             raise HTTPException(status_code=400, detail=video_info.get("error", "Could not retrieve video information"))
         
