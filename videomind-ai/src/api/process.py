@@ -620,7 +620,11 @@ async def process_video_background(job_id: str):
         processing_method = youtube_service.determine_processing_method(job.youtube_url)
         print(f"📋 Processing method: {processing_method} (FIXED: YouTube Transcript API PRIMARY for reliability)")
         
-        # Step 1: Get video content (FIXED: Back to working YouTube Transcript API)
+        # Step 1: Get video content (FORCE YouTube Transcript API for ALL YouTube videos)
+        # OVERRIDE: Always use YouTube Transcript API for YouTube videos to avoid bot detection
+        if 'youtube.com' in job.youtube_url or 'youtu.be' in job.youtube_url:
+            processing_method = 'youtube_transcript'  # Force YouTube Transcript API
+            
         if processing_method == 'youtube_transcript':
             # Use YouTube Transcript API (PROVEN WORKING)
             job.status = ProcessingStatus.TRANSCRIBING.value

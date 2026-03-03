@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     
     # App Configuration
     app_name: str = "VideoMind AI"
-    app_version: str = "0.1.0"
+    app_version: str = "0.1.1"  # YouTube Transcript API fix deployed
     debug: bool = False
     secret_key: str
     
