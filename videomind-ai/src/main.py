@@ -42,8 +42,18 @@ app.add_middleware(
 )
 
 # Mount static files and templates
+import os
+from pathlib import Path
+
+# Dynamic template path detection for both local and production
+current_dir = Path(__file__).parent
+if (current_dir / "templates").exists():
+    template_dir = "templates"  # Production: we're in src/
+else:
+    template_dir = "src/templates"  # Local: we're in root/
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="src/templates")
+templates = Jinja2Templates(directory=template_dir)
 
 # Include API routers
 app.include_router(health.router, prefix="/health", tags=["Health"])
