@@ -244,22 +244,22 @@ class YouTubeDataService:
             if not video_id:
                 return False, {"error": "Could not extract video ID from URL"}
             
-            success, video_data = self.get_video_info(video_id)
+            success, video_data = self.get_video_details(video_id)
             if not success:
                 return False, video_data
             
-            # Convert to yt-dlp compatible format
+            # Convert to yt-dlp compatible format (video_data is already processed)
             video_info = {
-                "id": video_data["id"],
-                "title": video_data["snippet"]["title"],
-                "description": video_data["snippet"]["description"],
-                "duration": self._parse_duration(video_data["contentDetails"]["duration"]),
-                "view_count": int(video_data["statistics"].get("viewCount", 0)),
-                "upload_date": video_data["snippet"]["publishedAt"][:10].replace("-", ""),
-                "uploader": video_data["snippet"]["channelTitle"],
-                "uploader_id": video_data["snippet"]["channelId"],
-                "channel_id": video_data["snippet"]["channelId"],
-                "thumbnail": video_data["snippet"]["thumbnails"]["high"]["url"],
+                "id": video_data["video_id"],
+                "title": video_data["title"],
+                "description": video_data["description"],
+                "duration": video_data["duration_seconds"],
+                "view_count": video_data["view_count"],
+                "upload_date": video_data["publish_date_formatted"].replace("-", "") if video_data.get("publish_date_formatted") else "",
+                "uploader": video_data["channel_title"],
+                "uploader_id": video_data["channel_id"],
+                "channel_id": video_data["channel_id"],
+                "thumbnail": video_data.get("thumbnail_high", ""),
                 "webpage_url": url,
                 "success": True
             }
