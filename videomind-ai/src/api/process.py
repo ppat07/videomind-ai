@@ -12,7 +12,7 @@ from database import get_database
 from models.video import VideoJob, VideoJobCreate, VideoJobResponse, VideoJobStatus, ProcessingStatus
 from models.directory import DirectoryEntry, ContentType
 from services.youtube_service import youtube_service
-from services.youtube_data_service import YouTubeDataService
+from services.youtube_data_service import YouTubeDataService, youtube_data_service as _yt_data_svc
 from services.transcription_service import transcription_service
 from services.article_service import article_processor
 from utils.validators import validate_video_url, validate_email, sanitize_video_url
@@ -195,11 +195,9 @@ async def submit_video_for_processing(
             }
         
         # Get video information first (FIXED: Use YouTube Data API to avoid bot detection)
-        youtube_data_service = YouTubeDataService()
-        
-        if youtube_data_service.is_available():
+        if _yt_data_svc.is_available():
             # Use YouTube Data API to avoid bot detection
-            success, video_info = youtube_data_service.get_basic_video_info(str(job_data.youtube_url))
+            success, video_info = _yt_data_svc.get_basic_video_info(str(job_data.youtube_url))
             print(f"✅ Used YouTube Data API for video info (avoiding bot detection)")
         else:
             # Fallback to yt-dlp method only if Data API unavailable
@@ -339,8 +337,8 @@ async def submit_batch_videos_for_processing(
             continue
 
         # Try YouTube Data API first for video info (avoids bot detection)
-        if youtube_data_service.is_available():
-            success, video_info = youtube_data_service.get_basic_video_info(url)
+        if _yt_data_svc.is_available():
+            success, video_info = _yt_data_svc.get_basic_video_info(url)
         else:
             # Fallback to yt-dlp method
             success, video_info = youtube_service.get_video_info(url)
