@@ -44,7 +44,84 @@
       "priority": "medium",
       "notes": "Use existing domain if available. Keep launch lightweight.",
       "due_date": null
+    },
+    {
+      "id": "dc3c4390-6008-4047-8c07-baea20ea214d",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Customer Outreach - Contact 5 potential AI/ML companies",
+      "owner": "Paul",
+      "status": "todo",
+      "priority": "high",
+      "notes": "Target companies who could use video training data for AI models"
+    },
+    {
+      "id": "a8bb8d12-b2db-4c4e-814c-e77ec9c0e8fd",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Complete Whisper fallback system for videos without transcripts",
+      "owner": "Paul",
+      "status": "todo",
+      "priority": "high",
+      "notes": "Biggest technical blocker - implement audio transcription fallback"
+    },
+    {
+      "id": "1b32603d-fe61-489b-8528-65f693d665ad",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Mission Control Review - Check metrics and plan next milestone",
+      "owner": "Paul",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Identify strategy for next $1K MRR milestone"
+    },
+    {
+      "id": "031cd0e5-4e52-425b-a070-1d6eedbd83e8",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "User Feedback Follow-up",
+      "owner": "Paul",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Contact any test users for product improvement insights"
+    },
+    {
+      "id": "6c2d3614-d196-45cd-aea0-71bfd13c209b",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Implement Whisper API Integration in processing pipeline",
+      "owner": "David",
+      "status": "todo",
+      "priority": "high",
+      "notes": "Add audio transcription fallback to VideoMind AI pipeline"
+    },
+    {
+      "id": "4ed4427e-707c-45f4-a4c1-a483b358eb8e",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Performance Optimization - Profile video processing speed",
+      "owner": "David",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Identify and fix processing bottlenecks"
+    },
+    {
+      "id": "c041d7c2-d573-4f9c-b27c-5e00ce29bb8c",
+      "created_at": "2026-03-06T15:32:20.625386+00:00",
+      "updated_at": "2026-03-06T15:32:20.625386+00:00",
+      "due_date": null,
+      "title": "Mission Control Enhancements - Add customer acquisition tracking",
+      "owner": "David",
+      "status": "todo",
+      "priority": "medium",
+      "notes": "Enhance dashboard with customer metrics"
     }
   ],
-  "updated_at": "2026-02-21T20:48:00.000000+00:00"
+  "updated_at": "2026-03-06T15:32:20.625386+00:00"
 }

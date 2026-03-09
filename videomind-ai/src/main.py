@@ -132,6 +132,25 @@ async def queue_dashboard_page(request: Request):
     )
 
 
+@app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
+async def checkout_page(request: Request):
+    """Serve the checkout page with products."""
+    return templates.TemplateResponse(
+        "checkout.html",
+        {"request": request, "app_name": settings.app_name}
+    )
+
+
+@app.get("/success", response_class=HTMLResponse, include_in_schema=False)
+async def success_page(request: Request):
+    """Serve the success page after payment."""
+    session_id = request.query_params.get('session_id')
+    return templates.TemplateResponse(
+        "success.html",
+        {"request": request, "app_name": settings.app_name, "session_id": session_id}
+    )
+
+
 @app.get("/payment/{job_id}", response_class=HTMLResponse, include_in_schema=False)
 async def payment_page(request: Request, job_id: str, db: Session = Depends(get_database)):
     """Serve the payment page for a specific job."""

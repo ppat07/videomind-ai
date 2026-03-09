@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoMind AI - Products</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            text-align: center; 
+            color: #333; 
+            margin-bottom: 40px; 
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .product { 
+            border: 2px solid #f0f0f0; 
+            padding: 30px; 
+            margin: 20px 0; 
+            border-radius: 12px; 
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .product:hover {
+            border-color: #5469d4;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(84, 105, 212, 0.15);
+        }
+        .product.featured {
+            border-color: #ff6b6b;
+            background: linear-gradient(45deg, #fff5f5, #ffffff);
+        }
+        .product.featured::before {
+            content: "🔥 MOST POPULAR";
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .price { 
+            font-size: 36px; 
+            font-weight: bold; 
+            color: #5469d4; 
+            margin: 15px 0;
+        }
+        .description { 
+            color: #666; 
+            margin: 15px 0; 
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        .features {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .features li:before {
+            content: "✓";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        button { 
+            background: linear-gradient(45deg, #5469d4, #8b5cf6); 
+            color: white; 
+            border: none; 
+            padding: 18px 40px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        button:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(84, 105, 212, 0.3);
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .back-link a {
+            color: #5469d4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 VideoMind AI</h1>
+        <p class="subtitle">Transform any video into structured AI training data</p>
+        
+        <div class="product">
+            <h3>📚 Video AI Training Data Mastery Guide</h3>
+            <div class="price">$39</div>
+            <div class="description">Complete guide to transforming video content into AI training data. Master the frameworks, best practices, and implementation strategies used by leading AI companies.</div>
+            
+            <ul class="features">
+                <li>Step-by-step video processing workflows</li>
+                <li>AI training data optimization techniques</li>
+                <li>Industry case studies and examples</li>
+                <li>Ready-to-use templates and scripts</li>
+                <li>Lifetime updates and new content</li>
+            </ul>
+            
+            <form action="/api/payments/create-checkout-session" method="POST">
+                <input type="hidden" name="price_id" value="price_1T97KmCX44YIxPlX6ZHqtXKX" />
+                <input type="hidden" name="mode" value="payment" />
+                <button type="submit">Get Instant Access</button>
+            </form>
+        </div>
+
+        <div class="product featured">
+            <h3>🚀 VideoMind AI Pro</h3>
+            <div class="price">$49<span style="font-size: 18px; font-weight: normal;">/month</span></div>
+            <div class="description">Monthly subscription for unlimited video processing and AI training data extraction. Perfect for teams and businesses scaling their AI training workflows.</div>
+            
+            <ul class="features">
+                <li>Unlimited video processing</li>
+                <li>Advanced AI enhancement features</li>
+                <li>Batch processing capabilities</li>
+                <li>Priority support</li>
+                <li>API access for integrations</li>
+                <li>Custom export formats</li>
+            </ul>
+            
+            <form action="/api/payments/create-checkout-session" method="POST">
+                <input type="hidden" name="price_id" value="price_1T97KmCX44YIxPlXTLOrdmfi" />
+                <input type="hidden" name="mode" value="subscription" />
+                <button type="submit">Start Pro Subscription</button>
+            </form>
+        </div>
+
+        <div class="back-link">
+            <a href="/">← Back to VideoMind AI</a>
+        </div>
+    </div>
+</body>
+</html>

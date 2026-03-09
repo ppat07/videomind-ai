@@ -99,6 +99,70 @@ async def create_payment_intent(
     except stripe.error.StripeError as e:
         raise HTTPException(status_code=400, detail=f"Payment error: {str(e)}")
 
+@router.post("/create-checkout-session")
+async def create_checkout_session(request: Request):
+    """Create Stripe checkout session for products."""
+    if not settings.stripe_secret_key:
+        raise HTTPException(status_code=503, detail="Payments not configured")
+    
+    # Get form data
+    form = await request.form()
+    price_id = form.get("price_id")
+    mode = form.get("mode", "payment")
+    
+    if not price_id:
+        raise HTTPException(status_code=400, detail="Price ID required")
+    
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[{
+                'price': price_id,
+                'quantity': 1,
+            }],
+            mode=mode,
+            success_url=f"{request.url.scheme}://{request.url.netloc}/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{request.url.scheme}://{request.url.netloc}/checkout",
+        )
+        
+        # Redirect to Stripe checkout
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=checkout_session.url, status_code=303)
+        
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+
+
+@router.post("/create-portal-session")
+async def create_portal_session(request: Request):
+    """Create customer portal session."""
+    if not settings.stripe_secret_key:
+        raise HTTPException(status_code=503, detail="Payments not configured")
+    
+    # Get form data
+    form = await request.form()
+    session_id = form.get("session_id")
+    
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Session ID required")
+    
+    try:
+        # Get the checkout session to find the customer
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Create portal session
+        portal_session = stripe.billing_portal.Session.create(
+            customer=checkout_session.customer,
+            return_url=f"{request.url.scheme}://{request.url.netloc}",
+        )
+        
+        # Redirect to customer portal
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=portal_session.url, status_code=303)
+        
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+
+
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
