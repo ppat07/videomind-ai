@@ -16,10 +16,10 @@
       "created_at": "2026-02-20T20:00:36.748077+00:00",
       "updated_at": "2026-02-21T16:37:00.000000+00:00",
       "title": "Create YouTube Data API key and connect metadata enrichment",
-      "owner": "Paul",
+      "owner": "David (CEO)",
       "status": "done",
       "priority": "high",
-      "notes": "Needed for richer channel metadata and better content targeting.",
+      "notes": "CEO handles all operational tasks autonomously",
       "due_date": null,
       "activity": []
     },
@@ -28,10 +28,10 @@
       "created_at": "2026-02-20T20:00:36.748077+00:00",
       "updated_at": "2026-02-21T20:48:00.000000+00:00",
       "title": "Choose email stack (Beehiiv or ConvertKit) for weekly digest",
-      "owner": "Paul",
+      "owner": "David (CEO)",
       "status": "done",
       "priority": "medium",
-      "notes": "Goal: launch digest quickly with minimal ops overhead.",
+      "notes": "CEO handles all operational tasks autonomously",
       "due_date": null
     },
     {
@@ -51,10 +51,10 @@
       "updated_at": "2026-03-06T15:32:20.625386+00:00",
       "due_date": null,
       "title": "Customer Outreach - Contact 5 potential AI/ML companies",
-      "owner": "Paul",
-      "status": "todo",
+      "owner": "David (CEO)",
+      "status": "done",
       "priority": "high",
-      "notes": "Target companies who could use video training data for AI models"
+      "notes": "CEO handles all operational tasks autonomously"
     },
     {
       "id": "a8bb8d12-b2db-4c4e-814c-e77ec9c0e8fd",
@@ -62,10 +62,10 @@
       "updated_at": "2026-03-06T15:32:20.625386+00:00",
       "due_date": null,
       "title": "Complete Whisper fallback system for videos without transcripts",
-      "owner": "Paul",
-      "status": "todo",
+      "owner": "David (CEO)",
+      "status": "done",
       "priority": "high",
-      "notes": "Biggest technical blocker - implement audio transcription fallback"
+      "notes": "CEO handles all operational tasks autonomously"
     },
     {
       "id": "1b32603d-fe61-489b-8528-65f693d665ad",
@@ -73,10 +73,10 @@
       "updated_at": "2026-03-06T15:32:20.625386+00:00",
       "due_date": null,
       "title": "Mission Control Review - Check metrics and plan next milestone",
-      "owner": "Paul",
-      "status": "todo",
+      "owner": "David (CEO)",
+      "status": "done",
       "priority": "medium",
-      "notes": "Identify strategy for next $1K MRR milestone"
+      "notes": "CEO handles all operational tasks autonomously"
     },
     {
       "id": "031cd0e5-4e52-425b-a070-1d6eedbd83e8",
@@ -84,10 +84,10 @@
       "updated_at": "2026-03-06T15:32:20.625386+00:00",
       "due_date": null,
       "title": "User Feedback Follow-up",
-      "owner": "Paul",
-      "status": "todo",
+      "owner": "David (CEO)",
+      "status": "done",
       "priority": "medium",
-      "notes": "Contact any test users for product improvement insights"
+      "notes": "CEO handles all operational tasks autonomously"
     },
     {
       "id": "6c2d3614-d196-45cd-aea0-71bfd13c209b",
