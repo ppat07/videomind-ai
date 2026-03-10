@@ -640,7 +640,44 @@ async def process_video_background(job_id: str):
             job.status = ProcessingStatus.TRANSCRIBING.value
             db.commit()
             
-            success, result = youtube_service.process_whisper_first(job.youtube_url, job_id)
+            # Try YouTube Transcript API first, then Whisper if it fails
+            video_id = None
+            if 'youtube.com' in job.youtube_url:
+                if 'watch?v=' in job.youtube_url:
+                    video_id = job.youtube_url.split('watch?v=')[1].split('&')[0]
+                elif 'embed/' in job.youtube_url:
+                    video_id = job.youtube_url.split('embed/')[1].split('?')[0]
+            elif 'youtu.be' in job.youtube_url:
+                video_id = job.youtube_url.split('youtu.be/')[1].split('?')[0]
+            
+            if video_id:
+                # Try YouTube Transcript API first
+                youtube_success, youtube_result = transcription_service.get_youtube_transcript(video_id)
+                
+                if youtube_success:
+                    success, result = True, {"transcript_data": youtube_result, "method": "youtube_transcript"}
+                    print(f"✅ YouTube Transcript API successful")
+                else:
+                    print(f"⚠️ YouTube Transcript failed: {youtube_result.get('error')}. Trying Whisper fallback...")
+                    
+                    # FALLBACK: Use Whisper via audio download
+                    job.status = ProcessingStatus.DOWNLOADING.value
+                    db.commit()
+                    
+                    download_success, download_result = youtube_service.download_audio(job.youtube_url, job_id)
+                    if download_success:
+                        audio_path = download_result["audio_file_path"]
+                        whisper_success, whisper_result = transcription_service.transcribe_audio_with_whisper(audio_path)
+                        
+                        if whisper_success:
+                            success, result = True, {"transcript_data": whisper_result, "method": "whisper_fallback"}
+                            print(f"✅ Whisper fallback successful")
+                        else:
+                            success, result = False, {"error": f"Both YouTube Transcript and Whisper failed. YouTube: {youtube_result.get('error')}. Whisper: {whisper_result.get('error')}"}
+                    else:
+                        success, result = False, {"error": f"Both YouTube Transcript and audio download failed. YouTube: {youtube_result.get('error')}. Download: {download_result.get('error')}"}
+            else:
+                success, result = False, {"error": "Could not extract video ID from YouTube URL"}
             
             if success:
                 # Extract transcript data
