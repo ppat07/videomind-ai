@@ -264,6 +264,14 @@ async def stripe_webhook(
             db
         )
     
+    # Handle checkout session completion (for PDF products)
+    elif event["type"] == "checkout.session.completed":
+        background_tasks.add_task(
+            handle_checkout_completion,
+            event["data"]["object"],
+            db
+        )
+    
     return {"status": "success"}
 
 async def handle_payment_success(payment_intent: Dict[str, Any], db: Session):
@@ -305,6 +313,35 @@ async def handle_payment_failure(payment_intent: Dict[str, Any], db: Session):
         job.status = "payment_failed"
         job.error_message = "Payment processing failed"
         db.commit()
+
+async def handle_checkout_completion(session: Dict[str, Any], db: Session):
+    """
+    Handle completed checkout session for PDF products.
+    
+    Args:
+        session: Stripe checkout session object
+        db: Database session
+    """
+    try:
+        # Check if this is a PDF product purchase
+        product_type = session.get('metadata', {}).get('product_type')
+        if product_type == 'pdf':
+            customer_email = session['customer_details']['email']
+            customer_name = session['customer_details']['name'] or "Valued Customer"
+            amount = session['amount_total'] / 100  # Convert cents to dollars
+            
+            print(f"📧 PDF purchase detected: {customer_email} paid ${amount}")
+            
+            # For now, just log the sale - PDF delivery can be implemented later
+            # This ensures we capture revenue even without email delivery
+            print(f"💰 REVENUE: ${amount} from PDF sale to {customer_email}")
+            
+            # TODO: Implement actual PDF email delivery
+            # send_pdf_via_email(customer_email, customer_name)
+            
+    except Exception as e:
+        print(f"❌ Error processing PDF checkout: {str(e)}")
+        # Don't raise exception - we don't want to break the webhook
 
 @router.get("/pricing")
 async def get_pricing():
