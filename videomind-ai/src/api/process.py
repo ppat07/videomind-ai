@@ -640,7 +640,7 @@ async def process_video_background(job_id: str):
             job.status = ProcessingStatus.TRANSCRIBING.value
             db.commit()
             
-            success, result = youtube_service.process_youtube_transcript(job.youtube_url, job_id)
+            success, result = youtube_service.process_whisper_first(job.youtube_url, job_id)
             
             if success:
                 # Extract transcript data
