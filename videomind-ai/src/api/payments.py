@@ -7,18 +7,43 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Dict, Any
-import stripe
 import json
+import os
+
+# Import Stripe properly
+try:
+    import stripe
+    print("✅ Stripe imported successfully")
+except ImportError as e:
+    print(f"❌ Failed to import Stripe: {e}")
+    stripe = None
 
 from database import get_database
 from models.video import VideoJob, ProcessingTier
 from config import settings
 
-# Configure Stripe
-import os
-stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
-if stripe_secret:
-    stripe.api_key = stripe_secret
+# Configure Stripe with better error handling
+def setup_stripe():
+    global stripe
+    if not stripe:
+        print("❌ Stripe not available")
+        return False
+    
+    try:
+        stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
+        if stripe_secret:
+            stripe.api_key = stripe_secret
+            print(f"✅ Stripe configured with key: {stripe_secret[:12]}...")
+            return True
+        else:
+            print("❌ No Stripe secret key found")
+            return False
+    except Exception as e:
+        print(f"❌ Stripe setup error: {e}")
+        return False
+
+# Setup Stripe on import
+stripe_ready = setup_stripe()
 
 router = APIRouter()
 
@@ -104,23 +129,32 @@ async def create_payment_intent(
 @router.post("/create-checkout-session")
 async def create_checkout_session(request: Request):
     """Create Stripe checkout session for products."""
-    import os
-    stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
-    if not stripe_secret:
-        raise HTTPException(status_code=503, detail="Stripe not configured")
+    global stripe, stripe_ready
     
-    # Ensure Stripe is configured
-    stripe.api_key = stripe_secret
+    print(f"🔧 Checkout session request - Stripe ready: {stripe_ready}")
+    
+    if not stripe or not stripe_ready:
+        print("❌ Stripe not available or not configured")
+        raise HTTPException(status_code=503, detail="Payment system not available")
     
     # Get form data
     form = await request.form()
     price_id = form.get("price_id")
     mode = form.get("mode", "payment")
     
+    print(f"📝 Form data - Price ID: {price_id}, Mode: {mode}")
+    
     if not price_id:
         raise HTTPException(status_code=400, detail="Price ID required")
     
     try:
+        print("🚀 Creating Stripe checkout session...")
+        
+        # Re-setup Stripe just in case
+        stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
+        if stripe_secret:
+            stripe.api_key = stripe_secret
+        
         checkout_session = stripe.checkout.Session.create(
             line_items=[{
                 'price': price_id,
@@ -131,12 +165,16 @@ async def create_checkout_session(request: Request):
             cancel_url=f"{request.url.scheme}://{request.url.netloc}/checkout",
         )
         
+        print(f"✅ Stripe session created: {checkout_session.id}")
+        
         # Redirect to Stripe checkout
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=checkout_session.url, status_code=303)
         
     except Exception as e:
-        print(f"Stripe error: {e}")
+        print(f"❌ Stripe session error: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 
