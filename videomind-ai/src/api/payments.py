@@ -15,8 +15,10 @@ from models.video import VideoJob, ProcessingTier
 from config import settings
 
 # Configure Stripe
-if settings.stripe_secret_key:
-    stripe.api_key = settings.stripe_secret_key
+import os
+stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
+if stripe_secret:
+    stripe.api_key = stripe_secret
 
 router = APIRouter()
 
@@ -102,8 +104,13 @@ async def create_payment_intent(
 @router.post("/create-checkout-session")
 async def create_checkout_session(request: Request):
     """Create Stripe checkout session for products."""
-    if not settings.stripe_secret_key:
-        raise HTTPException(status_code=503, detail="Payments not configured")
+    import os
+    stripe_secret = settings.stripe_secret_key or os.getenv("STRIPE_SECRET_KEY")
+    if not stripe_secret:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+    
+    # Ensure Stripe is configured
+    stripe.api_key = stripe_secret
     
     # Get form data
     form = await request.form()
@@ -128,8 +135,9 @@ async def create_checkout_session(request: Request):
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=checkout_session.url, status_code=303)
         
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+    except Exception as e:
+        print(f"Stripe error: {e}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 
 @router.post("/create-portal-session")
