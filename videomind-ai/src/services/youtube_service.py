@@ -576,7 +576,7 @@ class YouTubeService:
             result = {
                 "success": True,
                 "method": "youtube_transcript",
-                "video_info": video_info,
+                "video_info": {"video_id": video_id, "title": "YouTube Video"},
                 "transcript_data": transcript_data,
                 "file_size": 0,  # No file downloaded
                 "file_size_formatted": "0 B",
