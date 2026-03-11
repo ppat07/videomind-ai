@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoMind AI - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-red-600 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white">🔧 VideoMind AI Admin</h1>
+                <p class="text-red-100">Internal tools and management dashboard</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/dashboard" class="bg-white text-red-600 px-4 py-2 rounded hover:bg-gray-100">Task Board</a>
+                <a href="/" class="bg-red-800 text-white px-4 py-2 rounded hover:bg-red-900">← Main Site</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- Quick Actions -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">🚀 Quick Actions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="/dashboard" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 text-center">
+                    <div class="text-lg font-semibold">📋 Task Board</div>
+                    <div class="text-sm opacity-90">Manage project tasks</div>
+                </a>
+                <a href="/directory" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 text-center">
+                    <div class="text-lg font-semibold">📁 Video Directory</div>
+                    <div class="text-sm opacity-90">Browse processed videos</div>
+                </a>
+                <a href="/jobs" class="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 text-center">
+                    <div class="text-lg font-semibold">⚙️ Processing Jobs</div>
+                    <div class="text-sm opacity-90">Monitor video processing</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Newsletter Management -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">📧 Newsletter Management</h2>
+            <div class="space-y-4">
+                <div class="flex gap-3">
+                    <button id="digestPreviewBtn" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                        📋 Preview Weekly Digest
+                    </button>
+                    <button id="digestDraftBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        📤 Create Mailchimp Draft
+                    </button>
+                </div>
+                <div id="digestMsg" class="text-sm text-gray-600 whitespace-pre-line bg-gray-50 p-3 rounded"></div>
+            </div>
+        </section>
+
+        <!-- System Status -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">🔍 System Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-green-50 border border-green-200 p-4 rounded">
+                    <h3 class="font-semibold text-green-800">✅ Services Online</h3>
+                    <ul class="text-sm text-green-700 mt-2">
+                        <li>• VideoMind AI Processing</li>
+                        <li>• Stripe Payment System</li>
+                        <li>• Mailchimp Integration</li>
+                        <li>• Task Management</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded">
+                    <h3 class="font-semibold text-blue-800">📊 Revenue Streams</h3>
+                    <ul class="text-sm text-blue-700 mt-2">
+                        <li>• PDF Product: $39 (Active)</li>
+                        <li>• Pro Subscription: $49/month (Active)</li>
+                        <li>• Checkout System: Operational</li>
+                        <li>• Webhook Tracking: Enabled</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Testing -->
+        <section class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">🧪 API Testing</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-2">Quick Health Check</h3>
+                    <button id="healthCheckBtn" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                        🏥 Check System Health
+                    </button>
+                    <div id="healthResult" class="text-sm mt-2"></div>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-2">Task Board API</h3>
+                    <button id="taskCheckBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                        📋 List Recent Tasks
+                    </button>
+                    <div id="taskResult" class="text-sm mt-2"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Newsletter Management
+        document.getElementById('digestPreviewBtn').addEventListener('click', async () => {
+            const out = document.getElementById('digestMsg');
+            out.textContent = 'Building preview...';
+            try {
+                const res = await fetch('/api/newsletter/digest/preview?days=7&limit=8');
+                const data = await res.json();
+                if (!res.ok) {
+                    out.textContent = `Preview failed: ${data.detail || 'unknown error'}`;
+                    return;
+                }
+                out.textContent = `Preview ready ✅\nWould include: ${data.count} entries\nSubject: ${data.subject}`;
+            } catch (err) {
+                out.textContent = `Error: ${err.message}`;
+            }
+        });
+
+        document.getElementById('digestDraftBtn').addEventListener('click', async () => {
+            const out = document.getElementById('digestMsg');
+            out.textContent = 'Creating Mailchimp draft...';
+            try {
+                const res = await fetch('/api/newsletter/digest/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ days: 7, limit: 8, send_now: false })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    out.textContent = `Draft failed: ${data.detail || 'unknown error'}`;
+                    return;
+                }
+                out.textContent = `Draft created ✅\nCampaign ID: ${data.campaign_id}\nEntries used: ${data.entries_used}`;
+            } catch (err) {
+                out.textContent = `Error: ${err.message}`;
+            }
+        });
+
+        // Health Check
+        document.getElementById('healthCheckBtn').addEventListener('click', async () => {
+            const out = document.getElementById('healthResult');
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                out.innerHTML = `<span class="text-green-600">✅ System Healthy</span><br><small>Status: ${data.status}</small>`;
+            } catch (err) {
+                out.innerHTML = `<span class="text-red-600">❌ Health Check Failed</span><br><small>${err.message}</small>`;
+            }
+        });
+
+        // Task Check
+        document.getElementById('taskCheckBtn').addEventListener('click', async () => {
+            const out = document.getElementById('taskResult');
+            try {
+                const res = await fetch('/api/tasks');
+                const data = await res.json();
+                out.innerHTML = `<span class="text-green-600">✅ Task API Working</span><br><small>Total tasks: ${data.count}</small>`;
+            } catch (err) {
+                out.innerHTML = `<span class="text-red-600">❌ Task API Failed</span><br><small>${err.message}</small>`;
+            }
+        });
+    </script>
+</body>
+</html>

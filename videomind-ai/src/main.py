@@ -87,6 +87,11 @@ async def startup_event():
     print(f"💾 Database: {settings.database_url}")
 
 
+@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
+async def admin_dashboard(request: Request):
+    """Serve the admin dashboard with internal tools."""
+    return templates.TemplateResponse("admin.html", {"request": request})
+
 @app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
 async def loading_page(request: Request):
     """Serve a professional loading page during cold starts."""
