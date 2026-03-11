@@ -66,6 +66,43 @@ async def list_directory_entries(
         query = query.filter(DirectoryEntry.signal_score >= min_signal)
 
     total_count = query.with_entities(func.count(DirectoryEntry.id)).scalar() or 0
+    
+    # Auto-seed if directory is completely empty (bulletproof failsafe)
+    if total_count == 0:
+        try:
+            print("🔧 Directory empty, auto-seeding...")
+            await seed_directory_entries(db)
+            # Refresh query after seeding
+            query = db.query(DirectoryEntry)
+            
+            # Reapply filters after seeding
+            if q:
+                q_like = f"%{q}%"
+                query = query.filter(
+                    (DirectoryEntry.title.ilike(q_like)) |
+                    (DirectoryEntry.summary_5_bullets.ilike(q_like)) |
+                    (DirectoryEntry.tools_mentioned.ilike(q_like))
+                )
+            if content_type:
+                from models.directory import ContentType
+                if content_type == "video":
+                    query = query.filter(DirectoryEntry.content_type == ContentType.VIDEO)
+                elif content_type == "article":
+                    query = query.filter(DirectoryEntry.content_type == ContentType.ARTICLE)
+            if category:
+                query = query.filter(DirectoryEntry.category_primary == category)
+            if difficulty:
+                query = query.filter(DirectoryEntry.difficulty == difficulty)
+            if creator:
+                query = query.filter(DirectoryEntry.creator_name.ilike(f"%{creator}%"))
+            if min_signal is not None:
+                query = query.filter(DirectoryEntry.signal_score >= min_signal)
+            
+            total_count = query.with_entities(func.count(DirectoryEntry.id)).scalar() or 0
+            print(f"✅ Auto-seeding completed, directory now has {total_count} entries")
+        except Exception as e:
+            print(f"⚠️ Auto-seeding failed: {e}")
+            # Continue with empty results rather than erroring
 
     if sort_by == "oldest":
         query = query.order_by(DirectoryEntry.created_at.asc())
