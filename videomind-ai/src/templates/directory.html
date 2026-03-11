@@ -35,7 +35,10 @@
 
         <section class="bg-white rounded-lg shadow p-4 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-2">Batch ingest via VideoMind pipeline</h2>
-            <p class="text-sm text-gray-600 mb-3">Paste YouTube URLs (one per line). We’ll process transcripts + summaries and auto-publish to this directory.</p>
+            <p class="text-sm text-gray-600 mb-2">Paste YouTube URLs (one per line). We'll process transcripts + summaries and auto-publish to this directory.</p>
+            <div class="bg-blue-50 border border-blue-200 p-2 rounded mb-3">
+                <p class="text-xs text-blue-700">💳 <strong>Payment required:</strong> Batch processing charges per video ($2-5 depending on tier). Total cost shown before payment.</p>
+            </div>
             <div class="grid md:grid-cols-4 gap-3 mb-3">
                 <input id="batchEmail" class="border rounded px-3 py-2 md:col-span-2" placeholder="results email" />
                 <select id="batchTier" class="border rounded px-3 py-2">
@@ -136,14 +139,14 @@
                 const isArticle = item.content_type === 'article';
                 const sourceUrl = item.source_url || item.video_url;
                 const contentTypeIcon = isArticle ? '📄' : '🎥';
-                const contentTypeBadge = isArticle 
+                const contentTypeBadge = isArticle
                     ? `<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">${contentTypeIcon} Article</span>`
                     : `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${contentTypeIcon} Video</span>`;
-                
+
                 const contentMeta = isArticle
                     ? `<p class="text-sm text-gray-600 mb-2">${item.word_count || 0} words • ${item.reading_time_minutes || 0}min read</p>`
                     : `<p class="text-sm text-gray-600 mb-2">Creator: ${item.creator_name || 'Unknown'}</p>`;
-                
+
                 const actionButton = isArticle
                     ? `<a href="${sourceUrl}" target="_blank" class="text-green-600 hover:text-green-700 text-sm font-medium">Read →</a>`
                     : `<a href="${sourceUrl}" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Watch →</a>`;

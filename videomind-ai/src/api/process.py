@@ -378,6 +378,24 @@ async def submit_batch_videos_for_processing(
         created.append({"job_id": job_id, "youtube_url": url, "title": video_info.get("title")})
 
     db.commit()
+    
+    # Calculate total cost for batch
+    total_cost = sum(item.cost for item in [db.query(VideoJob).filter(VideoJob.id == item["job_id"]).first() for item in created])
+    
+    # REVENUE PROTECTION: Require payment for batch processing
+    if settings.stripe_secret_key and settings.stripe_publishable_key and total_cost > 0:
+        return {
+            "success": True,
+            "message": f"Batch prepared: {len(created)} videos. Payment required to start processing.",
+            "payment_required": True,
+            "payment_url": f"/batch-payment/{created[0]['job_id']}",  # Use first job as batch ID
+            "total_cost": total_cost,
+            "video_count": len(created),
+            "tier": batch_data.tier,
+            "per_video_cost": estimated_cost,
+            "created": created,
+            "skipped": skipped
+        }
 
     # Queue jobs for processing with bulk priority
     queued_count = 0
