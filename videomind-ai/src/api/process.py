@@ -525,10 +525,22 @@ async def get_job_status(job_id: str, db: Session = Depends(get_database)):
         # Check if job is pending payment
         actual_status = job.status
         if (job.status == ProcessingStatus.PENDING.value and 
-            not job.payment_intent_id and 
             settings.stripe_secret_key and 
             settings.stripe_publishable_key):
-            actual_status = "payment_required"
+            
+            # Check if payment is completed
+            payment_completed = False
+            if job.payment_intent_id:
+                try:
+                    import stripe
+                    stripe.api_key = settings.stripe_secret_key
+                    intent = stripe.PaymentIntent.retrieve(job.payment_intent_id)
+                    payment_completed = intent.status == 'succeeded'
+                except:
+                    payment_completed = False
+            
+            if not payment_completed:
+                actual_status = "payment_required"
         
         # Generate progress message based on status
         progress_messages = {
