@@ -11,6 +11,15 @@ from fastapi.responses import HTMLResponse
 from config import settings
 from database import create_tables, get_database
 from api import health, process, directory, tasks, newsletter, jobs, queue_management
+# Import PDF delivery system
+import sys
+sys.path.append('..')
+try:
+    from pdf_delivery import router as pdf_delivery_router
+    PDF_DELIVERY_AVAILABLE = True
+except ImportError:
+    print("⚠️ PDF delivery system not found")
+    PDF_DELIVERY_AVAILABLE = False
 from models.video import VideoJob, ProcessingTier
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -77,6 +86,11 @@ async def startup_event():
     print(f"🔧 Debug mode: {settings.debug}")
     print(f"💾 Database: {settings.database_url}")
 
+
+@app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
+async def loading_page(request: Request):
+    """Serve a professional loading page during cold starts."""
+    return templates.TemplateResponse("loading.html", {"request": request})
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def homepage(request: Request):
