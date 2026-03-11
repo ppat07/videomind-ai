@@ -135,7 +135,9 @@
         }
 
         function renderCards(items, append = false) {
+            console.log('RenderCards called with', items?.length || 0, 'items, append:', append);
             const html = (items || []).map(item => {
+                console.log('Processing item:', item.title, 'content_type:', item.content_type);
                 const isArticle = item.content_type === 'article';
                 const sourceUrl = item.source_url || item.video_url;
                 const contentTypeIcon = isArticle ? '📄' : '🎥';
@@ -179,11 +181,13 @@
                 `;
             }).join('');
 
+            console.log('Generated HTML length:', html?.length || 0, 'first 100 chars:', html?.substring(0, 100));
             if (append) {
                 cardsEl.insertAdjacentHTML('beforeend', html);
             } else {
                 cardsEl.innerHTML = html || `<div class="col-span-full bg-white border rounded p-6 text-center text-gray-600">No entries yet. Click <b>Seed starter entries</b> to load your first 3 videos.</div>`;
             }
+            console.log('Cards element after update:', cardsEl.children.length, 'children');
 
             document.querySelectorAll('.copyPromptBtn').forEach(btn => {
                 btn.onclick = async () => {
@@ -214,14 +218,17 @@
         }
 
         async function loadEntries({ append = false } = {}) {
+            console.log('LoadEntries called, currentPage:', currentPage);
             const params = collectFilterParams();
             params.set('page', currentPage);
             params.set('limit', pageSize);
 
             const res = await fetch(`/api/directory?${params.toString()}`);
             const data = await res.json();
+            console.log('Directory API response:', data);
 
             countText.textContent = `${data.total_count ?? data.count} total entries`;
+            console.log('About to render cards, items:', data.items?.length || 0);
             renderCards(data.items || [], append);
             loadMoreBtn.classList.toggle('hidden', !data.has_more);
         }
