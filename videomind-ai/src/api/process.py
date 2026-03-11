@@ -248,7 +248,7 @@ async def submit_video_for_processing(
                     "duration": video_info.get("duration_formatted"),
                     "uploader": video_info.get("uploader")
                 },
-                "estimated_cost": estimated_cost,
+                "estimated_cost": f"{estimated_cost:.2f}",
                 "tier": job_data.tier,
                 "status": "payment_required"
             }
@@ -291,7 +291,7 @@ async def submit_video_for_processing(
                     "duration": video_info.get("duration_formatted"),
                     "uploader": video_info.get("uploader")
                 },
-                "estimated_cost": estimated_cost,
+                "estimated_cost": f"{estimated_cost:.2f}",
                 "tier": job_data.tier,
                 "status": ProcessingStatus.PENDING.value
             }
@@ -389,10 +389,10 @@ async def submit_batch_videos_for_processing(
             "message": f"Batch prepared: {len(created)} videos. Payment required to start processing.",
             "payment_required": True,
             "payment_url": f"/batch-payment/{created[0]['job_id']}",  # Use first job as batch ID
-            "total_cost": total_cost,
+            "total_cost": f"{total_cost:.2f}",
             "video_count": len(created),
             "tier": batch_data.tier,
-            "per_video_cost": estimated_cost,
+            "per_video_cost": f"{estimated_cost:.2f}",
             "created": created,
             "skipped": skipped
         }

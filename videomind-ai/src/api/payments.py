@@ -353,7 +353,7 @@ async def get_pricing():
     """
     return {
         tier.value: {
-            "price_usd": amount / 100,
+            "price_usd": f"{amount / 100:.2f}",
             "price_cents": amount,
             "features": get_tier_features(tier)
         }

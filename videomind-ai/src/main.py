@@ -288,7 +288,7 @@ async def payment_page(request: Request, job_id: str, db: Session = Depends(get_
             "video_url": job.youtube_url,
             "tier": job.tier,
             "email": job.email,
-            "amount": amount_dollars,
+            "amount": f"{amount_dollars:.2f}",
             "stripe_publishable_key": settings.stripe_publishable_key or ""
         }
     )
