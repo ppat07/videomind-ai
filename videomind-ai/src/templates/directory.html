@@ -315,6 +315,32 @@
             await loadEntries({ append: true });
         });
 
+        // Auto-initialize database if directory is empty
+        async function autoInitIfNeeded() {
+            try {
+                const response = await fetch('/api/directory');
+                const data = await response.json();
+                
+                if (data.total_count === 0) {
+                    console.log('Directory empty, triggering auto-initialization...');
+                    const initResponse = await fetch('/api/auto-init');
+                    const initResult = await initResponse.json();
+                    console.log('Auto-init result:', initResult);
+                    
+                    if (initResult.status === 'initialized') {
+                        // Reload directory after successful initialization
+                        setTimeout(() => {
+                            loadEntries();
+                        }, 1000);
+                    }
+                }
+            } catch (error) {
+                console.log('Auto-init check failed:', error);
+            }
+        }
+
+        // Load directory and auto-init if needed
+        autoInitIfNeeded();
         loadEntries();
         loadJobsHealth();
     </script>

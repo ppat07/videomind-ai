@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables, get_database, engine
-from api import health, process, directory, tasks, newsletter, jobs, queue_management, admin
+from api import health, process, directory, tasks, newsletter, jobs, queue_management, admin, auto_init
 from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
@@ -79,6 +79,7 @@ app.include_router(job_health_router, tags=["Job Health"])
 from api import payments
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
+app.include_router(auto_init.router, prefix="/api", tags=["Auto-Init"])
 
 
 @app.on_event("startup")
