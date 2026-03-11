@@ -302,7 +302,9 @@
 
             const createdLines = (data.created || []).slice(0, 8).map(i => `• queued: ${i.title || i.youtube_url}`).join('\n');
             const skippedLines = (data.skipped || []).slice(0, 8).map(i => `• skipped: ${i.youtube_url} (${i.reason})`).join('\n');
-            resultEl.textContent = `Queued ${data.created_count} videos. Skipped ${data.skipped_count}.\n${createdLines}${createdLines && skippedLines ? '\n' : ''}${skippedLines}`;
+            const createdCount = data.created_count || (data.created ? data.created.length : 0);
+            const skippedCount = data.skipped_count || (data.skipped ? data.skipped.length : 0);
+            resultEl.textContent = `Queued ${createdCount} videos. Skipped ${skippedCount}.\n${createdLines}${createdLines && skippedLines ? '\n' : ''}${skippedLines}`;
             currentPage = 1;
             loadEntries();
             loadJobsHealth();
