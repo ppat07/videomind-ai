@@ -210,8 +210,9 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
     """Seed starter entries quickly for MVP demo."""
     seeds = [
         {
-            "title": "ClawdBot is the most powerful AI tool I’ve ever used in my life. Here’s how to set it up",
+            "title": "ClawdBot is the most powerful AI tool I've ever used in my life. Here's how to set it up",
             "video_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
+            "source_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
             "creator_name": "Alex Finn",
             "category_primary": "Setup & Onboarding",
             "difficulty": "Beginner",
@@ -228,6 +229,7 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
         {
             "title": "You NEED to do this with OpenClaw immediately!",
             "video_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
+            "source_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
             "creator_name": "Alex Finn",
             "category_primary": "Automation Workflows",
             "difficulty": "Beginner",
@@ -243,7 +245,8 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
         },
         {
             "title": "Making $$$ with OpenClaw",
-            "video_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s",
+            "video_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s", 
+            "source_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s",
             "creator_name": "Greg Isenberg",
             "category_primary": "Business Use Cases",
             "difficulty": "Intermediate",

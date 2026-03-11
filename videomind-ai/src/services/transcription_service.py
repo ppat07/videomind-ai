@@ -12,7 +12,8 @@ import re
 
 from config import settings
 from utils.helpers import format_bytes
-from utils.helpers import format_bytes
+from .assembly_ai_service import assembly_ai_service
+from .claude_enhancement_service import claude_enhancement_service
 
 
 class TranscriptionService:
@@ -204,6 +205,40 @@ class TranscriptionService:
         except Exception as e:
             return False, f"Audio conversion error: {str(e)}"
     
+    def transcribe_audio_with_production_ai(self, audio_file_path: str, prefer_assembly: bool = True) -> Tuple[bool, Dict]:
+        """
+        PRODUCTION TRANSCRIPTION: Try Assembly.ai first, fallback to Whisper.
+        Assembly.ai is more reliable and handles edge cases better.
+        
+        Args:
+            audio_file_path: Path to audio file
+            prefer_assembly: Whether to try Assembly.ai first
+            
+        Returns:
+            Tuple of (success, transcript_data or error_dict)
+        """
+        if prefer_assembly and assembly_ai_service.is_available():
+            print(f"🚀 PRODUCTION: Using Assembly.ai for transcription (more reliable)")
+            
+            # Try Assembly.ai first
+            assembly_success, assembly_result = assembly_ai_service.transcribe_file(
+                audio_file_path, 
+                enhance=True  # Use enhanced features for better quality
+            )
+            
+            if assembly_success:
+                print(f"✅ Assembly.ai success: {assembly_result['word_count']} words, {assembly_result['confidence']:.2f} confidence")
+                return True, assembly_result
+            else:
+                print(f"⚠️ Assembly.ai failed: {assembly_result.get('error')}")
+                
+                # Fallback to Whisper
+                print(f"🔄 Falling back to OpenAI Whisper...")
+                return self.transcribe_audio_with_whisper(audio_file_path)
+        else:
+            # Use Whisper directly (original method)
+            return self.transcribe_audio_with_whisper(audio_file_path)
+    
     def transcribe_audio_with_whisper(self, audio_file_path: str) -> Tuple[bool, Dict]:
         """
         ENHANCED: Transcribe audio file using OpenAI Whisper API with advanced processing.
@@ -306,7 +341,8 @@ class TranscriptionService:
     
     def enhance_with_ai(self, transcript_text: str, tier: str = "basic") -> Tuple[bool, Dict]:
         """
-        Enhance transcript with AI-generated summaries, Q&As, etc.
+        ENHANCED: AI enhancement with Claude fallback for reliability.
+        Tries OpenAI GPT first, falls back to Claude enhancement.
         
         Args:
             transcript_text: Raw transcript text
@@ -315,6 +351,17 @@ class TranscriptionService:
         Returns:
             Tuple of (success, enhanced_data or error_dict)
         """
+        # Try Claude enhancement first (more reliable)
+        print(f"🤖 Using Claude enhancement (production reliable)")
+        claude_success, claude_result = claude_enhancement_service.enhance_transcript(transcript_text, tier)
+        
+        if claude_success:
+            print(f"✅ Claude enhancement successful: {len(claude_result['qa_pairs'])} Q&As")
+            return True, claude_result
+        
+        # Fallback to original OpenAI method if Claude fails
+        print(f"🔄 Claude enhancement failed, trying OpenAI fallback...")
+        
         try:
             # Determine enhancement level based on tier
             if tier == "basic":
@@ -386,28 +433,33 @@ Format as JSON with keys: summary, key_points, qa_pairs, topics
                 "qa_pairs": enhanced_data.get("qa_pairs", [])[:qa_count],
                 "topics": enhanced_data.get("topics", [])[:5],
                 "word_count": len(transcript_text.split()),
-                "processing_model": "gpt-3.5-turbo"
+                "processing_model": "gpt-3.5-turbo_fallback"
             }
             
             return True, result
             
         except Exception as e:
-            # Return basic fallback data if AI enhancement fails
-            fallback_data = {
-                "success": False,
-                "error": f"AI enhancement failed: {str(e)}",
-                "tier": tier,
-                "summary": "AI enhancement temporarily unavailable. Raw transcript available.",
-                "key_points": ["Transcript processed", "Content available", "AI enhancement pending"],
-                "qa_pairs": [
-                    {"question": "What content is available?", "answer": "The video transcript has been processed and is available for download."}
-                ],
-                "topics": ["video", "transcript", "processing"],
-                "word_count": len(transcript_text.split()),
-                "processing_model": "fallback"
-            }
-            
-            return False, fallback_data
+            print(f"⚠️ OpenAI fallback also failed: {str(e)}")
+            # Use Claude fallback result if available, otherwise create basic fallback
+            if not claude_success:
+                return False, claude_result  # Return Claude's fallback data
+            else:
+                # Both failed, return basic fallback data
+                fallback_data = {
+                    "success": False,
+                    "error": f"Both Claude and OpenAI enhancement failed",
+                    "tier": tier,
+                    "summary": "AI enhancement temporarily unavailable. Raw transcript available.",
+                    "key_points": ["Transcript processed", "Content available", "AI enhancement pending"],
+                    "qa_pairs": [
+                        {"question": "What content is available?", "answer": "The video transcript has been processed and is available for download."}
+                    ],
+                    "topics": ["video", "transcript", "processing"],
+                    "word_count": len(transcript_text.split()),
+                    "processing_model": "fallback"
+                }
+                
+                return False, fallback_data
 
 
 # Global service instance

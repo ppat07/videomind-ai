@@ -667,7 +667,7 @@ async def process_video_background(job_id: str):
                     download_success, download_result = youtube_service.download_audio(job.youtube_url, job_id)
                     if download_success:
                         audio_path = download_result["audio_file_path"]
-                        whisper_success, whisper_result = transcription_service.transcribe_audio_with_whisper(audio_path)
+                        whisper_success, whisper_result = transcription_service.transcribe_audio_with_production_ai(audio_path)
                         
                         if whisper_success:
                             success, result = True, {"transcript_data": whisper_result, "method": "whisper_fallback"}
@@ -719,7 +719,7 @@ async def process_video_background(job_id: str):
             db.commit()
             
             audio_path = result["audio_file_path"]
-            whisper_success, whisper_result = transcription_service.transcribe_audio_with_whisper(audio_path)
+            whisper_success, whisper_result = transcription_service.transcribe_audio_with_production_ai(audio_path)
             
             if not whisper_success:
                 job.status = ProcessingStatus.FAILED.value

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: videomind-ai
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd src && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: PORT
+        value: "8000"
+    healthCheckPath: /health
+    # Custom loading page configuration
+    preDeployCommand: echo "VideoMind AI deployment starting..."
+    autoDeploy: false
+    branch: main
+    repo: your-repo-url
+    rootDir: .
+    buildFilter:
+      paths:
+        - src/**
+        - requirements.txt
+        - .env

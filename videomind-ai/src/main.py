@@ -97,7 +97,7 @@ async def admin_dashboard(request: Request):
 @app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
 async def loading_page(request: Request):
     """Serve a professional loading page during cold starts."""
-    return templates.TemplateResponse("loading.html", {"request": request})
+    return templates.TemplateResponse("loading_professional.html", {"request": request})
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def homepage(request: Request):
