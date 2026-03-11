@@ -234,8 +234,8 @@ async def submit_video_for_processing(
         db.refresh(db_job)
         
         # Check if payment is required (Stripe is configured)
-        # TEMPORARILY DISABLED FOR TESTING
-        if False and settings.stripe_secret_key and settings.stripe_publishable_key:
+        # ENABLED FOR PRODUCTION REVENUE
+        if settings.stripe_secret_key and settings.stripe_publishable_key:
             # Payment required - redirect to payment page
             return {
                 "success": True,
@@ -291,7 +291,7 @@ async def submit_video_for_processing(
                     "duration": video_info.get("duration_formatted"),
                     "uploader": video_info.get("uploader")
                 },
-                "estimated_cost": 0.0,
+                "estimated_cost": estimated_cost,
                 "tier": job_data.tier,
                 "status": ProcessingStatus.PENDING.value
             }
