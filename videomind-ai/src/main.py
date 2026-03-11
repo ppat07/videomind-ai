@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse
 from config import settings
 from database import create_tables, get_database
 from api import health, process, directory, tasks, newsletter, jobs, queue_management
+from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
 sys.path.append('..')
@@ -72,6 +73,7 @@ app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
 app.include_router(jobs.router, prefix="/api", tags=["Job Management"])
 app.include_router(queue_management.router, prefix="/api/queue", tags=["Queue Management"])
+app.include_router(job_health_router, tags=["Job Health"])
 
 # Import and include payments router
 from api import payments
@@ -112,6 +114,14 @@ async def job_status_page(request: Request, job_id: str):
     return templates.TemplateResponse(
         "status.html", 
         {"request": request, "job_id": job_id, "app_name": settings.app_name}
+    )
+
+@app.get("/health", response_class=HTMLResponse, include_in_schema=False)
+async def job_health_page(request: Request):
+    """Serve the customer-facing job health dashboard."""
+    return templates.TemplateResponse(
+        "job_health.html", 
+        {"request": request, "app_name": settings.app_name}
     )
 
 
