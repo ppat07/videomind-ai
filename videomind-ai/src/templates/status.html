@@ -175,6 +175,7 @@
             const progressFill = document.getElementById('progressFill');
             const progressMap = {
                 'pending': 0,
+                'payment_required': 0,
                 'downloading': 25,
                 'transcribing': 50,
                 'enhancing': 75,
@@ -184,6 +185,15 @@
             
             const progress = progressMap[status] || 0;
             progressFill.style.width = `${progress}%`;
+            
+            // Special styling for payment required
+            if (status === 'payment_required') {
+                progressFill.classList.add('bg-orange-500');
+                progressFill.classList.remove('bg-blue-600');
+            } else {
+                progressFill.classList.add('bg-blue-600');
+                progressFill.classList.remove('bg-orange-500');
+            }
             
             // Update step indicators
             if (progress >= 25) updateStepStatus(1, progress > 25 ? 'completed' : 'active');
@@ -233,7 +243,18 @@
                     // Show processing state
                     document.getElementById('statusContent').classList.remove('hidden');
                     document.getElementById('statusTitle').textContent = getStatusTitle(data.status);
-                    document.getElementById('statusMessage').textContent = data.progress_message || 'Processing...';
+                    
+                    // Handle payment required status
+                    if (data.status === 'payment_required') {
+                        document.getElementById('statusMessage').innerHTML = `
+                            <p class="text-gray-600 mb-4">Payment is required to start processing your video.</p>
+                            <a href="/payment/${jobId}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                Complete Payment
+                            </a>
+                        `;
+                    } else {
+                        document.getElementById('statusMessage').textContent = data.progress_message || 'Processing...';
+                    }
                     
                     updateProgress(data.status);
                 }
@@ -253,6 +274,7 @@
         function getStatusTitle(status) {
             const titles = {
                 'pending': 'Queued for Processing',
+                'payment_required': 'Payment Required',
                 'downloading': 'Downloading Audio',
                 'transcribing': 'Creating Transcript',
                 'enhancing': 'AI Enhancement',

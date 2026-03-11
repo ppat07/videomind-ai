@@ -522,9 +522,18 @@ async def get_job_status(job_id: str, db: Session = Depends(get_database)):
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         
+        # Check if job is pending payment
+        actual_status = job.status
+        if (job.status == ProcessingStatus.PENDING.value and 
+            not job.payment_intent_id and 
+            settings.stripe_secret_key and 
+            settings.stripe_publishable_key):
+            actual_status = "payment_required"
+        
         # Generate progress message based on status
         progress_messages = {
             ProcessingStatus.PENDING: "Waiting to start processing...",
+            "payment_required": f"Payment required to start processing. Click here to pay: /payment/{job_id}",
             ProcessingStatus.DOWNLOADING: "Downloading audio from video...",
             ProcessingStatus.TRANSCRIBING: "Creating transcript with AI (Whisper/YouTube API)...", 
             ProcessingStatus.ENHANCING: "Enhancing with GPT - generating summaries and Q&As...",
@@ -534,8 +543,8 @@ async def get_job_status(job_id: str, db: Session = Depends(get_database)):
         
         return VideoJobStatus(
             id=job.id,
-            status=job.status,
-            progress_message=progress_messages.get(job.status, "Processing..."),
+            status=actual_status,
+            progress_message=progress_messages.get(actual_status, "Processing..."),
             download_links=job.download_links,
             error_message=job.error_message
         )
