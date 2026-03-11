@@ -6,10 +6,11 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config import settings
 
-# Create database engine
+# Create database engine (prioritize production PostgreSQL)
+database_url = settings.production_database_url
 engine = create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {}
+    database_url,
+    connect_args={"check_same_thread": False} if "sqlite" in database_url else {}
 )
 
 # Create session maker

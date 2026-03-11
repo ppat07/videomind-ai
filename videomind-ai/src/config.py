@@ -31,8 +31,16 @@ class Settings(BaseSettings):
     openai_api_key: str
     youtube_data_api_key: Optional[str] = None
     
-    # Database Configuration
+    # Database Configuration (Production PostgreSQL preferred)
     database_url: str = "sqlite:///./videomind.db"
+    
+    @property 
+    def production_database_url(self) -> str:
+        """Return production database URL if available, otherwise SQLite."""
+        # Render automatically provides DATABASE_URL for PostgreSQL
+        if "DATABASE_URL" in os.environ:
+            return os.environ["DATABASE_URL"]
+        return self.database_url
     
     # File Storage
     temp_storage_path: str = "./temp/"
