@@ -267,6 +267,8 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
         exists = db.query(DirectoryEntry).filter(DirectoryEntry.video_url == seed["video_url"]).first()
         if exists:
             continue
+        # Ensure source_url is set for database compatibility
+        seed["source_url"] = seed.get("video_url", seed.get("source_url"))
         db.add(DirectoryEntry(**seed))
         created += 1
 
