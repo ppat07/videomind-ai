@@ -9,24 +9,14 @@ services:
         value: "3.11"
       - key: PORT
         value: "8000"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: videomind-db
-          property: connectionString
     healthCheckPath: /health
     # Custom loading page configuration
     preDeployCommand: echo "VideoMind AI deployment starting..."
     autoDeploy: false
     branch: main
-    repo: your-repo-url
     rootDir: .
     buildFilter:
       paths:
         - src/**
         - requirements.txt
         - .env
-
-databases:
-  - name: videomind-db
-    databaseName: videomind_production
-    user: videomind_user

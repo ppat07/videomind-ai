@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from config import settings
-from database import create_tables, get_database
+from database import create_tables, get_database, engine
 from api import health, process, directory, tasks, newsletter, jobs, queue_management, admin
 from job_health import router as job_health_router
 # Import PDF delivery system
@@ -88,6 +88,90 @@ async def startup_event():
     print(f"🚀 {settings.app_name} v{settings.app_version} starting up!")
     print(f"🔧 Debug mode: {settings.debug}")
     print(f"💾 Database: {settings.database_url}")
+    
+    # Ensure directory has seed data (fallback safety net)
+    try:
+        from sqlalchemy.orm import sessionmaker
+        from models.directory import DirectoryEntry, ContentType
+        
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = SessionLocal()
+        
+        count = db.query(DirectoryEntry).count()
+        if count == 0:
+            print("📚 Directory empty, auto-seeding with OpenClaw videos...")
+            
+            # Create seed data directly (sync version)
+            seed_videos = [
+                {
+                    "title": "ClawdBot is the most powerful AI tool I've ever used in my life. Here's how to set it up",
+                    "source_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
+                    "video_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
+                    "content_type": ContentType.VIDEO,
+                    "creator_name": "Alex Finn",
+                    "category_primary": "Setup & Onboarding",
+                    "difficulty": "Beginner",
+                    "tools_mentioned": "OpenClaw; CLI; OAuth/Auth setup",
+                    "summary_5_bullets": "• Introduces OpenClaw value\\n• Walkthrough setup\\n• Connect auth/models\\n• Run first workflow\\n• Quick-win setup tips",
+                    "best_for": "New users who want fast setup without mistakes",
+                    "signal_score": 82,
+                    "processing_status": "reviewed",
+                    "teaches_agent_to": "Execute setup and onboarding workflows quickly.",
+                    "prompt_template": "Implement a fast setup workflow for OpenClaw with clear commands and validation steps.",
+                    "execution_checklist": "[ ] Confirm prerequisites\\n[ ] Configure auth\\n[ ] Verify model\\n[ ] Run first task\\n[ ] Validate output",
+                    "agent_training_script": "TRAINING SCRIPT: Setup & onboarding workflow with clear commands and validation."
+                },
+                {
+                    "title": "You NEED to do this with OpenClaw immediately!",
+                    "source_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
+                    "video_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
+                    "content_type": ContentType.VIDEO,
+                    "creator_name": "Alex Finn", 
+                    "category_primary": "Automation Workflows",
+                    "difficulty": "Beginner",
+                    "tools_mentioned": "OpenClaw; workflow automation; model/session setup",
+                    "summary_5_bullets": "• High-impact immediate action\\n• Practical first wins\\n• Repeatable workflow\\n• Set defaults early\\n• Foundation for advanced use",
+                    "best_for": "Users who want fastest first ROI",
+                    "signal_score": 80,
+                    "processing_status": "reviewed",
+                    "teaches_agent_to": "Execute repeatable automation workflows quickly.",
+                    "prompt_template": "Build a repeatable automation workflow from this tutorial and include copy/paste commands.",
+                    "execution_checklist": "[ ] Define objective\\n[ ] Configure tools\\n[ ] Run workflow\\n[ ] Validate result\\n[ ] Document reusable steps",
+                    "agent_training_script": "TRAINING SCRIPT: Automation workflow execution with validation and documentation."
+                },
+                {
+                    "title": "Making $$$ with OpenClaw",
+                    "source_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s",
+                    "video_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s", 
+                    "content_type": ContentType.VIDEO,
+                    "creator_name": "Greg Isenberg",
+                    "category_primary": "Business Use Cases",
+                    "difficulty": "Intermediate",
+                    "tools_mentioned": "OpenClaw; automation workflows; lead/revenue systems",
+                    "summary_5_bullets": "• Monetization opportunities\\n• Revenue workflows\\n• Outreach/ops patterns\\n• Implementation focus\\n• OpenClaw as business leverage",
+                    "best_for": "Founders/solopreneurs turning automation into revenue",
+                    "signal_score": 86,
+                    "processing_status": "reviewed", 
+                    "teaches_agent_to": "Implement business-focused AI workflows that drive revenue outcomes.",
+                    "prompt_template": "Create a monetization-focused execution plan with steps, prompts, and KPI checks.",
+                    "execution_checklist": "[ ] Define revenue objective\\n[ ] Build workflow\\n[ ] Launch test\\n[ ] Measure KPI\\n[ ] Iterate",
+                    "agent_training_script": "TRAINING SCRIPT: Business workflow implementation focused on measurable outcomes."
+                }
+            ]
+            
+            for video_data in seed_videos:
+                entry = DirectoryEntry(**video_data)
+                db.add(entry)
+            
+            db.commit()
+            print(f"✅ Startup auto-seeding completed - added {len(seed_videos)} OpenClaw videos")
+        else:
+            print(f"📚 Directory contains {count} entries, no seeding needed")
+            
+        db.close()
+    except Exception as e:
+        print(f"⚠️ Startup seeding check failed: {e}")
+        print("📝 Manual seeding via /api/directory/seed still available")
 
 
 @app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
