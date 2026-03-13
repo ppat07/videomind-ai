@@ -83,6 +83,12 @@
             }
         }
 
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .fade-in-up {
             animation: fadeInUp 0.6s ease-out;
         }
@@ -144,6 +150,7 @@
             border-radius: var(--border-radius);
             padding: 4px;
             border: 1px solid var(--card-border);
+            flex-wrap: wrap;
         }
 
         .nav-tab {
@@ -423,168 +430,537 @@
             transform: translateY(-1px);
         }
 
-        /* ===== PROJECTS TAB ===== */
-        .kanban-board {
+        /* ===== REVENUE TAB ===== */
+        .revenue-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
         }
 
-        .kanban-column {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--card-border);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-lg);
-            min-height: 500px;
+        .revenue-gauge {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto var(--spacing-lg);
+            position: relative;
         }
 
-        .column-header {
+        .gauge-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+            fill: none;
+            stroke-width: 20;
+        }
+
+        .gauge-fill {
+            stroke: var(--accent);
+            fill: none;
+            stroke-width: 20;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
+        }
+
+        .gauge-text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-size: 24px;
+            font-weight: 700;
+            fill: var(--text-primary);
+        }
+
+        .client-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .client-item {
             display: flex;
+            justify-content: between;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: var(--spacing-lg);
-            padding-bottom: var(--spacing-sm);
-            border-bottom: 1px solid var(--card-border);
+            padding: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-sm);
+            border: 1px solid var(--card-border);
         }
 
-        .column-title {
+        .client-info {
+            flex: 1;
+        }
+
+        .client-name {
             font-weight: 600;
-            font-size: var(--font-size-lg);
+            margin-bottom: 4px;
         }
 
-        .task-count {
-            background: var(--accent);
-            color: white;
+        .client-details {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+        }
+
+        .client-status {
             padding: 4px 8px;
             border-radius: 12px;
             font-size: var(--font-size-xs);
             font-weight: 500;
-        }
-
-        .task-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-md);
-            margin-bottom: var(--spacing-sm);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            draggable: true;
-        }
-
-        .task-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
-        }
-
-        .task-title {
-            font-weight: 500;
-            margin-bottom: var(--spacing-xs);
-        }
-
-        .task-description {
-            font-size: var(--font-size-sm);
-            color: var(--text-secondary);
-            margin-bottom: var(--spacing-sm);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .task-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: var(--font-size-xs);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .priority-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 500;
             text-transform: uppercase;
         }
 
-        .priority-high {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-
-        .priority-medium {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-        }
-
-        .priority-low {
+        .status-active {
             background: rgba(16, 185, 129, 0.2);
             color: var(--success);
         }
 
-        .task-date {
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .status-churned {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .revenue-chart {
+            height: 200px;
+            display: flex;
+            align-items: end;
+            gap: var(--spacing-sm);
+            justify-content: space-between;
+            margin: var(--spacing-lg) 0;
+        }
+
+        .chart-bar {
+            background: var(--accent);
+            min-height: 20px;
+            border-radius: 4px 4px 0 0;
+            flex: 1;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        /* ===== COMMAND CENTER TAB ===== */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .agent-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 32px rgba(52, 152, 219, 0.15);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .agent-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-online {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-busy {
+            background: var(--warning);
+        }
+
+        .status-offline {
+            background: var(--text-muted);
+        }
+
+        .agent-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .agent-role {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .agent-model {
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .agent-last-active {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            font-size: var(--font-size-xs);
             color: var(--text-muted);
         }
 
-        .task-owner {
-            font-size: var(--font-size-xs);
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.05);
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-
-        .add-task-btn {
-            background: transparent;
-            border: 2px dashed var(--card-border);
-            color: var(--text-secondary);
-            padding: var(--spacing-md);
+        .send-task-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: var(--spacing-xs) var(--spacing-sm);
             border-radius: var(--border-radius);
-            font-size: var(--font-size-sm);
+            font-size: var(--font-size-xs);
             cursor: pointer;
             transition: all 0.2s ease;
+            margin-top: var(--spacing-sm);
             width: 100%;
         }
 
-        .add-task-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
+        .send-task-btn:hover {
+            background: var(--accent-hover);
         }
 
-        /* ===== FORM STYLES ===== */
-        .form-section {
+        .decisions-section {
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .decision-item {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .decision-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .decision-question {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .decision-summary {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .decision-meta {
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ===== YOUTUBE TAB ===== */
+        .youtube-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xl);
+        }
+
+        .video-pipeline {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .pipeline-statuses {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .pipeline-column {
+            text-align: center;
+            padding: var(--spacing-sm);
+            border: 2px dashed var(--card-border);
+            border-radius: var(--border-radius);
+            min-height: 200px;
+        }
+
+        .pipeline-title {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .video-idea-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+            font-size: var(--font-size-xs);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .video-idea-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .growth-tracker {
+            background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--border-radius);
             padding: var(--spacing-lg);
             margin-bottom: var(--spacing-lg);
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr auto;
-            gap: var(--spacing-sm);
-            align-items: end;
+        .sub-count {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: var(--spacing-sm);
+            color: var(--accent);
         }
 
-        .form-input, .form-select {
+        .milestone-progress {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 12px;
+            margin-bottom: var(--spacing-sm);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .milestone-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .content-calendar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--card-border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: var(--primary-bg);
+            padding: var(--spacing-xs);
+            min-height: 40px;
+            font-size: var(--font-size-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .calendar-day.has-content {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--accent);
+        }
+
+        /* ===== INTEL TAB ===== */
+        .intel-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: var(--spacing-xl);
+        }
+
+        .intel-categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-lg);
+        }
+
+        .intel-category {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .intel-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .intel-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .intel-summary {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .intel-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+        }
+
+        .importance-tag {
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .importance-hot {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .importance-notable {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .importance-reference {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .daily-brief {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-xl);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--font-size-xl);
+            cursor: pointer;
+            padding: var(--spacing-xs);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--border-radius);
             padding: var(--spacing-sm);
             color: var(--text-primary);
             font-size: var(--font-size-sm);
+            font-family: inherit;
         }
 
-        .form-input::placeholder {
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
             color: var(--text-muted);
         }
 
-        .form-input:focus, .form-select:focus {
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--accent-glow);
@@ -606,7 +982,30 @@
             background: var(--accent-hover);
         }
 
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: end;
+        }
+
         /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 1024px) {
+            .revenue-grid,
+            .intel-grid,
+            .youtube-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -631,22 +1030,16 @@
                 grid-template-columns: 1fr;
             }
 
-            .kanban-board {
+            .agents-grid {
                 grid-template-columns: 1fr;
             }
 
-            .form-grid {
+            .intel-categories {
                 grid-template-columns: 1fr;
             }
-        }
 
-        @media (max-width: 480px) {
-            .welcome-text {
-                font-size: var(--font-size-xl);
-            }
-
-            .metric-value {
-                font-size: var(--font-size-2xl);
+            .pipeline-statuses {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -665,11 +1058,6 @@
         .mb-3 { margin-bottom: var(--spacing-md); }
         .mb-4 { margin-bottom: var(--spacing-lg); }
 
-        /* ===== DRAG AND DROP ===== */
-        .drag-over {
-            background: rgba(52, 152, 219, 0.1);
-            border-color: var(--accent);
-        }
     </style>
 </head>
 <body>
@@ -680,8 +1068,11 @@
             
             <nav class="nav-tabs">
                 <button class="nav-tab active" data-tab="dashboard">📊 Overview</button>
+                <button class="nav-tab" data-tab="revenue">💰 Revenue</button>
+                <button class="nav-tab" data-tab="command-center">🏢 Command Center</button>
+                <button class="nav-tab" data-tab="youtube">🎬 YouTube</button>
+                <button class="nav-tab" data-tab="intel">📡 Intel</button>
                 <button class="nav-tab" data-tab="projects">📋 Tasks</button>
-                <button class="nav-tab" data-tab="metrics">📈 Metrics</button>
             </nav>
 
             <div class="header-right">
@@ -772,54 +1163,519 @@
             </div>
         </section>
 
+        <!-- REVENUE TAB -->
+        <section id="revenue" class="tab-content fade-in-up">
+            <h2 class="section-title">💰 Revenue Management</h2>
+            
+            <div class="revenue-grid">
+                <div class="glass">
+                    <div style="padding: var(--spacing-lg);">
+                        <h3 class="section-title">Monthly Revenue Goal</h3>
+                        <div class="revenue-gauge">
+                            <svg width="200" height="200" viewBox="0 0 200 200">
+                                <circle cx="100" cy="100" r="80" class="gauge-bg"></circle>
+                                <circle cx="100" cy="100" r="80" class="gauge-fill" id="revenueGauge"
+                                        stroke-dasharray="0 502" stroke-dashoffset="125"></circle>
+                                <text x="100" y="100" class="gauge-text" id="revenuePercentage">0%</text>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div style="font-size: var(--font-size-xl); font-weight: 600; margin-bottom: var(--spacing-xs);">
+                                $<span id="currentMrr">0</span> / $<span id="goalMrr">10000</span>
+                            </div>
+                            <div style="color: var(--text-secondary);">Current MRR / Goal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass">
+                    <div style="padding: var(--spacing-lg);">
+                        <h3 class="section-title">Revenue Chart</h3>
+                        <div class="revenue-chart" id="revenueChart">
+                            <!-- Chart bars will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass">
+                <div style="padding: var(--spacing-lg);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                        <h3 class="section-title" style="margin-bottom: 0;">Client List</h3>
+                        <button class="form-btn" onclick="openClientModal()">+ Add Client</button>
+                    </div>
+                    
+                    <div class="client-list" id="clientList">
+                        <!-- Client items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass" style="margin-top: var(--spacing-lg);">
+                <div style="padding: var(--spacing-lg);">
+                    <h3 class="section-title">Revenue Projections</h3>
+                    <div id="revenueProjections">
+                        <!-- Projections will be calculated here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMMAND CENTER TAB -->
+        <section id="command-center" class="tab-content fade-in-up">
+            <h2 class="section-title">🏢 Command Center</h2>
+            
+            <div class="agents-grid" id="agentsGrid">
+                <!-- Agent cards will be loaded here -->
+            </div>
+
+            <div class="decisions-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                    <h3 class="section-title" style="margin-bottom: 0;">🎯 Executive Decisions</h3>
+                    <button class="form-btn" onclick="openDecisionModal()">+ Log Decision</button>
+                </div>
+                <div id="decisionsList">
+                    <!-- Decisions will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- YOUTUBE TAB -->
+        <section id="youtube" class="tab-content fade-in-up">
+            <h2 class="section-title">🎬 YouTube Management</h2>
+            
+            <div class="youtube-grid">
+                <div class="video-pipeline">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                        <h3 class="section-title" style="margin-bottom: 0;">Video Ideas Pipeline</h3>
+                        <button class="form-btn" onclick="openVideoIdeaModal()">+ Add Idea</button>
+                    </div>
+                    
+                    <div class="pipeline-statuses" id="videoPipeline">
+                        <!-- Pipeline columns will be loaded here -->
+                    </div>
+                </div>
+
+                <div>
+                    <div class="growth-tracker">
+                        <h3 class="section-title">📈 Growth Tracker</h3>
+                        <div class="sub-count" id="subCount" contenteditable="true">1.2K</div>
+                        <div class="milestone-progress">
+                            <div class="progress-bar" id="milestoneProgress" style="width: 20%"></div>
+                        </div>
+                        <div class="milestone-label" id="milestoneLabel">Rising Creator (20% to 10K)</div>
+                    </div>
+
+                    <div class="content-calendar">
+                        <h3 class="section-title">📅 Content Calendar</h3>
+                        <div class="calendar-grid" id="contentCalendar">
+                            <!-- Calendar days will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- INTEL TAB -->
+        <section id="intel" class="tab-content fade-in-up">
+            <h2 class="section-title">📡 Intelligence Dashboard</h2>
+            
+            <div class="intel-grid">
+                <div class="intel-categories" id="intelCategories">
+                    <!-- Intel categories will be loaded here -->
+                </div>
+
+                <div class="daily-brief">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                        <h3 class="section-title" style="margin-bottom: 0;">📰 Daily Brief</h3>
+                        <button class="form-btn" onclick="openIntelModal()">+ Add Intel</button>
+                    </div>
+                    <div id="dailyBrief">
+                        <!-- Daily brief items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- PROJECTS TAB -->
         <section id="projects" class="tab-content fade-in-up">
             <h2 class="section-title">📋 Task Management</h2>
             
             <!-- Add Task Form -->
-            <div class="form-section">
-                <div class="form-grid">
-                    <input id="newTitle" class="form-input" placeholder="Task title" />
-                    <select id="newOwner" class="form-select">
-                        <option value="Paul">Paul</option>
-                        <option value="David">David</option>
-                    </select>
-                    <select id="newPriority" class="form-select">
-                        <option value="high">High Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
-                    <input id="newDue" class="form-input" type="date" />
-                    <button id="addTask" class="form-btn">Add Task</button>
+            <div class="glass">
+                <div style="padding: var(--spacing-lg);">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: var(--spacing-sm); align-items: end;">
+                        <input id="newTitle" class="form-input" placeholder="Task title" />
+                        <select id="newOwner" class="form-select">
+                            <option value="Paul">Paul</option>
+                            <option value="David">David</option>
+                        </select>
+                        <select id="newPriority" class="form-select">
+                            <option value="high">High Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                        </select>
+                        <input id="newDue" class="form-input" type="date" />
+                        <button id="addTask" class="form-btn">Add Task</button>
+                    </div>
+                    <p id="msg" style="font-size: var(--font-size-xs); color: var(--text-muted); margin-top: var(--spacing-xs);"></p>
                 </div>
-                <p id="msg" class="text-xs text-gray-600 mt-2"></p>
             </div>
 
             <!-- Kanban Board -->
-            <div class="kanban-board" id="kanbanBoard">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-lg); margin-top: var(--spacing-lg);" id="kanbanBoard">
                 <!-- Columns will be loaded here -->
-            </div>
-        </section>
-
-        <!-- METRICS TAB -->
-        <section id="metrics" class="tab-content fade-in-up">
-            <h2 class="section-title text-center">📈 Business Intelligence</h2>
-            <div class="text-center" style="color: var(--text-muted); margin-top: var(--spacing-xl);">
-                <p>Advanced analytics and reporting coming soon...</p>
-                <p>Track revenue trends, customer acquisition, and growth metrics.</p>
             </div>
         </section>
     </main>
 
+    <!-- MODALS -->
+    <!-- Client Modal -->
+    <div id="clientModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Client</h3>
+                <button class="modal-close" onclick="closeClientModal()">&times;</button>
+            </div>
+            <form id="clientForm">
+                <div class="form-group">
+                    <label class="form-label">Client Name</label>
+                    <input type="text" id="clientName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monthly Value ($)</label>
+                    <input type="number" id="clientValue" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="clientStatus" class="form-select">
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="churned">Churned</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" id="clientStartDate" class="form-input" required>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="form-btn btn-secondary" onclick="closeClientModal()">Cancel</button>
+                    <button type="submit" class="form-btn">Add Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Agent Task Modal -->
+    <div id="taskModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Send Task to <span id="taskAgentName"></span></h3>
+                <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Task Description</label>
+                    <textarea id="taskDescription" class="form-textarea" placeholder="Describe the task you want to assign..." required></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="form-btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+                    <button type="submit" class="form-btn">Send Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Decision Modal -->
+    <div id="decisionModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Log Executive Decision</h3>
+                <button class="modal-close" onclick="closeDecisionModal()">&times;</button>
+            </div>
+            <form id="decisionForm">
+                <div class="form-group">
+                    <label class="form-label">Question/Decision Point</label>
+                    <input type="text" id="decisionQuestion" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Decision Summary</label>
+                    <textarea id="decisionSummary" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Agents Consulted</label>
+                    <input type="text" id="agentsConsulted" class="form-input" placeholder="e.g., David, Marketing Agent">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="form-btn btn-secondary" onclick="closeDecisionModal()">Cancel</button>
+                    <button type="submit" class="form-btn">Log Decision</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Video Idea Modal -->
+    <div id="videoIdeaModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Video Idea</h3>
+                <button class="modal-close" onclick="closeVideoIdeaModal()">&times;</button>
+            </div>
+            <form id="videoIdeaForm">
+                <div class="form-group">
+                    <label class="form-label">Video Title</label>
+                    <input type="text" id="videoTitle" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Topic/Category</label>
+                    <input type="text" id="videoTopic" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Publish Date</label>
+                    <input type="date" id="videoPublishDate" class="form-input">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="form-btn btn-secondary" onclick="closeVideoIdeaModal()">Cancel</button>
+                    <button type="submit" class="form-btn">Add Idea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Intel Modal -->
+    <div id="intelModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Intelligence Item</h3>
+                <button class="modal-close" onclick="closeIntelModal()">&times;</button>
+            </div>
+            <form id="intelForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="intelTitle" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Summary</label>
+                    <textarea id="intelSummary" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="intelCategory" class="form-select">
+                        <option value="AI News">AI News</option>
+                        <option value="Industry Trends">Industry Trends</option>
+                        <option value="Competitor Watch">Competitor Watch</option>
+                        <option value="Opportunities">Opportunities</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Importance</label>
+                    <select id="intelImportance" class="form-select">
+                        <option value="hot">🔥 Hot</option>
+                        <option value="notable">⚡ Notable</option>
+                        <option value="reference">📌 Reference</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Source Link</label>
+                    <input type="url" id="intelSource" class="form-input">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="form-btn btn-secondary" onclick="closeIntelModal()">Cancel</button>
+                    <button type="submit" class="form-btn">Add Intel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // ===== GLOBAL STATE =====
         let tasks = [];
+        let clients = JSON.parse(localStorage.getItem('clients') || '[]');
+        let agents = JSON.parse(localStorage.getItem('agents') || '[]');
+        let decisions = JSON.parse(localStorage.getItem('decisions') || '[]');
+        let videoIdeas = JSON.parse(localStorage.getItem('videoIdeas') || '[]');
+        let intelItems = JSON.parse(localStorage.getItem('intelItems') || '[]');
+        let youtubeData = JSON.parse(localStorage.getItem('youtubeData') || '{"subCount": 1200, "milestone": "Rising Creator"}');
+
         const statuses = [
             { key: 'todo', label: '📝 Todo', count: 0 },
             { key: 'doing', label: '🚀 Doing', count: 0 },
             { key: 'blocked', label: '🚧 Blocked', count: 0 },
             { key: 'done', label: '✅ Done', count: 0 }
         ];
+
+        const videoStatuses = [
+            { key: 'idea', label: '💡 Ideas' },
+            { key: 'scripting', label: '📝 Scripting' },
+            { key: 'filming', label: '🎬 Filming' },
+            { key: 'editing', label: '✂️ Editing' },
+            { key: 'published', label: '🚀 Published' }
+        ];
+
+        let currentTaskAgent = '';
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 VideoMind AI Mission Control Enhanced initialized');
+            
+            initializeTabs();
+            updateWelcomeBar();
+            initializeSampleData();
+
+            // Load all data
+            await loadData();
+
+            setupEventListeners();
+            updateWelcomeBar();
+            setInterval(updateWelcomeBar, 60000);
+        });
+
+        // ===== SAMPLE DATA INITIALIZATION =====
+        function initializeSampleData() {
+            // Initialize sample clients if empty
+            if (clients.length === 0) {
+                clients = [
+                    {
+                        id: '1',
+                        name: 'TechCorp AI',
+                        monthlyValue: 2500,
+                        status: 'active',
+                        startDate: '2026-01-15'
+                    },
+                    {
+                        id: '2',
+                        name: 'DataFlow Solutions',
+                        monthlyValue: 1800,
+                        status: 'active',
+                        startDate: '2026-02-01'
+                    },
+                    {
+                        id: '3',
+                        name: 'ML Innovations',
+                        monthlyValue: 3200,
+                        status: 'pending',
+                        startDate: '2026-03-01'
+                    }
+                ];
+                localStorage.setItem('clients', JSON.stringify(clients));
+            }
+
+            // Initialize sample agents if empty
+            if (agents.length === 0) {
+                agents = [
+                    {
+                        id: '1',
+                        name: 'David',
+                        role: 'AI CEO & Strategy Lead',
+                        status: 'online',
+                        model: 'Claude Sonnet 4',
+                        lastActive: new Date().toISOString(),
+                        description: 'Primary AI agent handling VideoMind AI business operations, strategic decisions, and autonomous execution.',
+                        capabilities: ['Business Strategy', 'Product Development', 'Customer Acquisition', 'Revenue Optimization'],
+                        activity: [
+                            { timestamp: new Date().toISOString(), text: 'Deployed directory enhancement fixes' },
+                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Analyzed customer feedback and optimized pricing' }
+                        ]
+                    },
+                    {
+                        id: '2',
+                        name: 'Marketing Agent',
+                        role: 'Content & Growth Marketing',
+                        status: 'busy',
+                        model: 'GPT-4o',
+                        lastActive: new Date(Date.now() - 900000).toISOString(),
+                        description: 'Specialized in content creation, social media management, and customer acquisition strategies.',
+                        capabilities: ['Content Creation', 'Social Media', 'Email Marketing', 'SEO Optimization'],
+                        activity: [
+                            { timestamp: new Date(Date.now() - 1800000).toISOString(), text: 'Created weekly content calendar' },
+                            { timestamp: new Date(Date.now() - 7200000).toISOString(), text: 'Analyzed competitor marketing strategies' }
+                        ]
+                    },
+                    {
+                        id: '3',
+                        name: 'Technical Agent',
+                        role: 'Development & Infrastructure',
+                        status: 'online',
+                        model: 'Claude Code',
+                        lastActive: new Date(Date.now() - 600000).toISOString(),
+                        description: 'Handles technical development, infrastructure management, and system optimization.',
+                        capabilities: ['Full-Stack Development', 'Infrastructure', 'API Design', 'Database Optimization'],
+                        activity: [
+                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Optimized video processing pipeline' },
+                            { timestamp: new Date(Date.now() - 10800000).toISOString(), text: 'Deployed security updates' }
+                        ]
+                    },
+                    {
+                        id: '4',
+                        name: 'Customer Success Agent',
+                        role: 'Support & Retention',
+                        status: 'offline',
+                        model: 'GPT-4',
+                        lastActive: new Date(Date.now() - 86400000).toISOString(),
+                        description: 'Manages customer relationships, support tickets, and retention strategies.',
+                        capabilities: ['Customer Support', 'User Onboarding', 'Feedback Analysis', 'Retention Optimization'],
+                        activity: [
+                            { timestamp: new Date(Date.now() - 86400000).toISOString(), text: 'Processed customer feedback survey' },
+                            { timestamp: new Date(Date.now() - 172800000).toISOString(), text: 'Updated help documentation' }
+                        ]
+                    }
+                ];
+                localStorage.setItem('agents', JSON.stringify(agents));
+            }
+
+            // Initialize sample video ideas if empty
+            if (videoIdeas.length === 0) {
+                videoIdeas = [
+                    {
+                        id: '1',
+                        title: 'How I Built a $10K MRR AI Business in 6 Months',
+                        topic: 'Business',
+                        status: 'scripting',
+                        publishDate: '2026-03-20'
+                    },
+                    {
+                        id: '2',
+                        title: 'Replace Your Video Team With AI - Complete Guide',
+                        topic: 'Tutorial',
+                        status: 'idea',
+                        publishDate: '2026-03-25'
+                    },
+                    {
+                        id: '3',
+                        title: 'AI Transcription Market Analysis 2026',
+                        topic: 'Industry',
+                        status: 'filming',
+                        publishDate: '2026-03-30'
+                    }
+                ];
+                localStorage.setItem('videoIdeas', JSON.stringify(videoIdeas));
+            }
+
+            // Initialize sample intel if empty
+            if (intelItems.length === 0) {
+                intelItems = [
+                    {
+                        id: '1',
+                        title: 'OpenAI launches improved Whisper v3',
+                        summary: 'New Whisper model with 40% better accuracy for video transcription. Could impact our competitive positioning.',
+                        category: 'AI News',
+                        importance: 'hot',
+                        source: 'https://openai.com/blog/whisper-v3',
+                        dateAdded: new Date().toISOString()
+                    },
+                    {
+                        id: '2',
+                        title: 'Video AI market projected to reach $30B by 2028',
+                        summary: 'Significant growth in AI video processing market. VideoMind AI positioned well for this trend.',
+                        category: 'Industry Trends',
+                        importance: 'notable',
+                        source: 'https://techcrunch.com/video-ai-market',
+                        dateAdded: new Date(Date.now() - 86400000).toISOString()
+                    }
+                ];
+                localStorage.setItem('intelItems', JSON.stringify(intelItems));
+            }
+        }
 
         // ===== UTILITY FUNCTIONS =====
         function formatDate() {
@@ -854,66 +1710,8 @@
             return 'Just now';
         }
 
-        // ===== API FUNCTIONS =====
-        async function fetchTasks() {
-            try {
-                const response = await fetch('/api/tasks');
-                const data = await response.json();
-                return data.items || [];
-            } catch (error) {
-                console.error('Error fetching tasks:', error);
-                return [];
-            }
-        }
-
-        async function addTask(taskData) {
-            try {
-                const response = await fetch('/api/tasks', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(taskData)
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Error adding task:', error);
-                return false;
-            }
-        }
-
-        async function updateTask(id, updates) {
-            try {
-                const response = await fetch(`/api/tasks/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updates)
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Error updating task:', error);
-                return false;
-            }
-        }
-
-        async function addTaskActivity(id, text, author = 'David') {
-            try {
-                const response = await fetch(`/api/tasks/${id}/activity`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, author })
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Error adding activity:', error);
-                return false;
-            }
-        }
-
-        async function bootstrapTasks() {
-            try {
-                await fetch('/api/tasks/bootstrap', { method: 'POST' });
-            } catch (error) {
-                console.error('Error bootstrapping tasks:', error);
-            }
+        function generateId() {
+            return Date.now().toString() + Math.random().toString(36).substr(2, 5);
         }
 
         // ===== TAB MANAGEMENT =====
@@ -936,8 +1734,28 @@
                             content.classList.add('active');
                         }
                     });
+
+                    // Load tab-specific data
+                    loadTabData(targetTab);
                 });
             });
+        }
+
+        function loadTabData(tab) {
+            switch(tab) {
+                case 'revenue':
+                    loadRevenueData();
+                    break;
+                case 'command-center':
+                    loadCommandCenterData();
+                    break;
+                case 'youtube':
+                    loadYouTubeData();
+                    break;
+                case 'intel':
+                    loadIntelData();
+                    break;
+            }
         }
 
         // ===== DASHBOARD FUNCTIONS =====
@@ -947,69 +1765,593 @@
         }
 
         function updateMetrics() {
-            // Calculate metrics from task data
-            const completedTasks = tasks.filter(t => t.status === 'done').length;
-            const totalTasks = tasks.length;
-            const activeTasks = tasks.filter(t => t.status !== 'done').length;
+            // Calculate revenue metrics
+            const totalMrr = clients
+                .filter(c => c.status === 'active')
+                .reduce((sum, c) => sum + c.monthlyValue, 0);
             
-            // Mock business metrics (these would come from real data)
-            document.getElementById('mrrValue').textContent = '$0';
-            document.getElementById('videosValue').textContent = '0';
-            document.getElementById('customersValue').textContent = '0';
-            document.getElementById('daysToGoal').textContent = Math.ceil((new Date('2026-08-01') - new Date()) / (1000 * 60 * 60 * 24));
+            const pendingMrr = clients
+                .filter(c => c.status === 'pending')
+                .reduce((sum, c) => sum + c.monthlyValue, 0);
 
-            // Update trends (mock data)
-            document.getElementById('mrrTrend').textContent = '+0%';
-            document.getElementById('videosTrend').textContent = '+0%';
-            document.getElementById('customersTrend').textContent = '+0%';
-            document.getElementById('goalTrend').textContent = `${Math.ceil((new Date('2026-08-01') - new Date()) / (1000 * 60 * 60 * 24))} days`;
+            document.getElementById('mrrValue').textContent = `$${totalMrr.toLocaleString()}`;
+            document.getElementById('currentMrr').textContent = totalMrr.toLocaleString();
+            
+            // Update other metrics (mock data)
+            document.getElementById('videosValue').textContent = '0';
+            document.getElementById('customersValue').textContent = clients.filter(c => c.status === 'active').length;
+            
+            const daysToGoal = Math.ceil((new Date('2026-08-01') - new Date()) / (1000 * 60 * 60 * 24));
+            document.getElementById('daysToGoal').textContent = daysToGoal;
+            document.getElementById('goalTrend').textContent = `${daysToGoal} days`;
+
+            // Calculate trends (simplified)
+            const mrrGrowthPercent = totalMrr > 0 ? 15 : 0; // Mock 15% growth
+            document.getElementById('mrrTrend').textContent = `+${mrrGrowthPercent}%`;
         }
 
-        function loadActivity() {
-            const recentTasks = [...tasks]
-                .filter(t => t.activity && t.activity.length > 0)
-                .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-                .slice(0, 10);
+        // ===== REVENUE TAB FUNCTIONS =====
+        function loadRevenueData() {
+            updateRevenueGauge();
+            loadRevenueChart();
+            loadClientList();
+            updateRevenueProjections();
+        }
 
-            const activityHtml = recentTasks.map(task => {
-                const lastActivity = task.activity[task.activity.length - 1];
+        function updateRevenueGauge() {
+            const totalMrr = clients
+                .filter(c => c.status === 'active')
+                .reduce((sum, c) => sum + c.monthlyValue, 0);
+            
+            const goalMrr = 10000;
+            const percentage = Math.min((totalMrr / goalMrr) * 100, 100);
+            const circumference = 2 * Math.PI * 80;
+            const strokeDasharray = (percentage / 100) * circumference;
+            
+            document.getElementById('revenueGauge').style.strokeDasharray = `${strokeDasharray} ${circumference}`;
+            document.getElementById('revenuePercentage').textContent = `${Math.round(percentage)}%`;
+            document.getElementById('currentMrr').textContent = totalMrr.toLocaleString();
+        }
+
+        function loadRevenueChart() {
+            const chartContainer = document.getElementById('revenueChart');
+            const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            const data = [500, 1200, 2800, 4200, 5800, 7500]; // Mock data
+            
+            const maxValue = Math.max(...data);
+            
+            chartContainer.innerHTML = months.map((month, index) => {
+                const height = (data[index] / maxValue) * 180; // Max height 180px
                 return `
-                    <div class="activity-item">
-                        <div class="activity-text">${lastActivity.text}</div>
-                        <div class="activity-time">${formatTimeAgo(task.updated_at || task.created_at)}</div>
+                    <div class="chart-bar" style="height: ${height}px;" title="${month}: $${data[index]}">
+                        <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-muted);">
+                            ${month}
+                        </div>
                     </div>
                 `;
             }).join('');
+        }
 
-            document.getElementById('activityList').innerHTML = activityHtml || `
-                <div class="activity-item">
-                    <div class="activity-text">No recent activity</div>
-                    <div class="activity-time">Start by adding some tasks!</div>
+        function loadClientList() {
+            const clientListContainer = document.getElementById('clientList');
+            
+            clientListContainer.innerHTML = clients.map(client => `
+                <div class="client-item">
+                    <div class="client-info">
+                        <div class="client-name">${client.name}</div>
+                        <div class="client-details">
+                            $${client.monthlyValue}/month • Started ${new Date(client.startDate).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div class="client-status status-${client.status}">
+                        ${client.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateRevenueProjections() {
+            const activeMrr = clients
+                .filter(c => c.status === 'active')
+                .reduce((sum, c) => sum + c.monthlyValue, 0);
+            
+            const annualProjection = activeMrr * 12;
+            const goalMrr = 10000;
+            const monthsToGoal = activeMrr > 0 ? Math.ceil((goalMrr - activeMrr) / (activeMrr * 0.1)) : 'Infinity';
+            
+            document.getElementById('revenueProjections').innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg);">
+                    <div style="text-align: center; padding: var(--spacing-md); background: rgba(255,255,255,0.02); border-radius: var(--border-radius);">
+                        <div style="font-size: var(--font-size-xl); font-weight: 600; color: var(--accent);">$${annualProjection.toLocaleString()}</div>
+                        <div style="color: var(--text-secondary);">Annual Run Rate</div>
+                    </div>
+                    <div style="text-align: center; padding: var(--spacing-md); background: rgba(255,255,255,0.02); border-radius: var(--border-radius);">
+                        <div style="font-size: var(--font-size-xl); font-weight: 600; color: var(--warning);">${monthsToGoal === 'Infinity' ? '∞' : monthsToGoal}</div>
+                        <div style="color: var(--text-secondary);">Months to $10K Goal</div>
+                    </div>
+                    <div style="text-align: center; padding: var(--spacing-md); background: rgba(255,255,255,0.02); border-radius: var(--border-radius);">
+                        <div style="font-size: var(--font-size-xl); font-weight: 600; color: var(--success);">${activeMrr > 0 ? '10%' : '0%'}</div>
+                        <div style="color: var(--text-secondary);">Monthly Growth Needed</div>
+                    </div>
                 </div>
             `;
+        }
+
+        // ===== COMMAND CENTER FUNCTIONS =====
+        function loadCommandCenterData() {
+            loadAgentsGrid();
+            loadDecisionsList();
+        }
+
+        function loadAgentsGrid() {
+            const agentsContainer = document.getElementById('agentsGrid');
+            
+            agentsContainer.innerHTML = agents.map(agent => `
+                <div class="agent-card" onclick="openAgentDetails('${agent.id}')">
+                    <div class="agent-last-active">${formatTimeAgo(agent.lastActive)}</div>
+                    <div class="agent-header">
+                        <div class="agent-status status-${agent.status}"></div>
+                        <div class="agent-name">${agent.name}</div>
+                    </div>
+                    <div class="agent-role">${agent.role}</div>
+                    <div class="agent-model">${agent.model}</div>
+                    <button class="send-task-btn" onclick="event.stopPropagation(); openTaskModal('${agent.id}', '${agent.name}')">
+                        📋 Send Task
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadDecisionsList() {
+            const decisionsContainer = document.getElementById('decisionsList');
+            
+            if (decisions.length === 0) {
+                decisionsContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: var(--spacing-lg);">
+                        No executive decisions logged yet
+                    </div>
+                `;
+                return;
+            }
+            
+            decisionsContainer.innerHTML = decisions.map(decision => `
+                <div class="decision-item">
+                    <div class="decision-question">${decision.question}</div>
+                    <div class="decision-summary">${decision.summary}</div>
+                    <div class="decision-meta">
+                        <span>Consulted: ${decision.agentsConsulted}</span>
+                        <span>${new Date(decision.date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== YOUTUBE TAB FUNCTIONS =====
+        function loadYouTubeData() {
+            loadVideoPipeline();
+            loadGrowthTracker();
+            loadContentCalendar();
+        }
+
+        function loadVideoPipeline() {
+            const pipelineContainer = document.getElementById('videoPipeline');
+            
+            pipelineContainer.innerHTML = videoStatuses.map(status => {
+                const statusIdeas = videoIdeas.filter(idea => idea.status === status.key);
+                
+                return `
+                    <div class="pipeline-column">
+                        <div class="pipeline-title">${status.label}</div>
+                        ${statusIdeas.map(idea => `
+                            <div class="video-idea-card" onclick="editVideoIdea('${idea.id}')">
+                                <div style="font-weight: 600; margin-bottom: 4px;">${idea.title}</div>
+                                <div style="font-size: var(--font-size-xs); color: var(--text-muted);">
+                                    ${idea.topic} • ${idea.publishDate ? new Date(idea.publishDate).toLocaleDateString() : 'No date'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadGrowthTracker() {
+            const subCount = youtubeData.subCount;
+            document.getElementById('subCount').textContent = formatSubCount(subCount);
+            
+            // Calculate milestone progress
+            let nextMilestone, currentProgress, milestoneTitle;
+            
+            if (subCount < 1000) {
+                nextMilestone = 1000;
+                milestoneTitle = 'Rising Creator';
+                currentProgress = (subCount / nextMilestone) * 100;
+            } else if (subCount < 10000) {
+                nextMilestone = 10000;
+                milestoneTitle = 'Growth Engine';
+                currentProgress = ((subCount - 1000) / (nextMilestone - 1000)) * 100;
+            } else if (subCount < 100000) {
+                nextMilestone = 100000;
+                milestoneTitle = 'Content Titan';
+                currentProgress = ((subCount - 10000) / (nextMilestone - 10000)) * 100;
+            } else {
+                nextMilestone = 1000000;
+                milestoneTitle = 'YouTube Legend';
+                currentProgress = ((subCount - 100000) / (nextMilestone - 100000)) * 100;
+            }
+            
+            document.getElementById('milestoneProgress').style.width = `${Math.min(currentProgress, 100)}%`;
+            document.getElementById('milestoneLabel').textContent = 
+                `${milestoneTitle} (${Math.round(currentProgress)}% to ${formatSubCount(nextMilestone)})`;
+        }
+
+        function formatSubCount(count) {
+            if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+            if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+            return count.toString();
+        }
+
+        function loadContentCalendar() {
+            const calendarContainer = document.getElementById('contentCalendar');
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            let calendarHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                calendarHTML += `<div class="calendar-day" style="font-weight: 600; background: var(--card-bg);">${day}</div>`;
+            });
+            
+            // Add empty cells for days before month starts
+            const startDay = firstDay.getDay();
+            for (let i = 0; i < startDay; i++) {
+                calendarHTML += `<div class="calendar-day"></div>`;
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasVideo = videoIdeas.some(idea => idea.publishDate === dateStr);
+                
+                calendarHTML += `
+                    <div class="calendar-day ${hasVideo ? 'has-content' : ''}" title="${hasVideo ? 'Video scheduled' : ''}">
+                        ${day}
+                    </div>
+                `;
+            }
+            
+            calendarContainer.innerHTML = calendarHTML;
+        }
+
+        // ===== INTEL TAB FUNCTIONS =====
+        function loadIntelData() {
+            loadIntelCategories();
+            loadDailyBrief();
+        }
+
+        function loadIntelCategories() {
+            const categoriesContainer = document.getElementById('intelCategories');
+            const categories = ['AI News', 'Industry Trends', 'Competitor Watch', 'Opportunities'];
+            
+            categoriesContainer.innerHTML = categories.map(category => {
+                const categoryItems = intelItems.filter(item => item.category === category);
+                
+                return `
+                    <div class="intel-category">
+                        <h4 class="section-title">${category}</h4>
+                        ${categoryItems.map(item => `
+                            <div class="intel-item">
+                                <div class="intel-title">${item.title}</div>
+                                <div class="intel-summary">${item.summary}</div>
+                                <div class="intel-meta">
+                                    <span class="importance-tag importance-${item.importance}">
+                                        ${item.importance === 'hot' ? '🔥' : item.importance === 'notable' ? '⚡' : '📌'}
+                                        ${item.importance}
+                                    </span>
+                                    <span>${formatTimeAgo(item.dateAdded)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${categoryItems.length === 0 ? '<div style="color: var(--text-muted); text-align: center; padding: var(--spacing-lg);">No items yet</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadDailyBrief() {
+            const briefContainer = document.getElementById('dailyBrief');
+            const hotItems = intelItems
+                .filter(item => item.importance === 'hot')
+                .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+                .slice(0, 5);
+            
+            briefContainer.innerHTML = hotItems.map(item => `
+                <div class="intel-item">
+                    <div class="intel-title">${item.title}</div>
+                    <div class="intel-summary">${item.summary}</div>
+                    <div class="intel-meta">
+                        <span>${item.category}</span>
+                        <span>${formatTimeAgo(item.dateAdded)}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (hotItems.length === 0) {
+                briefContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: var(--spacing-lg);">No urgent items today</div>';
+            }
+        }
+
+        // ===== MODAL FUNCTIONS =====
+        function openClientModal() {
+            document.getElementById('clientModal').classList.add('active');
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').classList.remove('active');
+            document.getElementById('clientForm').reset();
+        }
+
+        function openTaskModal(agentId, agentName) {
+            currentTaskAgent = agentId;
+            document.getElementById('taskAgentName').textContent = agentName;
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+            document.getElementById('taskForm').reset();
+        }
+
+        function openDecisionModal() {
+            document.getElementById('decisionModal').classList.add('active');
+        }
+
+        function closeDecisionModal() {
+            document.getElementById('decisionModal').classList.remove('active');
+            document.getElementById('decisionForm').reset();
+        }
+
+        function openVideoIdeaModal() {
+            document.getElementById('videoIdeaModal').classList.add('active');
+        }
+
+        function closeVideoIdeaModal() {
+            document.getElementById('videoIdeaModal').classList.remove('active');
+            document.getElementById('videoIdeaForm').reset();
+        }
+
+        function openIntelModal() {
+            document.getElementById('intelModal').classList.add('active');
+        }
+
+        function closeIntelModal() {
+            document.getElementById('intelModal').classList.remove('active');
+            document.getElementById('intelForm').reset();
+        }
+
+        // ===== EVENT HANDLERS =====
+        function setupEventListeners() {
+            // Client form
+            document.getElementById('clientForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const client = {
+                    id: generateId(),
+                    name: document.getElementById('clientName').value,
+                    monthlyValue: parseInt(document.getElementById('clientValue').value),
+                    status: document.getElementById('clientStatus').value,
+                    startDate: document.getElementById('clientStartDate').value
+                };
+                clients.push(client);
+                localStorage.setItem('clients', JSON.stringify(clients));
+                closeClientModal();
+                loadRevenueData();
+                updateMetrics();
+            });
+
+            // Task form
+            document.getElementById('taskForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const task = document.getElementById('taskDescription').value;
+                const agent = agents.find(a => a.id === currentTaskAgent);
+                
+                if (agent) {
+                    agent.activity.unshift({
+                        timestamp: new Date().toISOString(),
+                        text: `Received task: ${task}`
+                    });
+                    localStorage.setItem('agents', JSON.stringify(agents));
+                }
+                
+                closeTaskModal();
+                loadCommandCenterData();
+            });
+
+            // Decision form
+            document.getElementById('decisionForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const decision = {
+                    id: generateId(),
+                    question: document.getElementById('decisionQuestion').value,
+                    summary: document.getElementById('decisionSummary').value,
+                    agentsConsulted: document.getElementById('agentsConsulted').value,
+                    date: new Date().toISOString()
+                };
+                decisions.push(decision);
+                localStorage.setItem('decisions', JSON.stringify(decisions));
+                closeDecisionModal();
+                loadDecisionsList();
+            });
+
+            // Video idea form
+            document.getElementById('videoIdeaForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const idea = {
+                    id: generateId(),
+                    title: document.getElementById('videoTitle').value,
+                    topic: document.getElementById('videoTopic').value,
+                    status: 'idea',
+                    publishDate: document.getElementById('videoPublishDate').value
+                };
+                videoIdeas.push(idea);
+                localStorage.setItem('videoIdeas', JSON.stringify(videoIdeas));
+                closeVideoIdeaModal();
+                loadVideoPipeline();
+                loadContentCalendar();
+            });
+
+            // Intel form
+            document.getElementById('intelForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const intel = {
+                    id: generateId(),
+                    title: document.getElementById('intelTitle').value,
+                    summary: document.getElementById('intelSummary').value,
+                    category: document.getElementById('intelCategory').value,
+                    importance: document.getElementById('intelImportance').value,
+                    source: document.getElementById('intelSource').value,
+                    dateAdded: new Date().toISOString()
+                };
+                intelItems.push(intel);
+                localStorage.setItem('intelItems', JSON.stringify(intelItems));
+                closeIntelModal();
+                loadIntelData();
+            });
+
+            // Sub count editing
+            document.getElementById('subCount').addEventListener('blur', (e) => {
+                const newCount = parseSubCount(e.target.textContent);
+                youtubeData.subCount = newCount;
+                localStorage.setItem('youtubeData', JSON.stringify(youtubeData));
+                loadGrowthTracker();
+            });
+        }
+
+        function parseSubCount(text) {
+            const num = parseFloat(text);
+            if (text.includes('M')) return Math.round(num * 1000000);
+            if (text.includes('K')) return Math.round(num * 1000);
+            return Math.round(num);
+        }
+
+        // ===== MAIN DATA LOADING =====
+        async function loadData() {
+            try {
+                // Try to fetch tasks from API
+                const response = await fetch('/api/tasks');
+                if (response.ok) {
+                    const data = await response.json();
+                    tasks = data.items || [];
+                }
+            } catch (error) {
+                console.log('API not available, using localStorage');
+                tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            }
+
+            updateMetrics();
+            loadActivity();
+            loadPriorities();
+            renderKanbanBoard();
+        }
+
+        function loadActivity() {
+            const activityList = document.getElementById('activityList');
+            
+            // Combine different activity sources
+            const allActivities = [];
+            
+            // Add agent activities
+            agents.forEach(agent => {
+                agent.activity.forEach(activity => {
+                    allActivities.push({
+                        text: `${agent.name}: ${activity.text}`,
+                        timestamp: activity.timestamp
+                    });
+                });
+            });
+            
+            // Add decision activities
+            decisions.forEach(decision => {
+                allActivities.push({
+                    text: `Decision logged: ${decision.question}`,
+                    timestamp: decision.date
+                });
+            });
+            
+            // Sort by timestamp and take recent ones
+            allActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const recentActivities = allActivities.slice(0, 10);
+            
+            if (recentActivities.length === 0) {
+                activityList.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-text">No recent activity</div>
+                        <div class="activity-time">Start by adding some tasks or agents!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            activityList.innerHTML = recentActivities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-text">${activity.text}</div>
+                    <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+                </div>
+            `).join('');
         }
 
         function loadPriorities() {
-            const highPriorityTasks = tasks
-                .filter(t => t.priority === 'high' && t.status !== 'done')
-                .slice(0, 5);
-
-            const prioritiesHtml = highPriorityTasks.map(task => `
+            const prioritiesList = document.getElementById('prioritiesList');
+            
+            // Get high priority items from various sources
+            const highPriority = [];
+            
+            // High priority tasks
+            const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'done').slice(0, 3);
+            highPriority.push(...highPriorityTasks.map(task => ({
+                text: task.title,
+                type: 'task',
+                completed: task.status === 'done',
+                id: task.id
+            })));
+            
+            // Hot intel items
+            const hotIntel = intelItems.filter(item => item.importance === 'hot').slice(0, 2);
+            highPriority.push(...hotIntel.map(item => ({
+                text: `Review: ${item.title}`,
+                type: 'intel',
+                completed: false,
+                id: item.id
+            })));
+            
+            if (highPriority.length === 0) {
+                prioritiesList.innerHTML = `
+                    <div class="priority-item">
+                        <span class="priority-text">No high priority items</span>
+                    </div>
+                    <button class="add-priority-btn" onclick="document.querySelector('.nav-tab[data-tab=\"projects\"]').click()">
+                        Add Priority Task
+                    </button>
+                `;
+                return;
+            }
+            
+            prioritiesList.innerHTML = highPriority.map(item => `
                 <div class="priority-item">
-                    <input type="checkbox" class="priority-checkbox" ${task.status === 'done' ? 'checked' : ''} 
-                           onchange="toggleTaskStatus('${task.id}')">
-                    <span class="priority-text ${task.status === 'done' ? 'completed' : ''}">${task.title}</span>
+                    <input type="checkbox" class="priority-checkbox" ${item.completed ? 'checked' : ''}>
+                    <span class="priority-text ${item.completed ? 'completed' : ''}">${item.text}</span>
                 </div>
-            `).join('');
-
-            document.getElementById('prioritiesList').innerHTML = prioritiesHtml || `
-                <div class="priority-item">
-                    <span class="priority-text">No high priority tasks</span>
-                </div>
+            `).join('') + `
+                <button class="add-priority-btn" onclick="document.querySelector('.nav-tab[data-tab=\"projects\"]').click()">
+                    Add More Tasks
+                </button>
             `;
         }
 
-        // ===== KANBAN BOARD =====
+        // ===== KANBAN BOARD (from original) =====
         function renderKanbanBoard() {
             // Update status counts
             statuses.forEach(status => {
@@ -1031,149 +2373,101 @@
                 `).join('');
 
                 return `
-                    <div class="kanban-column" data-status="${status.key}">
-                        <div class="column-header">
-                            <span class="column-title">${status.label}</span>
-                            <span class="task-count">${status.count}</span>
+                    <div class="kanban-column" data-status="${status.key}" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: var(--spacing-lg); min-height: 500px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg); padding-bottom: var(--spacing-sm); border-bottom: 1px solid var(--card-border);">
+                            <span style="font-weight: 600; font-size: var(--font-size-lg);">${status.label}</span>
+                            <span style="background: var(--accent); color: white; padding: 4px 8px; border-radius: 12px; font-size: var(--font-size-xs); font-weight: 500;">${status.count}</span>
                         </div>
                         <div class="tasks-container">${tasksHtml}</div>
-                        <button class="add-task-btn" onclick="focusNewTask()">+ Add Task</button>
+                        <button style="background: transparent; border: 2px dashed var(--card-border); color: var(--text-secondary); padding: var(--spacing-md); border-radius: var(--border-radius); font-size: var(--font-size-sm); cursor: pointer; width: 100%; transition: all 0.2s ease;" onclick="focusNewTask()">+ Add Task</button>
                     </div>
                 `;
             }).join('');
 
             document.getElementById('kanbanBoard').innerHTML = boardHtml;
-            initializeDragAndDrop();
         }
 
-        // ===== DRAG AND DROP =====
-        function initializeDragAndDrop() {
-            let draggedElement = null;
+        // Add task form handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const addTaskBtn = document.getElementById('addTask');
+            if (addTaskBtn) {
+                addTaskBtn.addEventListener('click', async () => {
+                    const title = document.getElementById('newTitle').value.trim();
+                    const owner = document.getElementById('newOwner').value;
+                    const priority = document.getElementById('newPriority').value;
+                    const due_date = document.getElementById('newDue').value || null;
+                    const msgEl = document.getElementById('msg');
 
-            document.querySelectorAll('.task-card').forEach(card => {
-                card.addEventListener('dragstart', (e) => {
-                    draggedElement = card;
-                    card.style.opacity = '0.5';
-                });
-
-                card.addEventListener('dragend', (e) => {
-                    card.style.opacity = '1';
-                    draggedElement = null;
-                });
-            });
-
-            document.querySelectorAll('.kanban-column').forEach(column => {
-                column.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    column.classList.add('drag-over');
-                });
-
-                column.addEventListener('dragleave', (e) => {
-                    column.classList.remove('drag-over');
-                });
-
-                column.addEventListener('drop', async (e) => {
-                    e.preventDefault();
-                    column.classList.remove('drag-over');
-
-                    if (draggedElement) {
-                        const taskId = draggedElement.dataset.id;
-                        const newStatus = column.dataset.status;
-                        const oldStatus = draggedElement.dataset.status;
-
-                        if (oldStatus !== newStatus) {
-                            const success = await updateTask(taskId, { status: newStatus });
-                            if (success) {
-                                await addTaskActivity(taskId, `Moved to ${newStatus}`, 'Paul');
-                                await loadData();
-                            }
-                        }
+                    if (!title) {
+                        msgEl.textContent = 'Please enter a task title.';
+                        msgEl.style.color = 'var(--danger)';
+                        return;
                     }
+
+                    // Try to add via API, fallback to localStorage
+                    try {
+                        const response = await fetch('/api/tasks', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title,
+                                owner,
+                                priority,
+                                due_date,
+                                status: 'todo'
+                            })
+                        });
+
+                        if (response.ok) {
+                            msgEl.textContent = 'Task added successfully!';
+                            msgEl.style.color = 'var(--success)';
+                        } else {
+                            throw new Error('API failed');
+                        }
+                    } catch (error) {
+                        // Fallback to localStorage
+                        const newTask = {
+                            id: generateId(),
+                            title,
+                            owner,
+                            priority,
+                            due_date,
+                            status: 'todo',
+                            created_at: new Date().toISOString()
+                        };
+                        
+                        tasks.push(newTask);
+                        localStorage.setItem('tasks', JSON.stringify(tasks));
+                        
+                        msgEl.textContent = 'Task added successfully!';
+                        msgEl.style.color = 'var(--success)';
+                    }
+
+                    document.getElementById('newTitle').value = '';
+                    document.getElementById('newDue').value = '';
+                    await loadData();
                 });
-            });
-        }
-
-        // ===== EVENT HANDLERS =====
-        async function toggleTaskStatus(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-
-            const newStatus = task.status === 'done' ? 'todo' : 'done';
-            const success = await updateTask(taskId, { status: newStatus });
-            if (success) {
-                await addTaskActivity(taskId, `Marked as ${newStatus}`, 'Paul');
-                await loadData();
             }
-        }
+        });
 
         function focusNewTask() {
             document.querySelector('.nav-tab[data-tab="projects"]').click();
-            document.getElementById('newTitle').focus();
+            setTimeout(() => {
+                document.getElementById('newTitle').focus();
+            }, 100);
         }
 
-        // ===== MAIN DATA LOADING =====
-        async function loadData() {
-            tasks = await fetchTasks();
-            updateMetrics();
-            loadActivity();
-            loadPriorities();
-            renderKanbanBoard();
-        }
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀 VideoMind AI Mission Control initialized');
-            
-            initializeTabs();
-            updateWelcomeBar();
-
-            // Check if tasks exist, bootstrap if needed
-            if (tasks.length === 0) {
-                await bootstrapTasks();
-            }
-
-            await loadData();
-
-            // Add task form handler
-            document.getElementById('addTask').addEventListener('click', async () => {
-                const title = document.getElementById('newTitle').value.trim();
-                const owner = document.getElementById('newOwner').value;
-                const priority = document.getElementById('newPriority').value;
-                const due_date = document.getElementById('newDue').value || null;
-                const msgEl = document.getElementById('msg');
-
-                if (!title) {
-                    msgEl.textContent = 'Please enter a task title.';
-                    msgEl.style.color = 'var(--danger)';
-                    return;
-                }
-
-                const success = await addTask({
-                    title,
-                    owner,
-                    priority,
-                    due_date,
-                    status: 'todo'
-                });
-
-                if (success) {
-                    document.getElementById('newTitle').value = '';
-                    document.getElementById('newDue').value = '';
-                    msgEl.textContent = 'Task added successfully!';
-                    msgEl.style.color = 'var(--success)';
-                    await loadData();
-                } else {
-                    msgEl.textContent = 'Failed to add task. Please try again.';
-                    msgEl.style.color = 'var(--danger)';
-                }
-            });
-
-            // Update time every minute
-            setInterval(updateWelcomeBar, 60000);
-        });
-
-        // ===== GLOBAL FUNCTIONS =====
-        window.toggleTaskStatus = toggleTaskStatus;
+        // Make functions globally accessible
+        window.openClientModal = openClientModal;
+        window.closeClientModal = closeClientModal;
+        window.openTaskModal = openTaskModal;
+        window.closeTaskModal = closeTaskModal;
+        window.openDecisionModal = openDecisionModal;
+        window.closeDecisionModal = closeDecisionModal;
+        window.openVideoIdeaModal = openVideoIdeaModal;
+        window.closeVideoIdeaModal = closeVideoIdeaModal;
+        window.openIntelModal = openIntelModal;
+        window.closeIntelModal = closeIntelModal;
         window.focusNewTask = focusNewTask;
     </script>
 </body>

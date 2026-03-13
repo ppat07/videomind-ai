@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control - {{ app_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary-bg: #050508;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #3498DB;
+            --accent-hover: #2980B9;
+            --accent-glow: rgba(52, 152, 219, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-radius: 12px;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 2.5rem;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-md: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+        }
+
+        /* ===== RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px var(--accent-glow);
+            }
+            50% {
+                box-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .glow {
+            animation: glow 2s infinite;
+        }
+
+        /* ===== GLASS MORPHISM ===== */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: var(--spacing-md) var(--spacing-xl);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(5, 5, 8, 0.8);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-lg);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-weight: 700;
+            font-size: var(--font-size-xl);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo::before {
+            content: "🧠";
+            font-size: var(--font-size-2xl);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-tab {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            border-radius: calc(var(--border-radius) - 4px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tab.active {
+            color: var(--text-primary);
+            background: var(--accent);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .header-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            transition: all 0.2s ease;
+        }
+
+        .header-nav a:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* ===== DASHBOARD TAB ===== */
+        .welcome-bar {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .welcome-text {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .welcome-date {
+            font-size: var(--font-size-md);
+            opacity: 0.9;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 32px rgba(52, 152, 219, 0.15);
+        }
+
+        .metric-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .metric-icon {
+            font-size: var(--font-size-xl);
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        .trend-neutral {
+            color: var(--text-muted);
+        }
+
+        .metric-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .metric-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-xl);
+        }
+
+        .activity-feed {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .activity-list {
+            max-height: 300px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+        }
+
+        .activity-item {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--card-border);
+            transition: all 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-text {
+            font-size: var(--font-size-sm);
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+        }
+
+        .priorities-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .priority-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: calc(var(--border-radius) - 4px);
+        }
+
+        .priority-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .priority-text {
+            flex: 1;
+            font-size: var(--font-size-sm);
+        }
+
+        .priority-text.completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .add-priority-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .add-priority-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ===== PROJECTS TAB ===== */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .kanban-column {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            min-height: 500px;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+        }
+
+        .task-count {
+            background: var(--accent);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            draggable: true;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+        }
+
+        .task-title {
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .task-description {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--font-size-xs);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .priority-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .priority-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .task-date {
+            color: var(--text-muted);
+        }
+
+        .task-owner {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .add-task-btn {
+            background: transparent;
+            border: 2px dashed var(--card-border);
+            color: var(--text-secondary);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .add-task-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ===== FORM STYLES ===== */
+        .form-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: var(--spacing-sm);
+            align-items: end;
+        }
+
+        .form-input, .form-select {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .form-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .form-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .nav-tabs {
+                order: -1;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: var(--spacing-md);
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-text {
+                font-size: var(--font-size-xl);
+            }
+
+            .metric-value {
+                font-size: var(--font-size-2xl);
+            }
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: var(--spacing-xs); }
+        .mb-2 { margin-bottom: var(--spacing-sm); }
+        .mb-3 { margin-bottom: var(--spacing-md); }
+        .mb-4 { margin-bottom: var(--spacing-lg); }
+
+        /* ===== DRAG AND DROP ===== */
+        .drag-over {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">VideoMind AI</a>
+            
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="dashboard">📊 Overview</button>
+                <button class="nav-tab" data-tab="projects">📋 Tasks</button>
+                <button class="nav-tab" data-tab="metrics">📈 Metrics</button>
+            </nav>
+
+            <div class="header-right">
+                <div class="header-nav">
+                    <a href="/">Home</a>
+                    <a href="/directory">Directory</a>
+                    <a href="/jobs">Jobs</a>
+                </div>
+                <div class="status-indicator" title="System Online"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        
+        <!-- DASHBOARD TAB -->
+        <section id="dashboard" class="tab-content active fade-in-up">
+            <div class="welcome-bar">
+                <div class="welcome-text" id="welcomeText">Good evening, Paul</div>
+                <div class="welcome-date" id="welcomeDate">Thursday, March 5th, 2026</div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">💰</span>
+                        <span class="metric-trend trend-up">
+                            <span>↗</span>
+                            <span id="mrrTrend">+0%</span>
+                        </span>
+                    </div>
+                    <div class="metric-label">Monthly Recurring Revenue</div>
+                    <div class="metric-value" id="mrrValue">$0</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🎥</span>
+                        <span class="metric-trend trend-up">
+                            <span>↗</span>
+                            <span id="videosTrend">+0%</span>
+                        </span>
+                    </div>
+                    <div class="metric-label">Videos Processed</div>
+                    <div class="metric-value" id="videosValue">0</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">👥</span>
+                        <span class="metric-trend trend-up">
+                            <span>↗</span>
+                            <span id="customersTrend">+0%</span>
+                        </span>
+                    </div>
+                    <div class="metric-label">Active Customers</div>
+                    <div class="metric-value" id="customersValue">0</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">📈</span>
+                        <span class="metric-trend trend-neutral">
+                            <span>→</span>
+                            <span id="goalTrend">145 days</span>
+                        </span>
+                    </div>
+                    <div class="metric-label">Days to $10K Goal</div>
+                    <div class="metric-value" id="daysToGoal">145</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="activity-feed">
+                    <h3 class="section-title">🔥 Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <!-- Activity items will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="priorities-section">
+                    <h3 class="section-title">🎯 Top Priorities</h3>
+                    <div id="prioritiesList">
+                        <!-- Priorities will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROJECTS TAB -->
+        <section id="projects" class="tab-content fade-in-up">
+            <h2 class="section-title">📋 Task Management</h2>
+            
+            <!-- Add Task Form -->
+            <div class="form-section">
+                <div class="form-grid">
+                    <input id="newTitle" class="form-input" placeholder="Task title" />
+                    <select id="newOwner" class="form-select">
+                        <option value="Paul">Paul</option>
+                        <option value="David">David</option>
+                    </select>
+                    <select id="newPriority" class="form-select">
+                        <option value="high">High Priority</option>
+                        <option value="medium" selected>Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                    <input id="newDue" class="form-input" type="date" />
+                    <button id="addTask" class="form-btn">Add Task</button>
+                </div>
+                <p id="msg" class="text-xs text-gray-600 mt-2"></p>
+            </div>
+
+            <!-- Kanban Board -->
+            <div class="kanban-board" id="kanbanBoard">
+                <!-- Columns will be loaded here -->
+            </div>
+        </section>
+
+        <!-- METRICS TAB -->
+        <section id="metrics" class="tab-content fade-in-up">
+            <h2 class="section-title text-center">📈 Business Intelligence</h2>
+            <div class="text-center" style="color: var(--text-muted); margin-top: var(--spacing-xl);">
+                <p>Advanced analytics and reporting coming soon...</p>
+                <p>Track revenue trends, customer acquisition, and growth metrics.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ===== GLOBAL STATE =====
+        let tasks = [];
+        const statuses = [
+            { key: 'todo', label: '📝 Todo', count: 0 },
+            { key: 'doing', label: '🚀 Doing', count: 0 },
+            { key: 'blocked', label: '🚧 Blocked', count: 0 },
+            { key: 'done', label: '✅ Done', count: 0 }
+        ];
+
+        // ===== UTILITY FUNCTIONS =====
+        function formatDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return now.toLocaleDateString('en-US', options);
+        }
+
+        function getTimeGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Good morning';
+            if (hour < 18) return 'Good afternoon';
+            return 'Good evening';
+        }
+
+        function formatTimeAgo(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+            if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            return 'Just now';
+        }
+
+        // ===== API FUNCTIONS =====
+        async function fetchTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const data = await response.json();
+                return data.items || [];
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+                return [];
+            }
+        }
+
+        async function addTask(taskData) {
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Error adding task:', error);
+                return false;
+            }
+        }
+
+        async function updateTask(id, updates) {
+            try {
+                const response = await fetch(`/api/tasks/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Error updating task:', error);
+                return false;
+            }
+        }
+
+        async function addTaskActivity(id, text, author = 'David') {
+            try {
+                const response = await fetch(`/api/tasks/${id}/activity`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, author })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Error adding activity:', error);
+                return false;
+            }
+        }
+
+        async function bootstrapTasks() {
+            try {
+                await fetch('/api/tasks/bootstrap', { method: 'POST' });
+            } catch (error) {
+                console.error('Error bootstrapping tasks:', error);
+            }
+        }
+
+        // ===== TAB MANAGEMENT =====
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+
+                    // Update tab appearance
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Update content visibility
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+
+        // ===== DASHBOARD FUNCTIONS =====
+        function updateWelcomeBar() {
+            document.getElementById('welcomeText').textContent = `${getTimeGreeting()}, Paul`;
+            document.getElementById('welcomeDate').textContent = formatDate();
+        }
+
+        function updateMetrics() {
+            // Calculate metrics from task data
+            const completedTasks = tasks.filter(t => t.status === 'done').length;
+            const totalTasks = tasks.length;
+            const activeTasks = tasks.filter(t => t.status !== 'done').length;
+            
+            // Mock business metrics (these would come from real data)
+            document.getElementById('mrrValue').textContent = '$0';
+            document.getElementById('videosValue').textContent = '0';
+            document.getElementById('customersValue').textContent = '0';
+            document.getElementById('daysToGoal').textContent = Math.ceil((new Date('2026-08-01') - new Date()) / (1000 * 60 * 60 * 24));
+
+            // Update trends (mock data)
+            document.getElementById('mrrTrend').textContent = '+0%';
+            document.getElementById('videosTrend').textContent = '+0%';
+            document.getElementById('customersTrend').textContent = '+0%';
+            document.getElementById('goalTrend').textContent = `${Math.ceil((new Date('2026-08-01') - new Date()) / (1000 * 60 * 60 * 24))} days`;
+        }
+
+        function loadActivity() {
+            const recentTasks = [...tasks]
+                .filter(t => t.activity && t.activity.length > 0)
+                .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+                .slice(0, 10);
+
+            const activityHtml = recentTasks.map(task => {
+                const lastActivity = task.activity[task.activity.length - 1];
+                return `
+                    <div class="activity-item">
+                        <div class="activity-text">${lastActivity.text}</div>
+                        <div class="activity-time">${formatTimeAgo(task.updated_at || task.created_at)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('activityList').innerHTML = activityHtml || `
+                <div class="activity-item">
+                    <div class="activity-text">No recent activity</div>
+                    <div class="activity-time">Start by adding some tasks!</div>
+                </div>
+            `;
+        }
+
+        function loadPriorities() {
+            const highPriorityTasks = tasks
+                .filter(t => t.priority === 'high' && t.status !== 'done')
+                .slice(0, 5);
+
+            const prioritiesHtml = highPriorityTasks.map(task => `
+                <div class="priority-item">
+                    <input type="checkbox" class="priority-checkbox" ${task.status === 'done' ? 'checked' : ''} 
+                           onchange="toggleTaskStatus('${task.id}')">
+                    <span class="priority-text ${task.status === 'done' ? 'completed' : ''}">${task.title}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('prioritiesList').innerHTML = prioritiesHtml || `
+                <div class="priority-item">
+                    <span class="priority-text">No high priority tasks</span>
+                </div>
+            `;
+        }
+
+        // ===== KANBAN BOARD =====
+        function renderKanbanBoard() {
+            // Update status counts
+            statuses.forEach(status => {
+                status.count = tasks.filter(t => t.status === status.key).length;
+            });
+
+            const boardHtml = statuses.map(status => {
+                const statusTasks = tasks.filter(t => t.status === status.key);
+                const tasksHtml = statusTasks.map(task => `
+                    <div class="task-card" draggable="true" data-id="${task.id}" data-status="${task.status}">
+                        <div class="task-title">${task.title}</div>
+                        ${task.notes ? `<div class="task-description">${task.notes}</div>` : ''}
+                        <div class="task-meta">
+                            <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                            <span class="task-date">${task.due_date || new Date(task.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="task-owner">${task.owner}</div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="kanban-column" data-status="${status.key}">
+                        <div class="column-header">
+                            <span class="column-title">${status.label}</span>
+                            <span class="task-count">${status.count}</span>
+                        </div>
+                        <div class="tasks-container">${tasksHtml}</div>
+                        <button class="add-task-btn" onclick="focusNewTask()">+ Add Task</button>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('kanbanBoard').innerHTML = boardHtml;
+            initializeDragAndDrop();
+        }
+
+        // ===== DRAG AND DROP =====
+        function initializeDragAndDrop() {
+            let draggedElement = null;
+
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('dragstart', (e) => {
+                    draggedElement = card;
+                    card.style.opacity = '0.5';
+                });
+
+                card.addEventListener('dragend', (e) => {
+                    card.style.opacity = '1';
+                    draggedElement = null;
+                });
+            });
+
+            document.querySelectorAll('.kanban-column').forEach(column => {
+                column.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    column.classList.add('drag-over');
+                });
+
+                column.addEventListener('dragleave', (e) => {
+                    column.classList.remove('drag-over');
+                });
+
+                column.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    column.classList.remove('drag-over');
+
+                    if (draggedElement) {
+                        const taskId = draggedElement.dataset.id;
+                        const newStatus = column.dataset.status;
+                        const oldStatus = draggedElement.dataset.status;
+
+                        if (oldStatus !== newStatus) {
+                            const success = await updateTask(taskId, { status: newStatus });
+                            if (success) {
+                                await addTaskActivity(taskId, `Moved to ${newStatus}`, 'Paul');
+                                await loadData();
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // ===== EVENT HANDLERS =====
+        async function toggleTaskStatus(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const newStatus = task.status === 'done' ? 'todo' : 'done';
+            const success = await updateTask(taskId, { status: newStatus });
+            if (success) {
+                await addTaskActivity(taskId, `Marked as ${newStatus}`, 'Paul');
+                await loadData();
+            }
+        }
+
+        function focusNewTask() {
+            document.querySelector('.nav-tab[data-tab="projects"]').click();
+            document.getElementById('newTitle').focus();
+        }
+
+        // ===== MAIN DATA LOADING =====
+        async function loadData() {
+            tasks = await fetchTasks();
+            updateMetrics();
+            loadActivity();
+            loadPriorities();
+            renderKanbanBoard();
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 VideoMind AI Mission Control initialized');
+            
+            initializeTabs();
+            updateWelcomeBar();
+
+            // Check if tasks exist, bootstrap if needed
+            if (tasks.length === 0) {
+                await bootstrapTasks();
+            }
+
+            await loadData();
+
+            // Add task form handler
+            document.getElementById('addTask').addEventListener('click', async () => {
+                const title = document.getElementById('newTitle').value.trim();
+                const owner = document.getElementById('newOwner').value;
+                const priority = document.getElementById('newPriority').value;
+                const due_date = document.getElementById('newDue').value || null;
+                const msgEl = document.getElementById('msg');
+
+                if (!title) {
+                    msgEl.textContent = 'Please enter a task title.';
+                    msgEl.style.color = 'var(--danger)';
+                    return;
+                }
+
+                const success = await addTask({
+                    title,
+                    owner,
+                    priority,
+                    due_date,
+                    status: 'todo'
+                });
+
+                if (success) {
+                    document.getElementById('newTitle').value = '';
+                    document.getElementById('newDue').value = '';
+                    msgEl.textContent = 'Task added successfully!';
+                    msgEl.style.color = 'var(--success)';
+                    await loadData();
+                } else {
+                    msgEl.textContent = 'Failed to add task. Please try again.';
+                    msgEl.style.color = 'var(--danger)';
+                }
+            });
+
+            // Update time every minute
+            setInterval(updateWelcomeBar, 60000);
+        });
+
+        // ===== GLOBAL FUNCTIONS =====
+        window.toggleTaskStatus = toggleTaskStatus;
+        window.focusNewTask = focusNewTask;
+    </script>
+</body>
+</html>
