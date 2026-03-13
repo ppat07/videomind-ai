@@ -419,3 +419,36 @@ async def bulk_add_directory_entries(
     
     db.commit()
     return {"success": True, "created": created, "skipped": skipped}
+
+
+@router.post("/directory/update-summaries")
+async def update_directory_summaries(
+    request: dict,
+    db: Session = Depends(get_database)
+):
+    """Update summaries for existing directory entries."""
+    updates = request.get("updates", [])
+    updated = 0
+    not_found = 0
+    
+    for update_data in updates:
+        source_url = update_data.get("source_url")
+        new_summary = update_data.get("summary_5_bullets")
+        
+        if not source_url or not new_summary:
+            continue
+            
+        # Find existing entry
+        entry = db.query(DirectoryEntry).filter(DirectoryEntry.source_url == source_url).first()
+        
+        if entry:
+            # Update the summary and related fields
+            entry.summary_5_bullets = new_summary
+            if update_data.get("best_for"):
+                entry.best_for = update_data["best_for"]
+            updated += 1
+        else:
+            not_found += 1
+    
+    db.commit()
+    return {"success": True, "updated": updated, "not_found": not_found}
