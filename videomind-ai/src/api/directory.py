@@ -452,3 +452,29 @@ async def update_directory_summaries(
     
     db.commit()
     return {"success": True, "updated": updated, "not_found": not_found}
+
+
+@router.post("/directory/emergency-reset")
+async def emergency_directory_reset(
+    request: dict,
+    db: Session = Depends(get_database)
+):
+    """EMERGENCY: Reset directory database completely."""
+    confirm = request.get("confirm_reset")
+    
+    if confirm != "CONFIRMED_RESET_DIRECTORY_DATABASE":
+        return {"error": "Reset confirmation required"}
+    
+    try:
+        # Delete all directory entries
+        deleted_count = db.query(DirectoryEntry).delete()
+        db.commit()
+        
+        return {
+            "success": True,
+            "deleted_count": deleted_count,
+            "message": "Directory database reset complete"
+        }
+    except Exception as e:
+        db.rollback()
+        return {"error": f"Reset failed: {str(e)}"}
