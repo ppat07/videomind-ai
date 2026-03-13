@@ -1070,7 +1070,7 @@
                 <button class="nav-tab active" data-tab="dashboard">📊 Overview</button>
                 <button class="nav-tab" data-tab="revenue">💰 Revenue</button>
                 <button class="nav-tab" data-tab="command-center">🏢 Command Center</button>
-                <button class="nav-tab" data-tab="youtube">🎬 YouTube</button>
+                <button class="nav-tab" data-tab="content">📱 Content</button>
                 <button class="nav-tab" data-tab="intel">📡 Intel</button>
                 <button class="nav-tab" data-tab="projects">📋 Tasks</button>
             </nav>
@@ -1240,30 +1240,30 @@
             </div>
         </section>
 
-        <!-- YOUTUBE TAB -->
-        <section id="youtube" class="tab-content fade-in-up">
-            <h2 class="section-title">🎬 YouTube Management</h2>
+        <!-- CONTENT TAB -->
+        <section id="content" class="tab-content fade-in-up">
+            <h2 class="section-title">📱 Content Strategy</h2>
             
             <div class="youtube-grid">
                 <div class="video-pipeline">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
-                        <h3 class="section-title" style="margin-bottom: 0;">Video Ideas Pipeline</h3>
-                        <button class="form-btn" onclick="openVideoIdeaModal()">+ Add Idea</button>
+                        <h3 class="section-title" style="margin-bottom: 0;">Content Ideas Pipeline</h3>
+                        <button class="form-btn" onclick="openContentIdeaModal()">+ Add Idea</button>
                     </div>
                     
-                    <div class="pipeline-statuses" id="videoPipeline">
+                    <div class="pipeline-statuses" id="contentPipeline">
                         <!-- Pipeline columns will be loaded here -->
                     </div>
                 </div>
 
                 <div>
                     <div class="growth-tracker">
-                        <h3 class="section-title">📈 Growth Tracker</h3>
-                        <div class="sub-count" id="subCount" contenteditable="true">1.2K</div>
+                        <h3 class="section-title">🐦 X Growth Tracker</h3>
+                        <div class="sub-count" id="followerCount" contenteditable="true">2.1K</div>
                         <div class="milestone-progress">
-                            <div class="progress-bar" id="milestoneProgress" style="width: 20%"></div>
+                            <div class="progress-bar" id="milestoneProgress" style="width: 42%"></div>
                         </div>
-                        <div class="milestone-label" id="milestoneLabel">Rising Creator (20% to 10K)</div>
+                        <div class="milestone-label" id="milestoneLabel">Growth Mode (42% to 5K)</div>
                     </div>
 
                     <div class="content-calendar">
@@ -1414,28 +1414,35 @@
         </div>
     </div>
 
-    <!-- Video Idea Modal -->
-    <div id="videoIdeaModal" class="modal-overlay">
+    <!-- Content Idea Modal -->
+    <div id="contentIdeaModal" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Add Video Idea</h3>
-                <button class="modal-close" onclick="closeVideoIdeaModal()">&times;</button>
+                <h3 class="modal-title">Add Content Idea</h3>
+                <button class="modal-close" onclick="closeContentIdeaModal()">&times;</button>
             </div>
-            <form id="videoIdeaForm">
+            <form id="contentIdeaForm">
                 <div class="form-group">
-                    <label class="form-label">Video Title</label>
-                    <input type="text" id="videoTitle" class="form-input" required>
+                    <label class="form-label">Content/Post Text</label>
+                    <textarea id="contentText" class="form-textarea" placeholder="What do you want to post about?" required></textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Topic/Category</label>
-                    <input type="text" id="videoTopic" class="form-input">
+                    <select id="contentTopic" class="form-select">
+                        <option value="Business Update">Business Update</option>
+                        <option value="Product Demo">Product Demo</option>
+                        <option value="Industry Insight">Industry Insight</option>
+                        <option value="Founder Story">Founder Story</option>
+                        <option value="Tips & Advice">Tips & Advice</option>
+                        <option value="Behind the Scenes">Behind the Scenes</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Target Publish Date</label>
-                    <input type="date" id="videoPublishDate" class="form-input">
+                    <input type="date" id="contentPublishDate" class="form-input">
                 </div>
                 <div class="btn-group">
-                    <button type="button" class="form-btn btn-secondary" onclick="closeVideoIdeaModal()">Cancel</button>
+                    <button type="button" class="form-btn btn-secondary" onclick="closeContentIdeaModal()">Cancel</button>
                     <button type="submit" class="form-btn">Add Idea</button>
                 </div>
             </form>
@@ -1495,7 +1502,7 @@
         let decisions = JSON.parse(localStorage.getItem('decisions') || '[]');
         let videoIdeas = JSON.parse(localStorage.getItem('videoIdeas') || '[]');
         let intelItems = JSON.parse(localStorage.getItem('intelItems') || '[]');
-        let youtubeData = JSON.parse(localStorage.getItem('youtubeData') || '{"subCount": 1200, "milestone": "Rising Creator"}');
+        let socialData = JSON.parse(localStorage.getItem('socialData') || '{"subCount": 2100, "milestone": "Growth Mode"}');
 
         const statuses = [
             { key: 'todo', label: '📝 Todo', count: 0 },
@@ -1504,11 +1511,11 @@
             { key: 'done', label: '✅ Done', count: 0 }
         ];
 
-        const videoStatuses = [
+        const contentStatuses = [
             { key: 'idea', label: '💡 Ideas' },
-            { key: 'scripting', label: '📝 Scripting' },
-            { key: 'filming', label: '🎬 Filming' },
-            { key: 'editing', label: '✂️ Editing' },
+            { key: 'drafting', label: '📝 Drafting' },
+            { key: 'review', label: '👀 Review' },
+            { key: 'scheduled', label: '⏰ Scheduled' },
             { key: 'published', label: '🚀 Published' }
         ];
 
@@ -1537,24 +1544,24 @@
                 clients = [
                     {
                         id: '1',
-                        name: 'TechCorp AI',
-                        monthlyValue: 2500,
+                        name: 'AI Training Co',
+                        monthlyValue: 149,
                         status: 'active',
-                        startDate: '2026-01-15'
+                        startDate: '2026-02-15'
                     },
                     {
                         id: '2',
-                        name: 'DataFlow Solutions',
-                        monthlyValue: 1800,
+                        name: 'Content Creator Pro',
+                        monthlyValue: 79,
                         status: 'active',
-                        startDate: '2026-02-01'
+                        startDate: '2026-03-01'
                     },
                     {
                         id: '3',
-                        name: 'ML Innovations',
-                        monthlyValue: 3200,
+                        name: 'Enterprise Demo Client',
+                        monthlyValue: 299,
                         status: 'pending',
-                        startDate: '2026-03-01'
+                        startDate: '2026-03-15'
                     }
                 ];
                 localStorage.setItem('clients', JSON.stringify(clients));
@@ -1565,87 +1572,94 @@
                 agents = [
                     {
                         id: '1',
-                        name: 'David',
-                        role: 'AI CEO & Strategy Lead',
+                        name: 'David Patler',
+                        role: 'AI CEO & Business Partner',
                         status: 'online',
                         model: 'Claude Sonnet 4',
                         lastActive: new Date().toISOString(),
-                        description: 'Primary AI agent handling VideoMind AI business operations, strategic decisions, and autonomous execution.',
-                        capabilities: ['Business Strategy', 'Product Development', 'Customer Acquisition', 'Revenue Optimization'],
+                        description: 'Paul\'s AI right-hand managing VideoMind AI operations with full autonomous authority to build to $10K MRR.',
+                        capabilities: ['Business Strategy', 'Product Development', 'Customer Acquisition', 'Revenue Optimization', 'Directory Management'],
                         activity: [
-                            { timestamp: new Date().toISOString(), text: 'Deployed directory enhancement fixes' },
-                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Analyzed customer feedback and optimized pricing' }
+                            { timestamp: new Date().toISOString(), text: 'Enhanced Mission Control dashboard with 4 new tabs' },
+                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Fixed directory card display issues - 76 videos now showing properly' }
                         ]
                     },
                     {
                         id: '2',
-                        name: 'Marketing Agent',
-                        role: 'Content & Growth Marketing',
+                        name: 'X Growth Agent',
+                        role: 'Social Media & Content',
                         status: 'busy',
                         model: 'GPT-4o',
                         lastActive: new Date(Date.now() - 900000).toISOString(),
-                        description: 'Specialized in content creation, social media management, and customer acquisition strategies.',
-                        capabilities: ['Content Creation', 'Social Media', 'Email Marketing', 'SEO Optimization'],
+                        description: 'Focused on growing Paul\'s X presence (@paulpatlur) and creating engaging content about VideoMind AI journey.',
+                        capabilities: ['X/Twitter Growth', 'Thread Writing', 'Engagement Strategy', 'Viral Content Creation'],
                         activity: [
-                            { timestamp: new Date(Date.now() - 1800000).toISOString(), text: 'Created weekly content calendar' },
-                            { timestamp: new Date(Date.now() - 7200000).toISOString(), text: 'Analyzed competitor marketing strategies' }
+                            { timestamp: new Date(Date.now() - 1800000).toISOString(), text: 'Drafted thread about hitting $527 MRR milestone' },
+                            { timestamp: new Date(Date.now() - 7200000).toISOString(), text: 'Analyzed competitor content strategies in AI space' }
                         ]
                     },
                     {
                         id: '3',
-                        name: 'Technical Agent',
-                        role: 'Development & Infrastructure',
+                        name: 'Revenue Agent',
+                        role: 'Sales & Customer Success',
                         status: 'online',
-                        model: 'Claude Code',
+                        model: 'Claude Haiku',
                         lastActive: new Date(Date.now() - 600000).toISOString(),
-                        description: 'Handles technical development, infrastructure management, and system optimization.',
-                        capabilities: ['Full-Stack Development', 'Infrastructure', 'API Design', 'Database Optimization'],
+                        description: 'Drives VideoMind AI revenue growth through customer acquisition, pricing optimization, and retention strategies.',
+                        capabilities: ['Lead Generation', 'Customer Onboarding', 'Pricing Strategy', 'MRR Optimization'],
                         activity: [
-                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Optimized video processing pipeline' },
-                            { timestamp: new Date(Date.now() - 10800000).toISOString(), text: 'Deployed security updates' }
+                            { timestamp: new Date(Date.now() - 3600000).toISOString(), text: 'Onboarded 2 new customers - $228 added to MRR' },
+                            { timestamp: new Date(Date.now() - 10800000).toISOString(), text: 'Updated pricing strategy based on customer feedback' }
                         ]
                     },
                     {
                         id: '4',
-                        name: 'Customer Success Agent',
-                        role: 'Support & Retention',
+                        name: 'Technical Agent',
+                        role: 'Platform Development',
                         status: 'offline',
-                        model: 'GPT-4',
+                        model: 'Claude Code',
                         lastActive: new Date(Date.now() - 86400000).toISOString(),
-                        description: 'Manages customer relationships, support tickets, and retention strategies.',
-                        capabilities: ['Customer Support', 'User Onboarding', 'Feedback Analysis', 'Retention Optimization'],
+                        description: 'Handles VideoMind AI technical infrastructure, processing pipeline, and platform improvements.',
+                        capabilities: ['Video Processing', 'API Development', 'Database Management', 'System Scaling'],
                         activity: [
-                            { timestamp: new Date(Date.now() - 86400000).toISOString(), text: 'Processed customer feedback survey' },
-                            { timestamp: new Date(Date.now() - 172800000).toISOString(), text: 'Updated help documentation' }
+                            { timestamp: new Date(Date.now() - 86400000).toISOString(), text: 'Deployed Whisper fallback for better transcript coverage' },
+                            { timestamp: new Date(Date.now() - 172800000).toISOString(), text: 'Optimized processing pipeline for 50% faster video handling' }
                         ]
                     }
                 ];
                 localStorage.setItem('agents', JSON.stringify(agents));
             }
 
-            // Initialize sample video ideas if empty
+            // Initialize sample content ideas if empty
             if (videoIdeas.length === 0) {
                 videoIdeas = [
                     {
                         id: '1',
-                        title: 'How I Built a $10K MRR AI Business in 6 Months',
-                        topic: 'Business',
-                        status: 'scripting',
+                        title: 'Just hit $7.5K MRR with VideoMind AI 🚀 From $0 to this in 6 months. Thread on the exact strategy below...',
+                        topic: 'Business Update',
+                        status: 'drafting',
                         publishDate: '2026-03-20'
                     },
                     {
                         id: '2',
-                        title: 'Replace Your Video Team With AI - Complete Guide',
-                        topic: 'Tutorial',
+                        title: 'Your video team costs $10K/month. VideoMind AI does it for $50. Same quality, 99% less cost. Here\'s how...',
+                        topic: 'Product Demo',
                         status: 'idea',
                         publishDate: '2026-03-25'
                     },
                     {
                         id: '3',
-                        title: 'AI Transcription Market Analysis 2026',
-                        topic: 'Industry',
-                        status: 'filming',
+                        title: 'AI transcription market just hit $4.5B and growing 40% YoY. Most founders are missing this massive opportunity.',
+                        topic: 'Industry Insight',
+                        status: 'review',
                         publishDate: '2026-03-30'
+                    },
+                    {
+                        id: '4',
+                        title: 'Built VideoMind AI as a solo founder. 145 days to $10K MRR goal. Daily updates on the journey.',
+                        topic: 'Founder Story',
+                        status: 'scheduled',
+                        publishDate: '2026-03-18'
                     }
                 ];
                 localStorage.setItem('videoIdeas', JSON.stringify(videoIdeas));
@@ -1749,8 +1763,8 @@
                 case 'command-center':
                     loadCommandCenterData();
                     break;
-                case 'youtube':
-                    loadYouTubeData();
+                case 'content':
+                    loadContentData();
                     break;
                 case 'intel':
                     loadIntelData();
@@ -1926,25 +1940,27 @@
             `).join('');
         }
 
-        // ===== YOUTUBE TAB FUNCTIONS =====
-        function loadYouTubeData() {
-            loadVideoPipeline();
+        // ===== CONTENT TAB FUNCTIONS =====
+        function loadContentData() {
+            loadContentPipeline();
             loadGrowthTracker();
             loadContentCalendar();
         }
 
-        function loadVideoPipeline() {
-            const pipelineContainer = document.getElementById('videoPipeline');
+        function loadContentPipeline() {
+            const pipelineContainer = document.getElementById('contentPipeline');
             
-            pipelineContainer.innerHTML = videoStatuses.map(status => {
+            pipelineContainer.innerHTML = contentStatuses.map(status => {
                 const statusIdeas = videoIdeas.filter(idea => idea.status === status.key);
                 
                 return `
                     <div class="pipeline-column">
                         <div class="pipeline-title">${status.label}</div>
                         ${statusIdeas.map(idea => `
-                            <div class="video-idea-card" onclick="editVideoIdea('${idea.id}')">
-                                <div style="font-weight: 600; margin-bottom: 4px;">${idea.title}</div>
+                            <div class="video-idea-card" onclick="editContentIdea('${idea.id}')">
+                                <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--font-size-sm); line-height: 1.3;">
+                                    ${idea.title.substring(0, 120)}${idea.title.length > 120 ? '...' : ''}
+                                </div>
                                 <div style="font-size: var(--font-size-xs); color: var(--text-muted);">
                                     ${idea.topic} • ${idea.publishDate ? new Date(idea.publishDate).toLocaleDateString() : 'No date'}
                                 </div>
@@ -1956,36 +1972,40 @@
         }
 
         function loadGrowthTracker() {
-            const subCount = youtubeData.subCount;
-            document.getElementById('subCount').textContent = formatSubCount(subCount);
+            const followerCount = socialData.subCount;
+            document.getElementById('followerCount').textContent = formatFollowerCount(followerCount);
             
-            // Calculate milestone progress
+            // Calculate milestone progress for X/Twitter growth
             let nextMilestone, currentProgress, milestoneTitle;
             
-            if (subCount < 1000) {
+            if (followerCount < 1000) {
                 nextMilestone = 1000;
-                milestoneTitle = 'Rising Creator';
-                currentProgress = (subCount / nextMilestone) * 100;
-            } else if (subCount < 10000) {
+                milestoneTitle = 'Building';
+                currentProgress = (followerCount / nextMilestone) * 100;
+            } else if (followerCount < 5000) {
+                nextMilestone = 5000;
+                milestoneTitle = 'Growth Mode';
+                currentProgress = ((followerCount - 1000) / (nextMilestone - 1000)) * 100;
+            } else if (followerCount < 10000) {
                 nextMilestone = 10000;
-                milestoneTitle = 'Growth Engine';
-                currentProgress = ((subCount - 1000) / (nextMilestone - 1000)) * 100;
-            } else if (subCount < 100000) {
-                nextMilestone = 100000;
-                milestoneTitle = 'Content Titan';
-                currentProgress = ((subCount - 10000) / (nextMilestone - 10000)) * 100;
+                milestoneTitle = 'Micro-Influencer';
+                currentProgress = ((followerCount - 5000) / (nextMilestone - 5000)) * 100;
+            } else if (followerCount < 50000) {
+                nextMilestone = 50000;
+                milestoneTitle = 'Thought Leader';
+                currentProgress = ((followerCount - 10000) / (nextMilestone - 10000)) * 100;
             } else {
-                nextMilestone = 1000000;
-                milestoneTitle = 'YouTube Legend';
-                currentProgress = ((subCount - 100000) / (nextMilestone - 100000)) * 100;
+                nextMilestone = 100000;
+                milestoneTitle = 'X Influencer';
+                currentProgress = ((followerCount - 50000) / (nextMilestone - 50000)) * 100;
             }
             
             document.getElementById('milestoneProgress').style.width = `${Math.min(currentProgress, 100)}%`;
             document.getElementById('milestoneLabel').textContent = 
-                `${milestoneTitle} (${Math.round(currentProgress)}% to ${formatSubCount(nextMilestone)})`;
+                `${milestoneTitle} (${Math.round(currentProgress)}% to ${formatFollowerCount(nextMilestone)})`;
         }
 
-        function formatSubCount(count) {
+        function formatFollowerCount(count) {
             if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
             if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
             return count.toString();
@@ -2115,13 +2135,13 @@
             document.getElementById('decisionForm').reset();
         }
 
-        function openVideoIdeaModal() {
-            document.getElementById('videoIdeaModal').classList.add('active');
+        function openContentIdeaModal() {
+            document.getElementById('contentIdeaModal').classList.add('active');
         }
 
-        function closeVideoIdeaModal() {
-            document.getElementById('videoIdeaModal').classList.remove('active');
-            document.getElementById('videoIdeaForm').reset();
+        function closeContentIdeaModal() {
+            document.getElementById('contentIdeaModal').classList.remove('active');
+            document.getElementById('contentIdeaForm').reset();
         }
 
         function openIntelModal() {
@@ -2186,20 +2206,20 @@
                 loadDecisionsList();
             });
 
-            // Video idea form
-            document.getElementById('videoIdeaForm').addEventListener('submit', (e) => {
+            // Content idea form
+            document.getElementById('contentIdeaForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const idea = {
                     id: generateId(),
-                    title: document.getElementById('videoTitle').value,
-                    topic: document.getElementById('videoTopic').value,
+                    title: document.getElementById('contentText').value,
+                    topic: document.getElementById('contentTopic').value,
                     status: 'idea',
-                    publishDate: document.getElementById('videoPublishDate').value
+                    publishDate: document.getElementById('contentPublishDate').value
                 };
                 videoIdeas.push(idea);
                 localStorage.setItem('videoIdeas', JSON.stringify(videoIdeas));
-                closeVideoIdeaModal();
-                loadVideoPipeline();
+                closeContentIdeaModal();
+                loadContentPipeline();
                 loadContentCalendar();
             });
 
@@ -2221,16 +2241,16 @@
                 loadIntelData();
             });
 
-            // Sub count editing
-            document.getElementById('subCount').addEventListener('blur', (e) => {
-                const newCount = parseSubCount(e.target.textContent);
-                youtubeData.subCount = newCount;
-                localStorage.setItem('youtubeData', JSON.stringify(youtubeData));
+            // Follower count editing
+            document.getElementById('followerCount').addEventListener('blur', (e) => {
+                const newCount = parseFollowerCount(e.target.textContent);
+                socialData.subCount = newCount;
+                localStorage.setItem('socialData', JSON.stringify(socialData));
                 loadGrowthTracker();
             });
         }
 
-        function parseSubCount(text) {
+        function parseFollowerCount(text) {
             const num = parseFloat(text);
             if (text.includes('M')) return Math.round(num * 1000000);
             if (text.includes('K')) return Math.round(num * 1000);
@@ -2464,8 +2484,8 @@
         window.closeTaskModal = closeTaskModal;
         window.openDecisionModal = openDecisionModal;
         window.closeDecisionModal = closeDecisionModal;
-        window.openVideoIdeaModal = openVideoIdeaModal;
-        window.closeVideoIdeaModal = closeVideoIdeaModal;
+        window.openContentIdeaModal = openContentIdeaModal;
+        window.closeContentIdeaModal = closeContentIdeaModal;
         window.openIntelModal = openIntelModal;
         window.closeIntelModal = closeIntelModal;
         window.focusNewTask = focusNewTask;
