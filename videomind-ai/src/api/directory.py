@@ -372,3 +372,50 @@ async def backfill_agent_scripts(db: Session = Depends(get_database)):
 
     db.commit()
     return {"success": True, "updated": updated}
+
+
+@router.post("/directory/bulk-add")
+async def bulk_add_directory_entries(
+    request: dict,
+    db: Session = Depends(get_database)
+):
+    """Bulk add directory entries from local database sync."""
+    entries_data = request.get("entries", [])
+    created = 0
+    skipped = 0
+    
+    for entry_data in entries_data:
+        # Check if entry already exists
+        source_url = entry_data.get("source_url")
+        if source_url:
+            exists = db.query(DirectoryEntry).filter(DirectoryEntry.source_url == source_url).first()
+            if exists:
+                skipped += 1
+                continue
+        
+        # Create new entry
+        from models.directory import ContentType
+        new_entry = DirectoryEntry(
+            title=entry_data.get("title", ""),
+            video_url=entry_data.get("source_url", ""),  # Legacy compatibility
+            source_url=entry_data.get("source_url", ""),
+            content_type=ContentType.VIDEO,  # Default to video
+            creator_name=entry_data.get("creator_name", ""),
+            category_primary=entry_data.get("category_primary", "OpenClaw Tutorials"),
+            difficulty=entry_data.get("difficulty", "Intermediate"),
+            tools_mentioned=entry_data.get("tools_mentioned", "OpenClaw"),
+            summary_5_bullets=entry_data.get("summary_5_bullets", ""),
+            best_for=entry_data.get("best_for", "AI automation users"),
+            signal_score=entry_data.get("signal_score", 75),
+            processing_status=entry_data.get("processing_status", "reviewed"),
+            teaches_agent_to=entry_data.get("teaches_agent_to", "Execute AI workflows effectively."),
+            prompt_template=entry_data.get("prompt_template", "Implement the workflow from this tutorial."),
+            execution_checklist=entry_data.get("execution_checklist", "[ ] Review tutorial\n[ ] Execute steps\n[ ] Validate results"),
+            agent_training_script=entry_data.get("agent_training_script", "TRAINING SCRIPT: Execute workflow from tutorial guidance."),
+        )
+        
+        db.add(new_entry)
+        created += 1
+    
+    db.commit()
+    return {"success": True, "created": created, "skipped": skipped}
