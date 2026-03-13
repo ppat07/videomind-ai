@@ -213,11 +213,97 @@ async def job_health_page(request: Request):
 
 @app.get("/directory", response_class=HTMLResponse, include_in_schema=False)
 async def directory_page(request: Request):
-    """Serve the AI training directory page."""
-    return templates.TemplateResponse(
-        "directory.html",
-        {"request": request, "app_name": settings.app_name}
-    )
+    """Directory temporarily offline for maintenance."""
+    from fastapi.responses import HTMLResponse
+    
+    maintenance_html = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Directory Maintenance - VideoMind AI</title>
+        <style>
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+            }
+            .container {
+                text-align: center;
+                max-width: 500px;
+                padding: 2rem;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+                font-weight: 700;
+            }
+            p {
+                font-size: 1.1rem;
+                margin-bottom: 2rem;
+                opacity: 0.9;
+                line-height: 1.6;
+            }
+            .status {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: rgba(34, 197, 94, 0.2);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-weight: 500;
+            }
+            .back-link {
+                display: inline-block;
+                margin-top: 2rem;
+                padding: 0.75rem 1.5rem;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+            .back-link:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔧 Directory Under Maintenance</h1>
+            <p>We're currently enhancing our AI training directory to provide you with the highest quality content. The directory is temporarily offline while we verify and improve our video collection.</p>
+            
+            <div class="status">
+                <span>🚀</span>
+                <span>Quality improvements in progress</span>
+            </div>
+            
+            <p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
+                VideoMind AI's core video processing features remain fully operational. 
+                The directory will return shortly with verified, high-quality content.
+            </p>
+            
+            <a href="/" class="back-link">← Back to VideoMind AI</a>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=maintenance_html)
 
 
 @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
