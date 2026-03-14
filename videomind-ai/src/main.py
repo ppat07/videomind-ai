@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables, get_database, engine
-from api import health, process, directory, newsletter, auto_init
+from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin
 from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
@@ -80,6 +80,11 @@ from api import payments
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
 app.include_router(auto_init.router, prefix="/api", tags=["Auto-Init"])
+
+# Admin tools with password protection
+app.include_router(tasks.router, prefix="/api", tags=["Tasks"])  
+app.include_router(jobs.router, prefix="/api", tags=["Jobs"])
+app.include_router(admin.router, prefix="/api", tags=["Admin"])
 
 
 @app.on_event("startup")
@@ -271,6 +276,40 @@ async def payment_page(request: Request, job_id: str, db: Session = Depends(get_
             "stripe_publishable_key": settings.stripe_publishable_key or ""
         }
     )
+
+
+# Admin pages with password protection
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
+
+security = HTTPBasic()
+
+def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, "admin")
+    correct_password = secrets.compare_digest(credentials.password, "videomind2026")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
+async def admin_page(request: Request, username: str = Depends(verify_admin)):
+    """Admin dashboard - password protected."""
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False) 
+async def dashboard_page(request: Request, username: str = Depends(verify_admin)):
+    """Task dashboard - password protected."""
+    return templates.TemplateResponse("dashboard.html", {"request": request, "app_name": settings.app_name})
+
+@app.get("/jobs", response_class=HTMLResponse, include_in_schema=False)
+async def jobs_page(request: Request, username: str = Depends(verify_admin)):
+    """Job management - password protected."""
+    return templates.TemplateResponse("jobs.html", {"request": request, "app_name": settings.app_name})
 
 
 if __name__ == "__main__":
