@@ -1,5 +1,9 @@
 # HEARTBEAT.md
 
-# Keep this file empty (or with only comments) to skip heartbeat API calls.
+## On Every Heartbeat
+1. Read memory/projects.md (~1K tokens)
+2. Read MEMORY.md (~3K tokens)
+3. Daily notes and vector search: on-demand only
 
-# Add tasks below when you want the agent to check something periodically.
+No automatic memory flush. Manual curation only (CEO discretion).
+If nothing needs attention, reply HEARTBEAT_OK.
