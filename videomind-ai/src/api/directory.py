@@ -50,8 +50,6 @@ async def list_directory_entries(
         from models.directory import ContentType
         if content_type == "video":
             query = query.filter(DirectoryEntry.content_type == ContentType.VIDEO)
-        elif content_type == "article":
-            query = query.filter(DirectoryEntry.content_type == ContentType.ARTICLE)
 
     if category:
         query = query.filter(DirectoryEntry.category_primary == category)
@@ -87,8 +85,6 @@ async def list_directory_entries(
                 from models.directory import ContentType
                 if content_type == "video":
                     query = query.filter(DirectoryEntry.content_type == ContentType.VIDEO)
-                elif content_type == "article":
-                    query = query.filter(DirectoryEntry.content_type == ContentType.ARTICLE)
             if category:
                 query = query.filter(DirectoryEntry.category_primary == category)
             if difficulty:

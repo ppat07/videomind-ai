@@ -1,5 +1,5 @@
 """
-Directory models for searchable AI training content (videos + articles).
+Directory models for searchable AI training content (videos only).
 """
 import uuid
 from datetime import datetime
@@ -13,11 +13,10 @@ from database import Base
 class ContentType(Enum):
     """Supported content types in the directory."""
     VIDEO = "video"
-    ARTICLE = "article"
 
 
 class DirectoryEntry(Base):
-    """Database model for training directory entries (videos + articles)."""
+    """Database model for training directory entries (videos only)."""
 
     __tablename__ = "directory_entries"
 
@@ -26,7 +25,7 @@ class DirectoryEntry(Base):
 
     # Content identification
     title = Column(String, nullable=False, index=True)
-    source_url = Column(String, nullable=False, index=True)  # Video or article URL
+    source_url = Column(String, nullable=False, index=True)  # Video URL
     content_type = Column(SqlEnum(ContentType), nullable=False, default=ContentType.VIDEO, index=True)
     creator_name = Column(String, nullable=True, index=True)
 
@@ -41,11 +40,6 @@ class DirectoryEntry(Base):
     tools_mentioned = Column(Text, nullable=True)
     summary_5_bullets = Column(Text, nullable=True)
     best_for = Column(Text, nullable=True)
-    
-    # Article-specific fields
-    article_content = Column(Text, nullable=True)  # Full text content for articles
-    word_count = Column(Integer, nullable=True, default=0)
-    reading_time_minutes = Column(Integer, nullable=True, default=0)
 
     # Quality scoring
     signal_score = Column(Integer, nullable=False, default=70)
