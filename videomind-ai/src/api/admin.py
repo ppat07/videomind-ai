@@ -54,3 +54,54 @@ async def admin_directory_seed(
         "admin_user": admin_user,
         **result
     }
+
+@router.post("/admin/enhance-training-scripts")
+async def admin_enhance_training_scripts(
+    admin_user: str = Depends(verify_admin),
+    db: Session = Depends(get_database)
+):
+    """Admin-only: Enhance all existing training scripts with new format."""
+    from models.directory import DirectoryEntry
+    from utils.directory_mapper import build_agent_training_script, build_execution_checklist
+    
+    # Get all directory entries
+    entries = db.query(DirectoryEntry).all()
+    
+    if not entries:
+        return {
+            "admin_action": "enhance_training_scripts",
+            "admin_user": admin_user,
+            "success": False,
+            "message": "No directory entries found",
+            "updated_count": 0
+        }
+    
+    updated_count = 0
+    for entry in entries:
+        # Generate enhanced training script
+        checklist = build_execution_checklist(entry.category_primary)
+        enhanced_script = build_agent_training_script(
+            entry.title,
+            entry.summary_5_bullets,
+            checklist
+        )
+        
+        # Update if the new script is significantly longer (enhanced format)
+        current_length = len(entry.agent_training_script or "")
+        enhanced_length = len(enhanced_script)
+        
+        if enhanced_length > current_length * 1.5:  # At least 50% longer
+            entry.agent_training_script = enhanced_script
+            updated_count += 1
+    
+    # Commit all updates
+    db.commit()
+    
+    return {
+        "admin_action": "enhance_training_scripts",
+        "admin_user": admin_user,
+        "success": True,
+        "message": f"Enhanced {updated_count} training scripts",
+        "total_entries": len(entries),
+        "updated_count": updated_count
+    }
