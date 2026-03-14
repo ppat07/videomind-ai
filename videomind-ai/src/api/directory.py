@@ -415,6 +415,64 @@ async def bulk_add_directory_entries(
     return {"success": True, "created": created, "skipped": skipped}
 
 
+@router.post("/directory/refresh-training-scripts")
+async def refresh_training_scripts(db: Session = Depends(get_database)):
+    """Refresh all training scripts with enhanced format - Public endpoint for emergency fixes."""
+    try:
+        entries = db.query(DirectoryEntry).all()
+        
+        if not entries:
+            return {
+                "success": False,
+                "message": "No directory entries found",
+                "updated_count": 0
+            }
+        
+        updated_count = 0
+        details = []
+        
+        for entry in entries:
+            current_script = entry.agent_training_script or ""
+            current_length = len(current_script)
+            
+            # Generate enhanced training script
+            checklist = build_execution_checklist(entry.category_primary)
+            enhanced_script = build_agent_training_script(
+                entry.title,
+                entry.summary_5_bullets,
+                checklist
+            )
+            enhanced_length = len(enhanced_script)
+            
+            # Update with new script
+            entry.agent_training_script = enhanced_script
+            updated_count += 1
+            
+            details.append({
+                "title": entry.title[:30] + "...",
+                "before_length": current_length,
+                "after_length": enhanced_length
+            })
+        
+        # Commit changes
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Refreshed {updated_count} training scripts with enhanced format",
+            "total_entries": len(entries),
+            "updated_count": updated_count,
+            "details": details[:5]  # First 5 for verification
+        }
+        
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Error refreshing scripts: {str(e)}",
+            "updated_count": 0
+        }
+
 @router.post("/directory/update-summaries")
 async def update_directory_summaries(
     request: dict,

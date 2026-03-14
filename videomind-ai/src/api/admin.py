@@ -60,7 +60,7 @@ async def admin_enhance_training_scripts(
     admin_user: str = Depends(verify_admin),
     db: Session = Depends(get_database)
 ):
-    """Admin-only: Enhance all existing training scripts with new format."""
+    """Admin-only: Enhance all existing training scripts with FULL enhanced format."""
     from models.directory import DirectoryEntry
     from utils.directory_mapper import build_agent_training_script, build_execution_checklist
     
@@ -77,31 +77,59 @@ async def admin_enhance_training_scripts(
         }
     
     updated_count = 0
+    details = []
+    
     for entry in entries:
-        # Generate enhanced training script
+        current_script = entry.agent_training_script or ""
+        current_length = len(current_script)
+        
+        # Always generate the full enhanced script
         checklist = build_execution_checklist(entry.category_primary)
         enhanced_script = build_agent_training_script(
             entry.title,
             entry.summary_5_bullets,
             checklist
         )
-        
-        # Update if the new script is significantly longer (enhanced format)
-        current_length = len(entry.agent_training_script or "")
         enhanced_length = len(enhanced_script)
         
-        if enhanced_length > current_length * 1.5:  # At least 50% longer
+        # Check if it's already the enhanced format
+        is_already_enhanced = enhanced_script.startswith("# AI Training Script:")
+        
+        # Update if not already enhanced OR if significantly different
+        if not is_already_enhanced or enhanced_length > current_length * 1.1:
             entry.agent_training_script = enhanced_script
             updated_count += 1
+            
+            details.append({
+                "title": entry.title[:50] + "...",
+                "before_length": current_length,
+                "after_length": enhanced_length,
+                "status": "updated"
+            })
+        else:
+            details.append({
+                "title": entry.title[:50] + "...",
+                "before_length": current_length,
+                "after_length": enhanced_length,
+                "status": "already_enhanced"
+            })
     
-    # Commit all updates
-    db.commit()
+    # Force commit all updates
+    try:
+        db.commit()
+        commit_success = True
+    except Exception as e:
+        db.rollback()
+        commit_success = False
+        commit_error = str(e)
     
     return {
         "admin_action": "enhance_training_scripts",
         "admin_user": admin_user,
-        "success": True,
-        "message": f"Enhanced {updated_count} training scripts",
+        "success": commit_success,
+        "message": f"Enhanced {updated_count} training scripts" if commit_success else f"Failed to commit: {commit_error}",
         "total_entries": len(entries),
-        "updated_count": updated_count
+        "updated_count": updated_count,
+        "details": details[:10],  # First 10 for debugging
+        "commit_success": commit_success
     }
