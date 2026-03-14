@@ -124,10 +124,23 @@ def build_execution_checklist(category: str) -> str:
 
 def build_agent_training_script(title: str, summary_bullets: str, checklist: str) -> str:
     return (
-        f"TRAINING SCRIPT: {title}\\n\\n"
-        "What to learn:\\n"
-        f"{summary_bullets or '- Review source video and transcript'}\\n\\n"
-        "How to execute:\\n"
+        f"# AI Training Script: {title}\\n\\n"
+        "## Training Objective\\n"
+        f"Learn to execute the workflow demonstrated in: {title}\\n\\n"
+        "## Key Learning Points\\n"
+        f"{summary_bullets or '• Review source video content and extract actionable steps'}\\n\\n"
+        "## Execution Checklist\\n"
         f"{checklist}\\n\\n"
-        "When done, report: objective, steps executed, outcome, blockers, and next action."
+        "## Success Criteria\\n"
+        "Agent should be able to:\\n"
+        "• Understand the core concept from this training content\\n"
+        "• Execute the demonstrated workflow independently\\n"
+        "• Troubleshoot common issues that may arise\\n"
+        "• Adapt the approach to similar scenarios\\n\\n"
+        "## Training Completion Report Format\\n"
+        "- **Objective:** [What was learned]\\n"
+        "- **Steps Executed:** [Specific actions taken]\\n"
+        "- **Outcome:** [Results achieved]\\n"
+        "- **Blockers:** [Issues encountered]\\n"
+        "- **Next Actions:** [What to do next]"
     )

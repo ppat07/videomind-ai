@@ -170,7 +170,7 @@
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs text-gray-500">Signal ${item.signal_score || 0}/100</span>
                             <div class="flex items-center gap-2">
-                              <button class="copyPromptBtn text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300" data-prompt="${encodeURIComponent(item.prompt_template || '')}">Copy Prompt</button>
+                              <button class="copyPromptBtn text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300" data-prompt="${encodeURIComponent(item.agent_training_script || '')}">Copy AI Training Script</button>
                               ${actionButton}
                             </div>
                         </div>
