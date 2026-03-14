@@ -131,8 +131,6 @@ async def list_directory_entries(
                 "tools_mentioned": r.tools_mentioned,
                 "summary_5_bullets": r.summary_5_bullets,
                 "best_for": r.best_for,
-                "word_count": r.word_count,
-                "reading_time_minutes": r.reading_time_minutes,
                 "signal_score": r.signal_score,
                 "processing_status": r.processing_status,
                 "teaches_agent_to": r.teaches_agent_to,
