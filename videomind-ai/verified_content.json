@@ -1,0 +1,40 @@
+{
+  "entries": [
+    {
+      "title": "ClawdBot is the most powerful AI tool I've ever used in my life. Here's how to set it up",
+      "source_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE",
+      "creator_name": "Alex Finn",
+      "category_primary": "Setup & Onboarding",
+      "difficulty": "Beginner",
+      "tools_mentioned": "OpenClaw, ClawdBot, AI agent setup",
+      "summary_5_bullets": "• Complete ClawdBot setup walkthrough\n• Initial configuration and authentication\n• First automation workflow creation\n• Common setup issues and solutions\n• Getting started best practices",
+      "best_for": "New users wanting to set up OpenClaw quickly",
+      "signal_score": 92,
+      "processing_status": "reviewed"
+    },
+    {
+      "title": "Making $$$ with OpenClaw", 
+      "source_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ",
+      "creator_name": "Greg Isenberg",
+      "category_primary": "Business Use Cases",
+      "difficulty": "Intermediate",
+      "tools_mentioned": "OpenClaw, automation, revenue generation", 
+      "summary_5_bullets": "• Monetization strategies using AI automation\n• Building profitable OpenClaw businesses\n• Client service automation workflows\n• Revenue-generating use cases\n• Scaling automation for profit",
+      "best_for": "Entrepreneurs wanting to monetize AI automation",
+      "signal_score": 88,
+      "processing_status": "reviewed"
+    },
+    {
+      "title": "You NEED to do this with OpenClaw immediately!",
+      "source_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
+      "creator_name": "Alex Finn", 
+      "category_primary": "Quick Wins",
+      "difficulty": "Beginner",
+      "tools_mentioned": "OpenClaw, immediate actions, workflow setup",
+      "summary_5_bullets": "• High-impact immediate actions with OpenClaw\n• Practical first wins for new users\n• Repeatable workflow templates\n• Quick setup for maximum impact\n• Foundation for advanced automation",
+      "best_for": "Users wanting fastest ROI from OpenClaw",
+      "signal_score": 85,
+      "processing_status": "reviewed"
+    }
+  ]
+}
