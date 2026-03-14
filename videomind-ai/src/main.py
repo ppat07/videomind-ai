@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database import create_tables, get_database, engine
-from api import health, process, directory, tasks, newsletter, jobs, queue_management, admin, auto_init
+from api import health, process, directory, newsletter, auto_init
 from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
@@ -69,16 +69,16 @@ templates = Jinja2Templates(directory=template_dir)
 app.include_router(health.router, prefix="/health", tags=["Health"])
 app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
-app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
+
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
-app.include_router(jobs.router, prefix="/api", tags=["Job Management"])
-app.include_router(queue_management.router, prefix="/api/queue", tags=["Queue Management"])
+
+
 app.include_router(job_health_router, tags=["Job Health"])
 
 # Import and include payments router
 from api import payments
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
-app.include_router(admin.router, prefix="/api", tags=["Admin"])
+
 app.include_router(auto_init.router, prefix="/api", tags=["Auto-Init"])
 
 
@@ -175,10 +175,7 @@ async def startup_event():
         print("📝 Manual seeding via /api/directory/seed still available")
 
 
-@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
-async def admin_dashboard(request: Request):
-    """Serve the admin dashboard with internal tools."""
-    return templates.TemplateResponse("admin.html", {"request": request})
+
 
 @app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
 async def loading_page(request: Request):
@@ -220,31 +217,13 @@ async def directory_page(request: Request):
     )
 
 
-@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
-async def dashboard_page(request: Request):
-    """Serve task dashboard page."""
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request, "app_name": settings.app_name}
-    )
 
 
-@app.get("/jobs", response_class=HTMLResponse, include_in_schema=False)
-async def jobs_page(request: Request):
-    """Serve job management page."""
-    return templates.TemplateResponse(
-        "jobs.html",
-        {"request": request, "app_name": settings.app_name}
-    )
 
 
-@app.get("/queue", response_class=HTMLResponse, include_in_schema=False)
-async def queue_dashboard_page(request: Request):
-    """Serve queue monitoring dashboard."""
-    return templates.TemplateResponse(
-        "queue_dashboard.html",
-        {"request": request, "app_name": settings.app_name}
-    )
+
+
+
 
 
 @app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
