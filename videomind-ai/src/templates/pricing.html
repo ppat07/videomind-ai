@@ -42,6 +42,17 @@
         </div>
     </header>
 
+    <!-- Urgency banner: Week 2 Launch Special (auto-hides after March 24) -->
+    <div id="week2Banner" style="display:none;background:linear-gradient(90deg,#dc2626,#ea580c);color:#fff;text-align:center;padding:11px 20px;font-weight:600;font-size:15px;">
+        ⏰ Week 2 Launch Special: <strong>20% off</strong> with code <strong>WEEK2</strong> — expires March 24 &nbsp;
+        <a href="/checkout?coupon=WEEK2" style="color:#fff;text-decoration:underline;">Grab the deal →</a>
+    </div>
+    <script>
+        if (new Date() < new Date('2026-03-24T23:59:59Z')) {
+            document.getElementById('week2Banner').style.display = 'block';
+        }
+    </script>
+
     <main class="max-w-5xl mx-auto px-4 py-16">
 
         <!-- Hero -->

@@ -143,8 +143,9 @@ async def create_checkout_session(request: Request):
     price_id = form.get("price_id")
     mode = form.get("mode", "payment")
     product_type = form.get("product_type", "")
+    coupon_code = (form.get("coupon_code") or "").strip().upper()
 
-    print(f"📝 Form data - Price ID: {price_id}, Mode: {mode}, Product type: {product_type}")
+    print(f"📝 Form data - Price ID: {price_id}, Mode: {mode}, Product type: {product_type}, Coupon: {coupon_code or 'none'}")
 
     if not price_id:
         raise HTTPException(status_code=400, detail="Price ID required")
@@ -162,9 +163,21 @@ async def create_checkout_session(request: Request):
             "mode": mode,
             "success_url": f"{request.url.scheme}://{request.url.netloc}/success?session_id={{CHECKOUT_SESSION_ID}}",
             "cancel_url": f"{request.url.scheme}://{request.url.netloc}/checkout",
+            "allow_promotion_codes": True,
         }
         if product_type:
             session_params["metadata"] = {"product_type": product_type}
+
+        # Pre-apply coupon if provided and valid
+        if coupon_code:
+            try:
+                stripe.Coupon.retrieve(coupon_code)
+                session_params["discounts"] = [{"coupon": coupon_code}]
+                # allow_promotion_codes cannot be used together with discounts
+                del session_params["allow_promotion_codes"]
+                print(f"✅ Coupon {coupon_code} applied to session")
+            except Exception:
+                print(f"⚠️ Coupon {coupon_code} not found or invalid — ignoring")
 
         checkout_session = stripe.checkout.Session.create(**session_params)
         
@@ -522,6 +535,30 @@ async def handle_subscription_changed(subscription: Dict[str, Any], db: Session)
             print(f"✅ Subscription {subscription_id} updated: active={active}")
     except Exception as e:
         print(f"❌ handle_subscription_changed error: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Coupon validation endpoint
+# ---------------------------------------------------------------------------
+
+@router.get("/validate-coupon")
+async def validate_coupon(code: str):
+    """Validate a coupon code and return discount info (for frontend preview)."""
+    code = code.strip().upper()
+    if not stripe or not stripe_ready:
+        return {"valid": False, "error": "Payment system unavailable"}
+    try:
+        coupon = stripe.Coupon.retrieve(code)
+        if not coupon.valid:
+            return {"valid": False, "error": "This code has expired"}
+        discount = {}
+        if coupon.percent_off:
+            discount = {"type": "percent", "percent_off": coupon.percent_off}
+        elif coupon.amount_off:
+            discount = {"type": "amount", "amount_off": coupon.amount_off / 100}
+        return {"valid": True, "code": code, "discount": discount, "name": coupon.name}
+    except Exception:
+        return {"valid": False, "error": "Invalid promo code"}
 
 
 # ---------------------------------------------------------------------------

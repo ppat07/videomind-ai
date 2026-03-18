@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     stripe_publishable_key: Optional[str] = None
     stripe_secret_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
+    stripe_coupon_week2: str = "WEEK2"
     
     # Redis Configuration
     redis_url: str = "redis://localhost:6379/0"
