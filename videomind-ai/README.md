@@ -67,13 +67,17 @@ VideoMind AI takes YouTube videos and converts them into structured training dat
 
 6. **Run the application:**
    ```bash
-   cd src
-   python main.py
+   python run.py
    ```
 
 7. **Open in browser:**
    ```
    http://localhost:8000
+   ```
+
+8. **Health check:**
+   ```
+   http://localhost:8000/health
    ```
 
 ## 🔧 Configuration
