@@ -16,10 +16,17 @@
                 <p class="text-gray-600 mt-2">Transform any YouTube video into AI-ready training data</p>
             </div>
             <div class="flex items-center gap-2">
+                <a href="/pricing" class="text-blue-600 font-semibold px-3 py-2 rounded hover:bg-blue-50">Pricing</a>
                 <a href="/directory" class="bg-gray-900 text-white px-4 py-2 rounded hover:bg-black">Open Directory</a>
             </div>
         </div>
     </header>
+
+    <!-- Free tier usage banner (shown once email is entered) -->
+    <div id="upgradeBanner" class="hidden bg-blue-600 text-white text-center py-2 px-4 text-sm">
+        <span id="upgradeBannerText"></span>
+        <a href="/pricing" class="ml-2 font-bold underline">Upgrade to Pro →</a>
+    </div>
 
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-8">
@@ -269,13 +276,61 @@
                 console.error('Error:', error);
                 statusModal.classList.add('hidden');
                 statusModal.classList.remove('flex');
-                
-                alert(error.response?.data?.detail || error.message || 'An error occurred');
-                
+
+                const detail = error.response?.data?.detail;
+                if (detail && detail.error === 'free_tier_limit_reached') {
+                    // Show upgrade modal instead of plain alert
+                    showUpgradeModal(detail.message);
+                } else {
+                    alert(detail?.message || detail || error.message || 'An error occurred');
+                }
+
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Start Processing';
             }
         });
+
+        // Show free tier usage when email is entered
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('blur', async function() {
+                const email = this.value.trim();
+                if (!email) return;
+                try {
+                    const res = await fetch(`/api/payments/free-usage?email=${encodeURIComponent(email)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const banner = document.getElementById('upgradeBanner');
+                    const bannerText = document.getElementById('upgradeBannerText');
+                    if (data.used > 0 && !data.is_pro) {
+                        bannerText.textContent = `You've used ${data.used} of ${data.limit} free videos this month.`;
+                        banner.classList.remove('hidden');
+                    }
+                    if (data.remaining === 0) {
+                        bannerText.textContent = `You've used all ${data.limit} free videos this month.`;
+                        banner.classList.remove('hidden');
+                    }
+                } catch (e) { /* ignore */ }
+            });
+        }
+
+        function showUpgradeModal(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">You've hit the free limit</h2>
+                    <p class="text-gray-600 mb-6">${message} Upgrade to Pro for unlimited video processing.</p>
+                    <a href="/pricing" class="block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors mb-3">
+                        See Pro plans →
+                    </a>
+                    <button onclick="this.closest('.fixed').remove()" class="text-sm text-gray-400 hover:text-gray-600">
+                        Maybe later
+                    </button>
+                </div>`;
+            document.body.appendChild(modal);
+        }
     </script>
 </body>
 </html>

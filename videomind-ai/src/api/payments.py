@@ -20,6 +20,7 @@ except ImportError as e:
 
 from database import get_database
 from models.video import VideoJob, ProcessingTier
+from models.subscription import ProSubscriber, ConversionEvent
 from config import settings
 
 # Configure Stripe with better error handling
@@ -264,14 +265,30 @@ async def stripe_webhook(
             db
         )
     
-    # Handle checkout session completion (for PDF products)
+    # Handle checkout session completion (for PDF products and subscriptions)
     elif event["type"] == "checkout.session.completed":
         background_tasks.add_task(
             handle_checkout_completion,
             event["data"]["object"],
             db
         )
-    
+
+    # Handle new subscription
+    elif event["type"] == "customer.subscription.created":
+        background_tasks.add_task(
+            handle_subscription_created,
+            event["data"]["object"],
+            db
+        )
+
+    # Handle subscription cancellation/deletion
+    elif event["type"] in ("customer.subscription.deleted", "customer.subscription.updated"):
+        background_tasks.add_task(
+            handle_subscription_changed,
+            event["data"]["object"],
+            db
+        )
+
     return {"status": "success"}
 
 async def handle_payment_success(payment_intent: Dict[str, Any], db: Session):
@@ -420,3 +437,129 @@ async def get_payment_status(job_id: str, db: Session = Depends(get_database)):
         "tier": job.tier,
         "processing_status": job.status
     }
+
+
+# ---------------------------------------------------------------------------
+# Subscription event handlers
+# ---------------------------------------------------------------------------
+
+async def handle_subscription_created(subscription: Dict[str, Any], db: Session):
+    """Record a new Pro subscriber when their Stripe subscription is created."""
+    try:
+        customer_id = subscription.get("customer")
+        subscription_id = subscription.get("id")
+        status = subscription.get("status", "")
+
+        if not customer_id or status not in ("active", "trialing"):
+            return
+
+        # Retrieve customer email from Stripe
+        customer = stripe.Customer.retrieve(customer_id)
+        email = customer.get("email", "").lower()
+        if not email:
+            return
+
+        # Upsert subscriber record
+        existing = db.query(ProSubscriber).filter(
+            ProSubscriber.stripe_subscription_id == subscription_id
+        ).first()
+        if existing:
+            existing.active = True
+            existing.cancelled_at = None
+        else:
+            db.add(ProSubscriber(
+                email=email,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription_id,
+                active=True,
+            ))
+
+        # Log conversion event
+        db.add(ConversionEvent(email=email, event="subscribed"))
+        db.commit()
+        print(f"✅ Pro subscriber recorded: {email}")
+    except Exception as e:
+        print(f"❌ handle_subscription_created error: {e}")
+
+
+async def handle_subscription_changed(subscription: Dict[str, Any], db: Session):
+    """Update subscriber record when a subscription is cancelled or changed."""
+    try:
+        subscription_id = subscription.get("id")
+        status = subscription.get("status", "")
+        active = status in ("active", "trialing")
+
+        record = db.query(ProSubscriber).filter(
+            ProSubscriber.stripe_subscription_id == subscription_id
+        ).first()
+        if record:
+            record.active = active
+            if not active:
+                record.cancelled_at = datetime.utcnow()
+            db.commit()
+            print(f"✅ Subscription {subscription_id} updated: active={active}")
+    except Exception as e:
+        print(f"❌ handle_subscription_changed error: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Pro status check endpoint
+# ---------------------------------------------------------------------------
+
+@router.get("/pro-status")
+async def check_pro_status(email: str, db: Session = Depends(get_database)):
+    """Check whether an email has an active Pro subscription."""
+    email = email.lower().strip()
+    subscriber = db.query(ProSubscriber).filter(
+        ProSubscriber.email == email,
+        ProSubscriber.active == True,  # noqa: E712
+    ).first()
+    return {"email": email, "is_pro": subscriber is not None}
+
+
+# ---------------------------------------------------------------------------
+# Free tier usage endpoint
+# ---------------------------------------------------------------------------
+
+@router.get("/free-usage")
+async def get_free_usage(email: str, db: Session = Depends(get_database)):
+    """Return how many free videos this email has used this month and the limit."""
+    from models.subscription import FreeTierUsage
+    from datetime import datetime
+
+    email = email.lower().strip()
+    year_month = datetime.utcnow().strftime("%Y-%m")
+    FREE_LIMIT = 3
+
+    usage = db.query(FreeTierUsage).filter(
+        FreeTierUsage.email == email,
+        FreeTierUsage.year_month == year_month,
+    ).first()
+
+    used = usage.count if usage else 0
+    return {"email": email, "used": used, "limit": FREE_LIMIT, "remaining": max(0, FREE_LIMIT - used)}
+
+
+# ---------------------------------------------------------------------------
+# Anonymous conversion event logging (best-effort, no auth required)
+# ---------------------------------------------------------------------------
+
+class EventLogRequest(BaseModel):
+    event: str
+    email: str = ""
+    metadata: str = ""
+
+
+@router.post("/log-event")
+async def log_conversion_event(body: EventLogRequest, db: Session = Depends(get_database)):
+    """Log a frontend conversion event (pricing_viewed, etc.)."""
+    try:
+        db.add(ConversionEvent(
+            email=body.email.lower().strip() if body.email else None,
+            event=body.event,
+            metadata_=body.metadata or None,
+        ))
+        db.commit()
+    except Exception:
+        pass  # Never fail on analytics
+    return {"ok": True}

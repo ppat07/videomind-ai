@@ -29,6 +29,9 @@ from utils.directory_mapper import (
 )
 from config import settings
 from services.job_queue import job_queue, JobPriority
+from models.subscription import ProSubscriber, FreeTierUsage, ConversionEvent
+
+FREE_TIER_LIMIT = 3  # free videos per month
 
 router = APIRouter()
 
@@ -150,7 +153,33 @@ async def submit_video_for_processing(
         # Validate email
         if not validate_email(job_data.email):
             raise HTTPException(status_code=400, detail="Invalid email address")
-        
+
+        # --- Free tier enforcement ---
+        email_lower = job_data.email.lower()
+        is_pro = db.query(ProSubscriber).filter(
+            ProSubscriber.email == email_lower,
+            ProSubscriber.active == True,  # noqa: E712
+        ).first() is not None
+
+        if not is_pro:
+            year_month = datetime.utcnow().strftime("%Y-%m")
+            usage = db.query(FreeTierUsage).filter(
+                FreeTierUsage.email == email_lower,
+                FreeTierUsage.year_month == year_month,
+            ).first()
+            if usage and usage.count >= FREE_TIER_LIMIT:
+                db.add(ConversionEvent(email=email_lower, event="limit_hit"))
+                db.commit()
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "error": "free_tier_limit_reached",
+                        "message": f"You've used all {FREE_TIER_LIMIT} free videos this month.",
+                        "upgrade_url": "/pricing",
+                    }
+                )
+        # --- End free tier enforcement ---
+
         video_url = str(job_data.youtube_url)
         
         # Enhanced deduplication: Check both VideoJob and DirectoryEntry tables
@@ -223,7 +252,21 @@ async def submit_video_for_processing(
         db.add(db_job)
         db.commit()
         db.refresh(db_job)
-        
+
+        # Increment free tier counter for non-Pro users
+        if not is_pro:
+            year_month = datetime.utcnow().strftime("%Y-%m")
+            usage = db.query(FreeTierUsage).filter(
+                FreeTierUsage.email == email_lower,
+                FreeTierUsage.year_month == year_month,
+            ).first()
+            if usage:
+                usage.count += 1
+            else:
+                db.add(FreeTierUsage(email=email_lower, year_month=year_month, count=1))
+            db.add(ConversionEvent(email=email_lower, event="video_processed"))
+            db.commit()
+
         # Check if payment is required (Stripe is configured)
         # ENABLED FOR PRODUCTION REVENUE
         if settings.stripe_secret_key and settings.stripe_publishable_key:

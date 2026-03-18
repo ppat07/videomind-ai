@@ -82,7 +82,7 @@ def _ensure_directory_columns():
 def create_tables():
     """Create all database tables."""
     # Ensure model modules are imported so metadata includes all tables
-    from models import VideoJob, DirectoryEntry  # noqa: F401
+    from models import VideoJob, DirectoryEntry, ProSubscriber, FreeTierUsage, ConversionEvent  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _ensure_directory_columns()

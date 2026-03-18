@@ -230,6 +230,15 @@ async def job_health_page(request: Request):
     )
 
 
+@app.get("/pricing", response_class=HTMLResponse, include_in_schema=False)
+async def pricing_page(request: Request):
+    """Serve the pricing page."""
+    return templates.TemplateResponse(
+        "pricing.html",
+        {"request": request, "app_name": settings.app_name}
+    )
+
+
 @app.get("/directory", response_class=HTMLResponse, include_in_schema=False)
 async def directory_page(request: Request):
     """Serve the AI training directory page."""
