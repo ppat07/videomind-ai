@@ -242,6 +242,56 @@
 
         // Log pricing page view with UTM data
         logEvent('pricing_viewed');
+
+        // Exit-intent nudge: show free chapter banner if user leaves without buying
+        let exitNudgeShown = false;
+        let boughtOrClicked = false;
+
+        document.querySelectorAll('a[href*="checkout"]').forEach(function(el) {
+            el.addEventListener('click', function() { boughtOrClicked = true; });
+        });
+
+        document.addEventListener('mouseleave', function(e) {
+            if (e.clientY <= 0 && !exitNudgeShown && !boughtOrClicked) {
+                exitNudgeShown = true;
+                document.getElementById('exitIntentBanner').classList.remove('hidden');
+            }
+        });
+
+        async function submitExitLeadCapture(e) {
+            e.preventDefault();
+            const email = document.getElementById('exitLeadEmail').value;
+            try {
+                await fetch('/api/leads/capture', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: email, source: 'pricing_exit_intent'})
+                });
+                document.getElementById('exitCaptureForm').innerHTML =
+                    '<p class="text-green-600 font-semibold">✅ Check your inbox for the free chapter!</p>';
+                setTimeout(() => document.getElementById('exitIntentBanner').classList.add('hidden'), 3000);
+            } catch(err) {}
+        }
     </script>
+
+    <!-- Exit-intent banner: shown on mouse-leave without buying -->
+    <div id="exitIntentBanner" class="hidden fixed bottom-0 left-0 right-0 bg-indigo-700 text-white shadow-2xl z-50 p-5">
+        <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-4">
+            <div class="flex-1">
+                <p class="font-bold text-base">Not ready to buy?</p>
+                <p class="text-indigo-200 text-sm">Get the free chapter first — Top 10 AI Workflow Videos for Training Data →</p>
+            </div>
+            <form id="exitCaptureForm" onsubmit="submitExitLeadCapture(event)" class="flex gap-2 flex-shrink-0">
+                <input type="email" id="exitLeadEmail" placeholder="your@email.com" required
+                       class="px-3 py-2 rounded-lg text-gray-900 text-sm w-48 focus:ring-2 focus:ring-white">
+                <button type="submit"
+                        class="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-indigo-50 transition whitespace-nowrap">
+                    Send it →
+                </button>
+            </form>
+            <button onclick="document.getElementById('exitIntentBanner').classList.add('hidden')"
+                    class="text-indigo-300 hover:text-white text-xl leading-none flex-shrink-0">&times;</button>
+        </div>
+    </div>
 </body>
 </html>

@@ -29,7 +29,7 @@ if _sentry_dsn:
         print("✅ Sentry error monitoring enabled")
     except Exception as _sentry_err:
         print(f"⚠️ Sentry init failed: {_sentry_err}")
-from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin
+from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin, leads as leads_api
 from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
@@ -88,6 +88,7 @@ app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
 
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
+app.include_router(leads_api.router, prefix="/api", tags=["Leads"])
 
 
 app.include_router(job_health_router, tags=["Job Health"])

@@ -51,6 +51,39 @@
         </div>
     </header>
 
+    <!-- Lead magnet: free chapter offer (above the fold) -->
+    <div id="leadMagnetBanner" class="bg-indigo-700 text-white text-center py-3 px-4">
+        <span class="text-sm font-medium">📘 Free: Get the first 10 pages of <em>Video AI Training Data Mastery</em> — </span>
+        <button onclick="document.getElementById('leadCaptureModal').classList.remove('hidden')"
+                class="text-sm font-bold underline hover:text-indigo-200 cursor-pointer bg-transparent border-none text-white">
+            Download free chapter →
+        </button>
+    </div>
+
+    <!-- Lead capture modal -->
+    <div id="leadCaptureModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 relative">
+            <button onclick="document.getElementById('leadCaptureModal').classList.add('hidden')"
+                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Get the free chapter</h3>
+            <p class="text-gray-500 text-sm mb-6">Top 10 AI Workflow Videos for Training Data — first 10 pages, free.</p>
+            <form id="leadCaptureForm" onsubmit="submitLeadCapture(event)">
+                <input type="email" id="leadEmail" name="email" required
+                       placeholder="your@email.com"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900">
+                <button type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                    Send me the free chapter
+                </button>
+            </form>
+            <div id="leadCaptureSuccess" class="hidden text-center py-4">
+                <p class="text-green-600 font-semibold text-lg mb-1">✅ Check your inbox!</p>
+                <p class="text-gray-500 text-sm">The free chapter is on its way.</p>
+            </div>
+            <p class="text-xs text-gray-400 mt-4 text-center">No spam. Unsubscribe anytime.</p>
+        </div>
+    </div>
+
     <!-- Free tier usage banner (shown once email is entered) -->
     <div id="upgradeBanner" class="hidden bg-blue-600 text-white text-center py-2 px-4 text-sm">
         <span id="upgradeBannerText"></span>
@@ -359,6 +392,24 @@
                     </button>
                 </div>`;
             document.body.appendChild(modal);
+        }
+    </script>
+    <script>
+        async function submitLeadCapture(e) {
+            e.preventDefault();
+            const email = document.getElementById('leadEmail').value;
+            try {
+                const resp = await axios.post('/api/leads/capture', { email, source: 'homepage' });
+                document.getElementById('leadCaptureForm').classList.add('hidden');
+                document.getElementById('leadCaptureSuccess').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('leadCaptureModal').classList.add('hidden');
+                    document.getElementById('leadCaptureForm').classList.remove('hidden');
+                    document.getElementById('leadCaptureSuccess').classList.add('hidden');
+                }, 3000);
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+            }
         }
     </script>
 </body>
