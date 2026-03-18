@@ -216,6 +216,25 @@ async def startup_event():
         print(f"⚠️ Startup seeding check failed: {e}")
         print("📝 Manual seeding via /api/directory/seed still available")
 
+    # Ensure FOUNDING Stripe coupon exists ($20/month recurring discount off $49 = $29/month)
+    try:
+        from api.payments import stripe, stripe_ready
+        if stripe and stripe_ready:
+            try:
+                stripe.Coupon.retrieve("FOUNDING")
+                print("✅ FOUNDING Stripe coupon already exists")
+            except Exception:
+                stripe.Coupon.create(
+                    id="FOUNDING",
+                    name="Founding Member — $20/month off forever",
+                    amount_off=2000,   # $20.00 off in cents
+                    currency="usd",
+                    duration="forever",
+                )
+                print("✅ FOUNDING Stripe coupon created ($20/month off forever)")
+    except Exception as _e:
+        print(f"⚠️ Could not create FOUNDING Stripe coupon: {_e}")
+
     # Start nurture email scheduler — runs every 6 hours
     _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")
     _nurture_scheduler.start()
