@@ -338,6 +338,66 @@ async def jobs_page(request: Request, username: str = Depends(verify_admin)):
     return templates.TemplateResponse("jobs.html", {"request": request, "app_name": settings.app_name})
 
 
+@app.get("/admin/analytics", response_class=HTMLResponse, include_in_schema=False)
+async def analytics_page(request: Request, username: str = Depends(verify_admin), db: Session = Depends(get_database)):
+    """Conversion funnel analytics dashboard - password protected."""
+    from models.subscription import ProSubscriber, ConversionEvent, FreeTierUsage
+    from sqlalchemy import func
+    from datetime import timedelta
+
+    now = datetime.utcnow()
+    thirty_days_ago = now - timedelta(days=30)
+    seven_days_ago = now - timedelta(days=7)
+
+    # MRR: count active Pro subscribers * $49
+    active_pro_count = db.query(func.count(ProSubscriber.id)).filter(
+        ProSubscriber.active == True  # noqa: E712
+    ).scalar() or 0
+    mrr = active_pro_count * 49
+
+    # Conversion funnel counts (last 30 days)
+    def count_events(event_type, since=thirty_days_ago):
+        return db.query(func.count(ConversionEvent.id)).filter(
+            ConversionEvent.event == event_type,
+            ConversionEvent.created_at >= since,
+        ).scalar() or 0
+
+    pricing_views = count_events("pricing_viewed")
+    checkout_clicks = count_events("checkout_clicked")
+    subscriptions = count_events("subscribed")
+    limit_hits = count_events("limit_hit")
+    pdf_purchases = count_events("pdf_purchased")
+
+    # Daily signups last 7 days
+    daily_signups = []
+    for i in range(6, -1, -1):
+        day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        count = db.query(func.count(ConversionEvent.id)).filter(
+            ConversionEvent.event == "subscribed",
+            ConversionEvent.created_at >= day_start,
+            ConversionEvent.created_at < day_end,
+        ).scalar() or 0
+        daily_signups.append({"date": day_start.strftime("%b %d"), "count": count})
+
+    # Total subscribers ever
+    total_subscribers = db.query(func.count(ProSubscriber.id)).scalar() or 0
+
+    return templates.TemplateResponse("analytics.html", {
+        "request": request,
+        "app_name": settings.app_name,
+        "mrr": mrr,
+        "active_pro_count": active_pro_count,
+        "total_subscribers": total_subscribers,
+        "pricing_views": pricing_views,
+        "checkout_clicks": checkout_clicks,
+        "subscriptions_30d": subscriptions,
+        "limit_hits_30d": limit_hits,
+        "pdf_purchases_30d": pdf_purchases,
+        "daily_signups": daily_signups,
+    })
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics — {{ app_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-900">{{ app_name }} — Analytics</h1>
+            <nav class="flex gap-6 text-sm text-gray-500">
+                <a href="/admin" class="hover:text-gray-900">Admin</a>
+                <a href="/dashboard" class="hover:text-gray-900">Dashboard</a>
+                <a href="/admin/analytics" class="font-semibold text-gray-900">Analytics</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+
+        <!-- Revenue KPIs -->
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Revenue</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 mb-1">MRR</p>
+                <p class="text-3xl font-extrabold text-green-600">${{ mrr }}</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 mb-1">Active Pro subscribers</p>
+                <p class="text-3xl font-extrabold text-blue-600">{{ active_pro_count }}</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 mb-1">Total subscribers (all time)</p>
+                <p class="text-3xl font-extrabold text-gray-900">{{ total_subscribers }}</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 mb-1">PDF purchases (30d)</p>
+                <p class="text-3xl font-extrabold text-purple-600">{{ pdf_purchases_30d }}</p>
+            </div>
+        </div>
+
+        <!-- Conversion funnel -->
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Conversion Funnel — Last 30 Days</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10">
+            {% set steps = [
+                ("Pricing page views", pricing_views, "blue"),
+                ("Checkout clicks", checkout_clicks, "indigo"),
+                ("New Pro subscriptions", subscriptions_30d, "green"),
+                ("Free tier limit hits", limit_hits_30d, "orange"),
+            ] %}
+            <div class="space-y-4">
+                {% for label, count, color in steps %}
+                {% set bar_width = [((count / (pricing_views if pricing_views > 0 else 1)) * 100) | round | int, 100] | min %}
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-700 font-medium">{{ label }}</span>
+                        <span class="text-gray-500">{{ count }}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-3">
+                        <div class="bg-{{ color }}-500 h-3 rounded-full" style="width: {{ bar_width }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if pricing_views > 0 and subscriptions_30d > 0 %}
+            <p class="mt-4 text-sm text-gray-500">
+                Overall conversion rate: <strong>{{ ((subscriptions_30d / pricing_views) * 100) | round(1) }}%</strong>
+                (pricing view → paid)
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Daily signups chart -->
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Daily New Subscribers — Last 7 Days</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10">
+            {% set max_count = daily_signups | map(attribute='count') | max %}
+            {% set max_count = max_count if max_count > 0 else 1 %}
+            <div class="flex items-end gap-4 h-32">
+                {% for day in daily_signups %}
+                {% set bar_pct = ((day.count / max_count) * 100) | round | int %}
+                <div class="flex flex-col items-center flex-1">
+                    <span class="text-xs text-gray-500 mb-1">{{ day.count }}</span>
+                    <div class="w-full bg-blue-500 rounded-t" style="height: {{ [bar_pct, 4] | max }}%"></div>
+                    <span class="text-xs text-gray-400 mt-1 truncate w-full text-center">{{ day.date }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>

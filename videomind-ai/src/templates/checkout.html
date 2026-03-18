@@ -169,5 +169,16 @@
             <a href="/">← Back to VideoMind AI</a>
         </div>
     </div>
+    <script>
+        document.querySelectorAll('form[action="/api/payments/create-checkout-session"]').forEach(form => {
+            form.addEventListener('submit', function() {
+                fetch('/api/payments/log-event', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({event: 'checkout_clicked'})
+                }).catch(() => {});
+            });
+        });
+    </script>
 </body>
 </html>
