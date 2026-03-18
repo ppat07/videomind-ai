@@ -322,6 +322,48 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap(request: Request, db: Session = Depends(get_database)):
+    """Dynamic sitemap.xml for all pages and directory entries."""
+    from fastapi.responses import Response
+    from models.directory import DirectoryEntry
+
+    base = "https://videomind.ai"
+    entries = db.query(DirectoryEntry).filter(
+        DirectoryEntry.processing_status == "completed"
+    ).all()
+
+    urls = [
+        f"<url><loc>{base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>",
+        f"<url><loc>{base}/pricing</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>",
+        f"<url><loc>{base}/directory</loc><changefreq>daily</changefreq><priority>0.9</priority></url>",
+    ]
+    for entry in entries:
+        # Each directory entry gets its own URL slot in the sitemap
+        video_id = entry.source_url.split("v=")[-1].split("&")[0] if "v=" in (entry.source_url or "") else entry.id
+        urls.append(
+            f"<url><loc>{base}/directory?v={video_id}</loc>"
+            f"<changefreq>monthly</changefreq><priority>0.7</priority></url>"
+        )
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        + "".join(urls)
+        + "</urlset>"
+    )
+    return Response(content=xml, media_type="application/xml")
+
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots_txt():
+    """robots.txt pointing crawlers to sitemap."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(
+        "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: https://videomind.ai/sitemap.xml\n"
+    )
+
+
 @app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
 async def admin_page(request: Request, username: str = Depends(verify_admin)):
     """Admin dashboard - password protected."""
