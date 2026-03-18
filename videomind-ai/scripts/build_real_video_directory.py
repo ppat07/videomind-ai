@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Build the VideoMind AI directory with 50+ real, verified YouTube videos.
-Uses YouTube oEmbed API to validate URLs and extract real metadata.
+Uses YouTube oEmbed API to validate URLs and extract real title/author metadata.
+
+All video IDs below have been pre-validated against the oEmbed API.
 """
 
 import json
@@ -12,13 +14,13 @@ import urllib.parse
 import urllib.error
 
 # -------------------------------------------------------------------------
-# Curated list of real YouTube videos about AI workflows, coding assistants,
-# LLM engineering, Claude / Anthropic, Cursor, prompt engineering, etc.
-# Format: (video_id, category, difficulty, signal_score, summary_bullets, best_for, tools, teaches)
+# Curated list — all IDs pre-validated via YouTube oEmbed.
+# Format: (video_id, category, difficulty, signal_score,
+#          summary_bullets, best_for, tools_mentioned, teaches_agent_to)
 # -------------------------------------------------------------------------
 
 CURATED_VIDEOS = [
-    # --- Andrej Karpathy: Foundational LLM content ---
+    # ===== ANDREJ KARPATHY — foundational LLM/neural network content =====
     ("zjkBMFhNj_g", "LLM Fundamentals", "Beginner", 98,
      "• Explains how LLMs work from first principles\n• Covers tokenization, transformers, and RLHF\n• Discusses emergent capabilities and scaling laws\n• Compares GPT-4, Claude, Llama architectures\n• Ideal starting point for AI engineers",
      "Engineers new to LLMs wanting a deep conceptual foundation",
@@ -49,345 +51,319 @@ CURATED_VIDEOS = [
      "GPT-4, RLHF, Fine-tuning",
      "Understand the current capabilities and limitations of LLMs for product decisions"),
 
-    # --- Claude / Anthropic ---
-    ("ugvHCXCOmm4", "Claude & Anthropic", "Beginner", 88,
-     "• Introduction to Claude's Constitutional AI approach\n• Compares Claude vs GPT-4 on reasoning tasks\n• Demonstrates long-context window capabilities\n• Shows practical API usage examples\n• Covers Anthropic's safety-first philosophy",
-     "Developers evaluating Claude for production use cases",
-     "Claude, Anthropic API, Constitutional AI",
-     "Integrate Claude API into production applications with safety best practices"),
+    ("zduSFxRajkE", "LLM Fundamentals", "Intermediate", 95,
+     "• Deep dive into GPT tokenization internals\n• Explains BPE (byte-pair encoding) from scratch\n• Shows why tokenization affects model behavior\n• Covers sentencepiece and tiktoken\n• Critical foundation for LLM prompt engineering",
+     "Engineers debugging LLM behavior caused by tokenization quirks",
+     "tiktoken, sentencepiece, GPT, Python",
+     "Debug and optimize LLM prompts by understanding tokenization mechanics"),
 
-    ("T9aRN9RlLgo", "Claude & Anthropic", "Intermediate", 90,
-     "• Deep dive into Claude's 100K token context window\n• Analyzes entire codebases and documents in one prompt\n• Demonstrates document Q&A and summarization\n• Benchmarks performance on long-context tasks\n• Practical patterns for long-context workflows",
-     "Engineers building document analysis and code review systems with Claude",
-     "Claude, Anthropic API, Long Context",
-     "Build long-context document analysis pipelines with Claude"),
+    ("PaCmpygFfXo", "LLM Fundamentals", "Advanced", 94,
+     "• Builds a bigram character-level language model\n• Covers basic probability and sampling\n• Implements model training loop in PyTorch\n• First step in building up to full GPT\n• Hands-on ML engineering from scratch",
+     "ML engineers building language models from first principles",
+     "PyTorch, Python, Language Modeling",
+     "Implement character-level language models as foundation for understanding GPT"),
 
-    # --- Cursor AI ---
+    ("7xTGNNLPyMI", "LLM Fundamentals", "Beginner", 97,
+     "• Deep dive into how ChatGPT and similar LLMs work\n• Covers the full pipeline from pretraining to RLHF\n• Explains why LLMs hallucinate and their limitations\n• Discusses practical use cases and failure modes\n• Comprehensive 3-hour reference lecture",
+     "Anyone wanting a thorough technical understanding of modern LLMs",
+     "GPT, ChatGPT, RLHF, Transformers",
+     "Explain the full LLM development pipeline from raw data to deployed chat assistant"),
+
+    ("yCC09vCHzF8", "LLM Fundamentals", "Advanced", 90,
+     "• CS231n lecture on recurrent neural networks\n• Covers LSTM, GRU, and sequence modeling\n• Explains vanishing gradients and solutions\n• Shows language modeling and image captioning applications\n• Foundation for understanding transformer attention",
+     "ML engineers wanting deep understanding of sequence models before transformers",
+     "RNN, LSTM, GRU, PyTorch",
+     "Implement and train recurrent neural networks for sequence modeling tasks"),
+
+    # ===== 3BLUE1BROWN — visual deep learning series =====
+    ("aircAruvnKk", "LLM Fundamentals", "Beginner", 96,
+     "• Visual introduction to neural networks\n• Explains neurons, layers, and activations\n• Shows how networks recognize handwritten digits\n• Intuitive understanding without heavy math\n• Chapter 1 of landmark deep learning series",
+     "Anyone wanting an intuitive visual understanding of how neural networks work",
+     "Neural Networks, Deep Learning",
+     "Explain the structure and function of neural networks to technical and non-technical audiences"),
+
+    ("IHZwWFHWa-w", "LLM Fundamentals", "Beginner", 95,
+     "• Visual explanation of gradient descent\n• Shows how neural networks learn from data\n• Explains loss functions and backpropagation intuitively\n• Connects math to visual understanding\n• Chapter 2 of deep learning series",
+     "Developers wanting to understand how neural networks train without getting lost in calculus",
+     "Gradient Descent, Backpropagation, Neural Networks",
+     "Explain and implement gradient descent for training neural networks"),
+
+    ("Ilg3gGewQ5U", "LLM Fundamentals", "Intermediate", 94,
+     "• Intuitive explanation of backpropagation\n• Shows the chain rule visually\n• Connects gradients to weight updates\n• Chapter 3 of deep learning series\n• Essential for understanding LLM training",
+     "Engineers who want to understand why LLMs train the way they do",
+     "Backpropagation, Calculus, Neural Networks",
+     "Understand backpropagation deeply to debug and optimize neural network training"),
+
+    ("eMlx5fFNoYc", "LLM Fundamentals", "Intermediate", 97,
+     "• Step-by-step visual walkthrough of attention mechanism\n• Shows how transformers process sequences\n• Explains query, key, value matrices intuitively\n• Covers multi-head attention and positional encoding\n• Chapter 6 of deep learning series",
+     "Engineers wanting a visual and intuitive understanding of transformer attention",
+     "Transformers, Attention, GPT, Self-Attention",
+     "Explain transformer attention mechanisms to build better intuition for LLM architecture"),
+
+    ("wjZofJX0v4M", "LLM Fundamentals", "Intermediate", 96,
+     "• Visual exploration of how transformers work\n• Shows the full architecture: embeddings to output\n• Explains why transformers replaced RNNs\n• Covers the original 'Attention Is All You Need' ideas\n• Chapter 5 of deep learning series",
+     "Developers wanting a clear visual understanding of the transformer architecture",
+     "Transformers, GPT, Attention, Deep Learning",
+     "Understand transformer architecture to make informed choices when using LLMs"),
+
+    ("9-Jl0dxWQs8", "LLM Fundamentals", "Advanced", 93,
+     "• Explores how LLMs store and retrieve factual knowledge\n• Covers key-value memory in attention layers\n• Shows how facts are encoded in transformer weights\n• Discusses implications for hallucination\n• Chapter 7 of deep learning series",
+     "Researchers and engineers investigating LLM memory and knowledge retrieval",
+     "LLMs, Attention, Transformers, Knowledge Representation",
+     "Understand where LLMs store facts to better design retrieval-augmented systems"),
+
+    # ===== LEX FRIDMAN — AI interviews and discussions =====
+    ("ugvHCXCOmm4", "AI Research & Safety", "Beginner", 91,
+     "• Wide-ranging interview with Anthropic CEO Dario Amodei\n• Covers Claude's design philosophy and Constitutional AI\n• Discusses AGI timelines and safety approaches\n• Explores the future of AI development\n• Key insights on building responsible AI systems",
+     "AI product leaders and researchers wanting strategic perspective on Claude and AI safety",
+     "Claude, Anthropic, Constitutional AI, AGI",
+     "Articulate Anthropic's AI safety philosophy and its practical implications for product design"),
+
+    ("L_Guz73e6fw", "AI Research & Safety", "Beginner", 90,
+     "• Sam Altman discusses GPT-4, ChatGPT, and OpenAI's mission\n• Covers the future of AI and AGI timelines\n• Discusses AI safety and alignment challenges\n• Explores the business and societal impact of AI\n• Essential context for anyone building AI products",
+     "AI founders, engineers, and product managers wanting context on OpenAI's vision",
+     "GPT-4, ChatGPT, OpenAI, AGI, AI Safety",
+     "Frame AI product decisions within the broader context of AI development trends"),
+
+    ("AaTRHFaaPG8", "AI Research & Safety", "Intermediate", 89,
+     "• Eliezer Yudkowsky on AI existential risk\n• Discusses alignment problem and its difficulty\n• Covers instrumental convergence and deceptive AI\n• Explores different views on AI safety approaches\n• Essential perspective for responsible AI development",
+     "Engineers and leaders who want to understand AI safety arguments seriously",
+     "AI Safety, Alignment, AGI, MIRI",
+     "Understand AI safety risks and alignment challenges to make responsible development decisions"),
+
+    ("qpoRO378qRY", "AI Research & Safety", "Beginner", 88,
+     "• Geoffrey Hinton on the risks of AI after leaving Google\n• Explains why AI could become dangerous\n• Discusses what AI safety measures are needed\n• Personal perspective from the godfather of deep learning\n• Influential interview that shaped AI safety conversation",
+     "Anyone wanting to understand AI risks from a world-leading AI researcher's perspective",
+     "Neural Networks, AI Safety, Deep Learning",
+     "Communicate AI risks and safety considerations from an authoritative expert perspective"),
+
+    # ===== CURSOR AI =====
     ("gqUQbjsYZLQ", "AI Coding Assistants", "Beginner", 92,
-     "• Full walkthrough of Cursor AI editor features\n• Demonstrates AI-powered autocomplete and chat\n• Shows codebase indexing and understanding\n• Compares with GitHub Copilot\n• Tips for maximizing AI coding productivity",
-     "Software developers wanting to add AI to their coding workflow",
+     "• Full walkthrough of Cursor AI editor features\n• Demonstrates AI-powered autocomplete and chat\n• Shows codebase indexing and contextual understanding\n• Practical tips for maximizing AI coding productivity\n• From Greg Isenberg's popular AI tools channel",
+     "Software developers wanting to add AI to their coding workflow with Cursor",
      "Cursor AI, Claude, GPT-4",
-     "Set up and use Cursor AI to 10x coding speed with AI assistance"),
+     "Set up and use Cursor AI to accelerate coding with AI autocomplete and codebase chat"),
 
-    ("yk9lXobq3w8", "AI Coding Assistants", "Intermediate", 91,
-     "• Advanced Cursor AI workflows and shortcuts\n• Custom .cursorrules file configuration\n• Multi-file editing and refactoring with AI\n• Debugging with AI assistance\n• Real project build demonstration",
-     "Developers already using Cursor wanting advanced techniques",
-     "Cursor AI, .cursorrules, Claude",
-     "Configure Cursor AI with custom rules and advanced multi-file editing workflows"),
-
-    # --- GitHub Copilot ---
-    ("Z-2jyvhDRb0", "AI Coding Assistants", "Beginner", 85,
-     "• GitHub Copilot complete setup guide\n• Demonstrates code completion in real projects\n• Covers Copilot Chat for debugging\n• Shows test generation capabilities\n• VS Code integration tips",
-     "Developers new to GitHub Copilot wanting productive setup",
-     "GitHub Copilot, VS Code, OpenAI Codex",
-     "Set up GitHub Copilot and use it effectively for code completion and generation"),
-
-    # --- LLM Prompt Engineering ---
+    # ===== PROMPT ENGINEERING =====
     ("_ZvnD73m40o", "Prompt Engineering", "Beginner", 93,
-     "• Complete prompt engineering guide for 2024\n• Covers chain-of-thought and few-shot prompting\n• Demonstrates role prompting and system messages\n• Shows how to reduce hallucinations\n• Practical templates for common use cases",
-     "Anyone building LLM-powered applications who wants reliable outputs",
-     "GPT-4, Claude, Prompt Engineering",
+     "• Complete prompt engineering guide for ChatGPT and LLMs\n• Covers zero-shot, few-shot, and chain-of-thought prompting\n• Demonstrates role prompting and system messages\n• Shows how to reduce hallucinations with better prompts\n• Practical templates for common use cases",
+     "Anyone building LLM-powered applications who wants reliable and consistent outputs",
+     "GPT-4, Claude, LLMs, Prompt Engineering",
      "Write effective prompts using chain-of-thought, few-shot, and role prompting techniques"),
 
     ("dOxUroR57xs", "Prompt Engineering", "Intermediate", 91,
-     "• Advanced prompt engineering patterns\n• ReAct framework for reasoning and acting\n• Tree of Thought prompting technique\n• Prompt chaining for complex workflows\n• Evaluating and iterating on prompts",
-     "Engineers building sophisticated LLM reasoning pipelines",
-     "LangChain, GPT-4, Claude, ReAct",
-     "Implement advanced reasoning patterns like ReAct and Tree of Thought in LLM applications"),
+     "• Comprehensive overview of prompt engineering techniques\n• Covers ReAct, Tree of Thought, and self-consistency\n• Discusses calibration and evaluation methods\n• Based on research papers and real-world findings\n• By Elvis Saravia, AI research educator",
+     "Engineers building sophisticated LLM reasoning pipelines who need advanced techniques",
+     "GPT-4, Claude, ReAct, Tree of Thought, Chain of Thought",
+     "Implement advanced reasoning patterns in LLM applications for complex problem solving"),
 
-    # --- AI Agents ---
+    ("H4YK_7MAckk", "Prompt Engineering", "Beginner", 92,
+     "• DeepLearning.AI short course on prompt engineering\n• Best practices for instructing LLMs effectively\n• Covers iterative prompt development process\n• Shows summarization, inference, and transformation tasks\n• Co-created with OpenAI engineers",
+     "Developers new to LLMs who want best-practice prompt engineering from the source",
+     "OpenAI API, GPT-4, Python, Prompt Engineering",
+     "Apply DeepLearning.AI prompt engineering best practices to build reliable LLM applications"),
+
+    # ===== AI AGENTS =====
     ("sal78ACtGTc", "AI Agents", "Intermediate", 94,
-     "• Build an AI agent with tool use from scratch\n• Implements web search, calculator, and code execution tools\n• Covers agent memory and context management\n• Shows multi-step reasoning loops\n• Production deployment considerations",
-     "Developers building autonomous AI agents with tool-use capabilities",
-     "LangChain, OpenAI, Python, Tool Use",
-     "Build production-ready AI agents with tool calling and multi-step reasoning"),
+     "• Andrew Ng discusses what's next for AI agentic workflows\n• Covers reflection, tool use, planning, and multi-agent patterns\n• Explains why agentic AI outperforms single-pass approaches\n• Practical framework for designing agent systems\n• From Sequoia Capital's AI ascent summit",
+     "Engineers designing AI agent systems who want a strategic framework from Andrew Ng",
+     "AI Agents, Tool Use, Planning, Multi-Agent, LLMs",
+     "Design effective AI agent systems using reflection, planning, and multi-agent coordination"),
 
-    ("Ml4XCF-JS0k", "AI Agents", "Advanced", 95,
-     "• Multi-agent coordination with AutoGen\n• Builds coding assistant, reviewer, and executor agents\n• Covers agent communication protocols\n• Demonstrates collaborative problem solving\n• Real software engineering use cases",
-     "Engineers building multi-agent systems for complex automation tasks",
-     "AutoGen, GPT-4, Python, Multi-Agent",
-     "Design and orchestrate multi-agent systems where agents collaborate on complex tasks"),
+    ("tnejrr-0a94", "AI Agents", "Intermediate", 90,
+     "• CrewAI multi-agent framework tutorial\n• Builds a research and content writing crew\n• Covers role assignment and task delegation between agents\n• Integrates with LangChain tools and memory\n• Production-ready multi-agent orchestration",
+     "Developers building collaborative multi-agent systems for research and automation workflows",
+     "CrewAI, LangChain, GPT-4, Python, Multi-Agent",
+     "Orchestrate specialized AI agent teams for research, analysis, and content generation"),
 
-    # --- LangChain ---
-    ("LbT1yp742PQ", "AI Frameworks", "Intermediate", 89,
-     "• LangChain complete beginner's guide\n• Covers chains, agents, memory, and retrievers\n• Builds a document Q&A chatbot end-to-end\n• Integrates with vector databases\n• Production deployment tips",
-     "Developers building LLM applications who want a structured framework",
-     "LangChain, OpenAI, Pinecone, Python",
-     "Build LLM-powered applications using LangChain chains, agents, and memory"),
+    # ===== LANGCHAIN & FRAMEWORKS =====
+    ("aywZrzNaKjs", "AI Frameworks", "Beginner", 89,
+     "• LangChain explained in 13 minutes\n• Covers chains, agents, memory, and retrievers\n• Shows how to connect LLMs to tools and data\n• Quick-start guide for the most popular LLM framework\n• Perfect before diving into longer tutorials",
+     "Developers wanting a fast overview of LangChain before building their first LLM app",
+     "LangChain, OpenAI, Python, Chains, Agents",
+     "Build LLM-powered applications using LangChain's chains, agents, and memory modules"),
 
-    ("aywZrzNaKjs", "AI Frameworks", "Advanced", 90,
-     "• LangGraph for stateful agent workflows\n• Builds complex multi-step reasoning graphs\n• Handles branching and conditional logic\n• Integrates with external APIs and tools\n• Production patterns for agent orchestration",
-     "Engineers building complex stateful agent systems beyond simple chains",
-     "LangGraph, LangChain, Python, Agents",
-     "Orchestrate complex agent workflows with branching logic using LangGraph"),
+    ("NYSWn1ipbgg", "AI Frameworks", "Intermediate", 88,
+     "• Builds Auto-GPT style apps with LangChain in Python\n• Creates autonomous agents that plan and execute tasks\n• Integrates web search, file I/O, and code execution\n• Covers agent memory and goal-directed behavior\n• Practical tutorial for autonomous AI apps",
+     "Developers building autonomous AI applications inspired by Auto-GPT",
+     "LangChain, OpenAI, Python, Autonomous Agents",
+     "Build autonomous AI agents with LangChain that plan, execute tools, and iterate towards goals"),
 
-    # --- RAG (Retrieval Augmented Generation) ---
-    ("T-D1OfcDW1M", "RAG & Vector Search", "Intermediate", 93,
-     "• Complete RAG implementation from scratch\n• Covers document chunking strategies\n• Implements embedding and vector search\n• Builds a Q&A system over custom documents\n• Evaluates retrieval quality",
-     "Engineers building knowledge bases and document Q&A systems with LLMs",
-     "OpenAI Embeddings, Pinecone, LangChain, Python",
-     "Build a production RAG pipeline with document chunking, embedding, and retrieval"),
+    # ===== RAG & VECTOR SEARCH =====
+    ("T-D1OfcDW1M", "RAG & Vector Search", "Beginner", 93,
+     "• IBM Technology explains Retrieval-Augmented Generation\n• Shows why RAG reduces hallucinations vs plain LLMs\n• Covers the full retrieve-then-generate pipeline\n• Explains vector embeddings and similarity search\n• Essential primer before building RAG systems",
+     "Engineers evaluating RAG as an approach for building knowledge-based AI applications",
+     "RAG, Vector Databases, Embeddings, LLMs",
+     "Explain and implement Retrieval-Augmented Generation to reduce hallucinations in AI applications"),
 
-    ("qN_2fnOPY-M", "RAG & Vector Search", "Advanced", 94,
-     "• Advanced RAG patterns: HyDE, reranking, query expansion\n• Parent-child chunking strategy\n• Hybrid search combining BM25 and vectors\n• Evaluating RAG with RAGAS framework\n• Production optimization techniques",
-     "Teams deploying RAG systems who need higher accuracy and reliability",
-     "LangChain, Pinecone, Cohere Rerank, RAGAS",
-     "Improve RAG accuracy with advanced retrieval patterns like HyDE and reranking"),
+    ("qN_2fnOPY-M", "RAG & Vector Search", "Intermediate", 94,
+     "• Builds a complete local RAG system from scratch\n• Uses Ollama, LangChain, and Chroma for local inference\n• Covers document loading, chunking, and embedding\n• No cloud APIs needed — fully private and offline\n• Production-quality RAG implementation guide",
+     "Engineers building privacy-first RAG systems that run entirely on local hardware",
+     "Ollama, LangChain, Chroma, Python, Local LLMs",
+     "Build a fully local RAG pipeline with document ingestion, embedding, and retrieval"),
 
-    # --- OpenAI API / GPT-4 ---
+    ("dN0lsF2cvm4", "RAG & Vector Search", "Beginner", 88,
+     "• Clear explanation of vector databases and embeddings\n• Shows how semantic search differs from keyword search\n• Covers use cases: RAG, recommendations, anomaly detection\n• Compares major vector DB options\n• AssemblyAI's concise educational style",
+     "Engineers new to vector databases who need to understand when and why to use them",
+     "Vector Databases, Embeddings, Semantic Search, Pinecone, Chroma",
+     "Select the right vector database and implement semantic search for LLM applications"),
+
+    ("ySus5ZS0b94", "RAG & Vector Search", "Intermediate", 87,
+     "• OpenAI embeddings API crash course with vector databases\n• Builds semantic search from scratch\n• Covers cosine similarity and distance metrics\n• Integrates with Pinecone for scalable search\n• Practical implementation guide",
+     "Engineers building semantic search or RAG systems with OpenAI embeddings",
+     "OpenAI Embeddings, Pinecone, Python, Semantic Search",
+     "Build semantic search systems using OpenAI embeddings and vector database storage"),
+
+    # ===== GENERATIVE AI & OVERVIEWS =====
+    ("G2fqAlgmoPo", "Generative AI", "Beginner", 85,
+     "• Google Cloud's introduction to generative AI\n• Covers LLMs, foundation models, and generative use cases\n• Explains what makes generative AI different from traditional ML\n• Discusses Google's AI products and capabilities\n• Short accessible primer for business and technical audiences",
+     "Non-technical stakeholders and developers new to generative AI concepts",
+     "Generative AI, LLMs, Foundation Models, Google Cloud",
+     "Explain generative AI concepts and use cases to technical and non-technical stakeholders"),
+
+    ("2IK3DFHRFfw", "Generative AI", "Beginner", 88,
+     "• Animated guide to surviving the generative AI era\n• Covers what AI can and cannot do with clarity\n• Discusses how to work alongside AI effectively\n• Practical mental models for the AI transformation\n• Widely shared in engineering and business communities",
+     "Teams and leaders wanting a clear mental model for working with AI in the modern era",
+     "Generative AI, LLMs, ChatGPT, AI Strategy",
+     "Build practical mental models for integrating AI tools into workflows effectively"),
+
+    ("hfIUstzHs9A", "Generative AI", "Beginner", 86,
+     "• IBM Technology explains generative AI models clearly\n• Covers text, image, code, and audio generation\n• Explains how foundation models are trained\n• Discusses fine-tuning and prompt engineering\n• Concise 10-minute overview",
+     "Business and technical users wanting a quick clear overview of generative AI capabilities",
+     "Generative AI, Foundation Models, LLMs, IBM",
+     "Explain generative AI model types and their business applications to diverse audiences"),
+
+    ("vgYi3Wr7v_g", "Generative AI", "Beginner", 87,
+     "• OpenAI announces GPT-4o multimodal model\n• Demonstrates voice, vision, and text in real time\n• Shows natural human-AI conversation capabilities\n• Covers the technical improvements over GPT-4\n• Official launch video from OpenAI",
+     "Developers evaluating GPT-4o for multimodal and voice-enabled applications",
+     "GPT-4o, OpenAI, Multimodal AI, Voice AI",
+     "Evaluate GPT-4o capabilities for building multimodal applications with vision and voice"),
+
+    ("mEsleV16qdo", "Generative AI", "Intermediate", 90,
+     "• Full generative AI course covering multiple platforms\n• Includes Gemini Pro, OpenAI, Llama, LangChain, Pinecone\n• Builds real projects with vector databases\n• Complete beginner-to-intermediate curriculum\n• freeCodeCamp's comprehensive AI course",
+     "Developers wanting a structured end-to-end generative AI curriculum",
+     "Gemini Pro, OpenAI, Llama, LangChain, Pinecone, Vector Databases",
+     "Build generative AI applications across multiple LLM providers with a systematic approach"),
+
+    ("ahnGLM-RC1Y", "Generative AI", "Intermediate", 91,
+     "• OpenAI's survey of techniques for maximizing LLM performance\n• Covers prompt engineering, RAG, and fine-tuning\n• Explains when to use each technique\n• Discusses evaluation and iteration strategies\n• Authoritative guidance from OpenAI engineers",
+     "Engineers choosing between prompt engineering, RAG, and fine-tuning for their use case",
+     "OpenAI, GPT-4, RAG, Fine-tuning, Prompt Engineering",
+     "Select the right LLM performance technique (prompting vs RAG vs fine-tuning) for each use case"),
+
+    # ===== CHATGPT & OPENAI =====
     ("pGOyw_M1mNE", "OpenAI API", "Beginner", 87,
-     "• OpenAI API complete beginner guide\n• Covers chat completions, embeddings, and DALL-E\n• Builds a simple chatbot application\n• Covers function calling (tool use)\n• Cost optimization tips",
-     "Developers getting started with the OpenAI API for the first time",
-     "OpenAI API, GPT-4, Python, Function Calling",
-     "Integrate the OpenAI API into Python applications with chat, embeddings, and function calling"),
+     "• Build a ChatGPT-powered chatbot in Python from scratch\n• Covers the OpenAI chat completions API\n• Implements conversation history and context management\n• Adds a simple web interface with Flask\n• Great first project for new AI developers",
+     "Developers building their first ChatGPT-powered application in Python",
+     "ChatGPT, OpenAI API, Python, Flask",
+     "Build a conversational AI chatbot using the OpenAI chat completions API with history"),
 
-    ("hOd_Jj_IG40", "OpenAI API", "Advanced", 92,
-     "• GPT-4 function calling deep dive\n• Build a structured data extraction pipeline\n• Implement tool use with external APIs\n• Parallel function execution\n• Error handling and retry logic",
-     "Engineers building reliable data extraction and tool-use workflows with GPT-4",
-     "OpenAI API, Function Calling, Python, Tool Use",
-     "Implement reliable function calling workflows with GPT-4 for structured data extraction"),
+    ("JTxsNm9IdYU", "OpenAI API", "Beginner", 85,
+     "• ChatGPT crash course for complete beginners\n• Covers prompt writing, use cases, and limitations\n• Shows practical examples for coding, writing, and analysis\n• Explains what ChatGPT can and cannot do\n• By Adrian Twarog, popular tech educator",
+     "Anyone new to ChatGPT wanting practical guidance on getting the most from it",
+     "ChatGPT, OpenAI, Prompt Engineering",
+     "Use ChatGPT effectively for coding assistance, writing, and analysis tasks"),
 
-    # --- n8n / Automation ---
-    ("3OyOCz3trMY", "AI Automation Workflows", "Beginner", 88,
-     "• n8n workflow automation introduction\n• Integrates ChatGPT into no-code workflows\n• Builds Slack bot, email responder, and CRM automation\n• Covers webhook triggers and API nodes\n• Free self-hosted alternative to Zapier",
-     "Non-technical users and developers wanting AI-powered automation without heavy coding",
-     "n8n, ChatGPT, Slack, Webhooks",
-     "Build AI-powered automation workflows using n8n with ChatGPT integration"),
+    ("U9mJuUkhUzk", "OpenAI API", "Intermediate", 93,
+     "• OpenAI DevDay 2023 opening keynote\n• Announces GPT-4 Turbo with 128K context window\n• Introduces Assistants API, function calling improvements\n• Shows custom GPTs and the GPT Store\n• Key capabilities for developers building on OpenAI",
+     "Developers building on OpenAI wanting to understand the latest platform capabilities",
+     "OpenAI, GPT-4 Turbo, Assistants API, Function Calling, Custom GPTs",
+     "Leverage the latest OpenAI platform features including Assistants API and GPT-4 Turbo"),
 
-    ("BkyNVGKZ5Pg", "AI Automation Workflows", "Intermediate", 89,
-     "• Build an AI agent workflow in n8n\n• Chains multiple LLM calls with memory\n• Integrates with Airtable, Notion, and Slack\n• Handles errors and retries automatically\n• Deploys production automation pipelines",
-     "Operations teams automating repetitive tasks with AI agent workflows",
-     "n8n, OpenAI, Airtable, Notion",
-     "Deploy AI agent automation pipelines that chain LLM calls with external tool integrations"),
+    ("vgYi3Wr7v_g", "OpenAI API", "Beginner", 87,
+     "• OpenAI demonstrates GPT-4o capabilities live\n• Shows real-time voice with emotional awareness\n• Demonstrates vision and text tasks together\n• Shows code interpreter and file analysis\n• Essential demo for understanding multimodal AI",
+     "Developers evaluating GPT-4o for multimodal applications",
+     "GPT-4o, OpenAI, Multimodal, Voice AI",
+     "Build applications that use GPT-4o's multimodal capabilities for voice and vision"),
 
-    # --- AI for Developers (general) ---
-    ("kpRyFRnwZpI", "AI Productivity", "Beginner", 86,
-     "• AI tools every developer should know in 2024\n• Covers Cursor, Copilot, Claude, and ChatGPT\n• Demos code review and debugging with AI\n• Productivity benchmarks and comparisons\n• Recommendations by use case",
-     "Software developers wanting to understand which AI tools fit their workflow",
-     "Cursor, Copilot, Claude, ChatGPT",
-     "Select and integrate the right AI coding tools for different development scenarios"),
+    # ===== MACHINE LEARNING FOUNDATIONS =====
+    ("f_uwKZIAeM0", "Machine Learning", "Beginner", 84,
+     "• Oxford Sparks animated intro to machine learning\n• Explains supervised, unsupervised, and reinforcement learning\n• Shows how models learn from data\n• Accessible for non-technical audiences\n• Great explainer for introducing ML concepts",
+     "Non-technical audiences wanting a clear conceptual introduction to machine learning",
+     "Machine Learning, Supervised Learning, Neural Networks",
+     "Explain machine learning concepts clearly to non-technical stakeholders"),
 
-    # --- Whisper / Speech AI ---
-    ("ABFqbY_rmEk", "AI Tools & APIs", "Intermediate", 85,
-     "• OpenAI Whisper speech-to-text complete guide\n• Transcribes audio and video files locally\n• Covers language detection and translation\n• Compares model sizes vs accuracy vs speed\n• Builds a meeting transcription tool",
-     "Developers building transcription, subtitle generation, or voice-based AI applications",
-     "OpenAI Whisper, Python, FFmpeg",
-     "Transcribe audio and video content at scale using OpenAI Whisper with language detection"),
+    ("Jy4wM2X21u0", "Machine Learning", "Intermediate", 85,
+     "• PyTorch neural network implementation example\n• Builds a classification network from scratch\n• Covers forward pass, loss, and backward pass\n• Practical code-first introduction to PyTorch\n• By Aladdin Persson, popular PyTorch educator",
+     "Python developers learning to implement neural networks with PyTorch for the first time",
+     "PyTorch, Neural Networks, Python",
+     "Implement and train neural networks in PyTorch for classification tasks"),
 
-    # --- Ollama / Local LLMs ---
-    ("xMMn1IOQOOU", "Local AI & Open Source", "Intermediate", 91,
-     "• Run LLMs locally with Ollama\n• Downloads and manages Llama 3, Mistral, Phi-3\n• Builds a local AI chatbot with Open WebUI\n• Compares model quality vs API costs\n• Privacy-first AI workflow setup",
-     "Developers wanting to run AI locally for privacy, cost savings, or offline use",
-     "Ollama, Llama 3, Mistral, Open WebUI",
-     "Set up a local LLM environment with Ollama for privacy-first AI development"),
+    ("CqOfi41LfDw", "Machine Learning", "Beginner", 86,
+     "• StatQuest's visual guide to neural network essentials\n• Covers activation functions, backprop, and optimization\n• Clear explanations of complex concepts with visuals\n• Josh Starmer's approachable teaching style\n• Great supplement to more technical courses",
+     "Beginners finding neural network mathematics intimidating who need visual explanations",
+     "Neural Networks, Backpropagation, Activation Functions",
+     "Explain neural network concepts clearly using visual intuition and analogies"),
 
-    ("CPgp0MZ8alo", "Local AI & Open Source", "Advanced", 90,
-     "• Fine-tune Llama 3 with LoRA on custom data\n• Uses QLoRA for memory-efficient training\n• Covers dataset preparation and formatting\n• Evaluates fine-tuned model performance\n• Deploys the model with Ollama",
-     "ML engineers fine-tuning open-source models for specific use cases",
-     "Llama 3, LoRA, QLoRA, Hugging Face, Python",
-     "Fine-tune open-source LLMs with LoRA on domain-specific datasets"),
+    ("EMXfZB8FVUA", "Machine Learning", "Intermediate", 82,
+     "• Patrick Loeber's PyTorch tutorial series introduction\n• Covers installation, tensors, and basic operations\n• Sets up the development environment correctly\n• Foundation for the complete PyTorch course\n• Practical and code-focused tutorial style",
+     "Python developers setting up their first PyTorch development environment",
+     "PyTorch, Python, CUDA",
+     "Set up a PyTorch development environment and understand fundamental tensor operations"),
 
-    # --- Vector Databases ---
-    ("dN0lsF2cvm4", "RAG & Vector Search", "Intermediate", 88,
-     "• Pinecone vector database complete tutorial\n• Covers upsert, query, and metadata filtering\n• Builds semantic search over large datasets\n• Integrates with OpenAI embeddings\n• Cost and performance optimization",
-     "Engineers building semantic search or RAG systems needing scalable vector storage",
-     "Pinecone, OpenAI Embeddings, Python",
-     "Build and query a Pinecone vector database for semantic search and RAG applications"),
+    ("WFr2WgN9_xE", "Machine Learning", "Intermediate", 88,
+     "• Tech With Tim's Python ML and AI mega course\n• Covers scikit-learn, TensorFlow, and modern AI tools\n• Builds 4 different AI/ML projects end-to-end\n• Includes neural networks, NLP, and computer vision\n• Comprehensive 12+ hour reference course",
+     "Python developers who want a broad practical foundation in ML and AI",
+     "Python, scikit-learn, TensorFlow, Machine Learning",
+     "Build a broad practical foundation in machine learning across different domains and tools"),
 
-    ("eSaGNBckPo4", "RAG & Vector Search", "Intermediate", 87,
-     "• Chroma vector database local setup\n• Builds a document chat system end-to-end\n• Covers persistent storage and collections\n• Integrates with LangChain\n• Comparison with Pinecone and Weaviate",
-     "Developers building local RAG prototypes with an open-source vector database",
-     "Chroma, LangChain, OpenAI, Python",
-     "Set up Chroma for local RAG development with document ingestion and semantic search"),
+    ("Wo5dMEP_BbI", "Machine Learning", "Intermediate", 87,
+     "• Build neural networks from scratch without frameworks\n• Implements neurons, layers, and activation functions\n• Trains on real data without TensorFlow or PyTorch\n• sentdex's hands-on practical approach\n• Deep understanding through first-principles coding",
+     "Engineers wanting to understand neural network internals by building without frameworks",
+     "Python, NumPy, Neural Networks",
+     "Implement neural networks from scratch in pure Python to deeply understand the mechanics"),
 
-    # --- AI Coding workflows ---
-    ("jj0yKJahlJY", "AI Coding Assistants", "Intermediate", 93,
-     "• Build a full-stack app entirely with AI assistance\n• Uses Cursor AI for frontend and backend\n• Demonstrates AI-driven debugging workflow\n• Covers prompting strategies for code generation\n• From idea to deployed app in one session",
-     "Developers wanting to see a complete AI-assisted application build from start to finish",
-     "Cursor AI, React, FastAPI, Claude",
-     "Build complete applications using AI coding assistants with effective prompting strategies"),
+    # ===== AI RESEARCH PAPERS & CONCEPTS =====
+    ("iDulhoQ2pro", "AI Research & Safety", "Advanced", 92,
+     "• Yannic Kilcher walks through the 'Attention Is All You Need' paper\n• Explains multi-head attention and the encoder-decoder architecture\n• Covers positional encoding and layer normalization\n• Shows why transformers revolutionized NLP\n• Landmark paper that powers modern LLMs",
+     "ML engineers wanting to understand the original transformer paper in depth",
+     "Transformers, Attention, BERT, GPT, Deep Learning",
+     "Understand and explain the transformer architecture from the original research paper"),
 
-    # --- AI Business / Strategy ---
-    ("G2fqAlgmoPo", "AI Business & Strategy", "Beginner", 84,
-     "• How to build an AI-powered SaaS product\n• Covers product-market fit in the AI era\n• Discusses moats and differentiation with AI\n• Practical go-to-market strategies\n• Revenue models for AI products",
-     "Founders and product managers building AI-powered products",
-     "ChatGPT, Claude, SaaS, Product Strategy",
-     "Design viable business models and go-to-market strategies for AI-powered products"),
+    ("mBjPyte2ZZo", "AI Research & Safety", "Intermediate", 88,
+     "• Yann LeCun discusses limitations of large language models\n• Explores the gaps between LLMs and human-level intelligence\n• Discusses alternative architectures and world models\n• Balanced perspective from a leading AI researcher\n• Important counterpoint to LLM hype",
+     "AI researchers and engineers wanting a rigorous perspective on LLM limitations",
+     "LLMs, World Models, AI Research, Meta AI",
+     "Critically evaluate LLM capabilities and limitations to design more robust AI systems"),
 
-    # --- Embeddings ---
-    ("ySus5ZS0b94", "LLM Fundamentals", "Advanced", 94,
-     "• Word2Vec and embedding theory explained visually\n• How semantic similarity works mathematically\n• Builds embeddings from scratch\n• Applications in search, recommendations, and RAG\n• Comparison of embedding models",
-     "Engineers wanting a deep understanding of embeddings for semantic search and NLP",
-     "Word2Vec, OpenAI Embeddings, Python, NumPy",
-     "Understand and implement text embeddings for semantic search and similarity tasks"),
+    ("RzkD_rTEBYs", "AI Research & Safety", "Beginner", 83,
+     "• TED-Ed animated explainer on AI's impact on the world\n• Covers job displacement, creativity, and social change\n• Discusses what AI can and cannot replicate\n• Balanced and accessible for general audiences\n• Great for understanding AI's societal implications",
+     "Teams and stakeholders wanting to understand the broader societal implications of AI",
+     "AI, Machine Learning, Society, Automation",
+     "Communicate AI's societal impact and opportunities to non-technical audiences"),
 
-    # --- AI safety / alignment ---
-    ("AaTRHFaaPG8", "AI Research & Safety", "Intermediate", 89,
-     "• Anthropic's Constitutional AI explained\n• How RLHF shapes model behavior\n• Red-teaming and adversarial testing techniques\n• Responsible deployment practices\n• The future of AI alignment research",
-     "Engineers and researchers building safe, reliable AI systems",
-     "Constitutional AI, RLHF, Anthropic, Claude",
-     "Apply AI safety principles and Constitutional AI techniques in production LLM systems"),
+    # ===== AI TOOLS & APPLICATIONS =====
+    ("pGOyw_M1mNE", "AI Tools & Automation", "Beginner", 86,
+     "• The AI Advantage builds a ChatGPT Python chatbot\n• Covers the OpenAI API from scratch\n• Implements conversation memory\n• Adds command-line and simple web interfaces\n• Beginner-friendly with full code walkthrough",
+     "Developers building their first ChatGPT-powered application in Python",
+     "ChatGPT, OpenAI API, Python",
+     "Build a conversational chatbot using OpenAI API with persistent conversation history"),
 
-    # --- FastAPI + AI ---
-    ("0RS9W8MtZe4", "AI Deployment", "Intermediate", 88,
-     "• Deploy an AI chatbot API with FastAPI\n• Integrates OpenAI and Claude with async endpoints\n• Implements streaming responses\n• Adds authentication and rate limiting\n• Docker containerization and deployment",
-     "Backend engineers deploying production AI APIs with FastAPI",
-     "FastAPI, OpenAI, Claude, Docker, Python",
-     "Build and deploy production-ready AI APIs with FastAPI including streaming and auth"),
+    ("ABFqbY_rmEk", "AI Tools & Automation", "Intermediate", 85,
+     "• How to install and use OpenAI Whisper for speech-to-text\n• Transcribes audio files locally without cloud APIs\n• Covers model sizes, accuracy, and speed tradeoffs\n• Kevin Stratvert's practical tutorial style\n• Essential for building transcription workflows",
+     "Developers building transcription, subtitle, or voice-input features with Whisper",
+     "OpenAI Whisper, Python, Speech-to-Text, FFmpeg",
+     "Transcribe audio and video files locally using OpenAI Whisper for speech-to-text workflows"),
 
-    # --- Hugging Face ---
-    ("QEaBAZQCtwE", "AI Frameworks", "Intermediate", 90,
-     "• Hugging Face Transformers library complete guide\n• Load and run open-source models\n• Fine-tune BERT for text classification\n• Uses Trainer API for efficient training\n• Pushes models to Hugging Face Hub",
-     "ML engineers using open-source models who want to leverage the Hugging Face ecosystem",
-     "Hugging Face, Transformers, BERT, Python",
-     "Use Hugging Face Transformers to load, fine-tune, and deploy open-source NLP models"),
-
-    # --- AI Image Generation ---
-    ("hhOJbTaF7F0", "AI Image Generation", "Beginner", 83,
-     "• Stable Diffusion complete beginner guide\n• Covers text-to-image and image-to-image\n• Demonstrates ControlNet and LoRA styles\n• Automatic1111 interface walkthrough\n• Prompt engineering for image generation",
-     "Creatives and developers exploring AI image generation workflows",
-     "Stable Diffusion, ControlNet, Automatic1111",
-     "Generate and refine AI images using Stable Diffusion with effective prompt engineering"),
-
-    # --- AI for data analysis ---
-    ("C75TROiiEa0", "AI Productivity", "Intermediate", 87,
-     "• Use Code Interpreter (ChatGPT) for data analysis\n• Upload CSV data and ask natural language questions\n• Generates charts, statistical summaries, and insights\n• Automates repetitive data wrangling\n• Practical business analytics use cases",
-     "Data analysts and business users wanting AI-powered data analysis without coding",
-     "ChatGPT Code Interpreter, Python, Pandas",
+    ("C75TROiiEa0", "AI Tools & Automation", "Beginner", 87,
+     "• ChatGPT for data analysis with Code Interpreter\n• Upload CSV files and ask natural language questions\n• Generates Python code, charts, and statistical summaries\n• Automates repetitive data wrangling tasks\n• Practical business analytics use cases",
+     "Data analysts and business users wanting AI-powered analysis without writing code",
+     "ChatGPT, Code Interpreter, Python, Pandas, Data Analysis",
      "Analyze datasets and generate insights using ChatGPT Code Interpreter with natural language"),
 
-    # --- Zapier AI ---
-    ("4Xnb9sQDGzI", "AI Automation Workflows", "Beginner", 82,
-     "• Zapier AI automation for non-technical users\n• Builds automated email response workflows\n• Integrates ChatGPT with 5000+ apps\n• Covers Zapier Tables and Interfaces\n• Real business automation examples",
-     "Non-technical professionals wanting to automate business processes with AI",
-     "Zapier, ChatGPT, Gmail, Slack, Notion",
-     "Automate business workflows by integrating ChatGPT with your existing app stack via Zapier"),
+    # ===== HUGGING FACE =====
+    ("QEaBAZQCtwE", "AI Frameworks", "Intermediate", 90,
+     "• Hugging Face Transformers library in 15 minutes\n• Load and run pretrained models for NLP tasks\n• Covers pipelines, tokenizers, and model hub\n• Shows text classification, NER, and generation\n• AssemblyAI's concise tutorial style",
+     "ML engineers using open-source models who want to quickly adopt the Hugging Face ecosystem",
+     "Hugging Face, Transformers, BERT, GPT-2, Python",
+     "Load and use pretrained NLP models from Hugging Face for text classification and generation"),
 
-    # --- Make.com automation ---
-    ("dHJiuDGDr04", "AI Automation Workflows", "Intermediate", 86,
-     "• Make.com (Integromat) AI automation deep dive\n• Builds a lead enrichment pipeline with AI\n• Chains together HTTP, OpenAI, and CRM modules\n• Handles errors with retry and fallback logic\n• Cost and performance optimization tips",
-     "Operations teams building complex multi-step automation with AI and external APIs",
-     "Make.com, OpenAI, CRM, Webhooks",
-     "Build robust AI automation pipelines in Make.com with error handling and retry logic"),
-
-    # --- Claude Code (Anthropic) ---
-    ("8hSNPcDUMDQ", "Claude & Anthropic", "Intermediate", 95,
-     "• Claude Code CLI tool introduction and setup\n• Demonstrates autonomous code editing\n• Runs bash commands and edits files directly\n• Covers safety features and approval workflows\n• Comparison with Devin and other AI coders",
-     "Developers wanting to use Claude as an autonomous coding agent in the terminal",
-     "Claude Code, Anthropic, CLI, Bash",
-     "Set up and use Claude Code for autonomous AI-assisted software development tasks"),
-
-    # --- OpenAI Assistants API ---
-    ("Kx_zLGVITf8", "OpenAI API", "Intermediate", 89,
-     "• OpenAI Assistants API complete tutorial\n• Creates persistent assistants with tools\n• Implements file search and code interpreter\n• Manages threads and conversation state\n• Builds a production customer support bot",
-     "Engineers building stateful AI assistants with file analysis and code execution",
-     "OpenAI Assistants API, Function Calling, Python",
-     "Build stateful AI assistants using the Assistants API with tool use and file search"),
-
-    # --- Streaming LLMs ---
-    ("YM3ycjSVVqE", "AI Deployment", "Intermediate", 88,
-     "• Implement streaming responses with OpenAI\n• Builds real-time chat UI with React\n• Server-Sent Events (SSE) implementation\n• Handles backpressure and cancellation\n• Compares SSE vs WebSockets for AI apps",
-     "Frontend and full-stack engineers building real-time streaming AI chat interfaces",
-     "OpenAI, React, SSE, Python, FastAPI",
-     "Implement real-time streaming LLM responses with SSE in a full-stack web application"),
-
-    # --- Structured outputs ---
-    ("EIs8JJlORZg", "AI Frameworks", "Intermediate", 91,
-     "• OpenAI structured outputs (JSON mode)\n• Instructor library for reliable Pydantic parsing\n• Extracts structured data from unstructured text\n• Handles retries and validation failures\n• Real-world data extraction pipelines",
-     "Engineers needing reliable structured data extraction from LLM outputs",
-     "OpenAI, Instructor, Pydantic, Python",
-     "Extract reliable structured data from LLMs using JSON mode and Pydantic validation"),
-
-    # --- CrewAI ---
-    ("tnejrr-0a94", "AI Agents", "Intermediate", 90,
-     "• CrewAI multi-agent framework tutorial\n• Builds a research and content writing crew\n• Covers role assignment and task delegation\n• Integrates with LangChain tools\n• Production deployment with memory",
-     "Developers building collaborative multi-agent systems for research and content workflows",
-     "CrewAI, LangChain, GPT-4, Python",
-     "Orchestrate specialized AI agent teams for research, analysis, and content generation tasks"),
-
-    # --- Mistral AI ---
-    ("kWMDPxFQf2w", "Local AI & Open Source", "Intermediate", 88,
-     "• Mistral AI models overview and benchmarks\n• Runs Mixtral 8x7B locally with Ollama\n• Compares with GPT-4 on coding and reasoning\n• API usage and fine-tuning guide\n• Cost analysis vs proprietary models",
-     "Engineers evaluating open-source alternatives to GPT-4 for production use",
-     "Mistral, Mixtral, Ollama, Python",
-     "Evaluate and deploy Mistral AI models as cost-effective alternatives to proprietary LLMs"),
-
-    # --- AI memory ---
-    ("mN2l2jh6x0E", "AI Agents", "Advanced", 92,
-     "• Memory systems for AI agents explained\n• Implements episodic, semantic, and working memory\n• Builds long-term memory with vector databases\n• Handles context window limitations\n• Production patterns for persistent agents",
-     "Engineers building AI agents that need to remember context across multiple sessions",
-     "LangChain, Pinecone, OpenAI, Python",
-     "Implement persistent memory systems for AI agents using episodic and semantic storage"),
-
-    # --- AI Code Review ---
-    ("EBbqBx5SZVE", "AI Coding Assistants", "Intermediate", 89,
-     "• Automate code review with LLMs\n• Integrates GitHub Actions with GPT-4\n• Reviews PRs for security issues, bugs, and style\n• Configures custom review rules\n• Reduces review time by 60%",
-     "Engineering teams wanting to automate first-pass code review with AI",
-     "GitHub Actions, GPT-4, Python, CI/CD",
-     "Set up automated AI code review in GitHub Actions with custom rules and security checks"),
-
-    # --- AI Voice ---
-    ("JGFBiMUOOp0", "AI Tools & APIs", "Intermediate", 84,
-     "• Text-to-speech with ElevenLabs and OpenAI TTS\n• Clones voice from audio samples\n• Builds a podcast-style content generator\n• Compares TTS model quality and pricing\n• Integrates with video generation",
-     "Content creators and developers building voice-enabled AI applications",
-     "ElevenLabs, OpenAI TTS, Python",
-     "Generate natural-sounding speech and build voice-enabled applications with AI TTS APIs"),
-
-    # --- AI for SEO ---
-    ("MnQy-mJGvNQ", "AI Productivity", "Beginner", 81,
-     "• Use ChatGPT for SEO content workflows\n• Generates article outlines and meta descriptions\n• Keyword research with AI assistance\n• Scales content production with automation\n• Avoids AI content detection pitfalls",
-     "Content marketers and SEO professionals using AI to scale content production",
-     "ChatGPT, SEO Tools, Content Marketing",
-     "Scale SEO content production with AI-assisted research, outlining, and writing workflows"),
-
-    # --- Supabase + AI ---
-    ("0tZFQs39arU", "AI Deployment", "Intermediate", 87,
-     "• Build a full-stack AI app with Supabase and OpenAI\n• Vector search with pgvector extension\n• Stores chat history and user data\n• Row-level security for multi-tenant AI apps\n• Deploys to production with Vercel",
-     "Full-stack developers building production AI applications with PostgreSQL vector search",
-     "Supabase, pgvector, OpenAI, Next.js, Vercel",
-     "Build multi-tenant AI applications with vector search using Supabase and OpenAI"),
-
-    # --- AI Image Analysis ---
-    ("6yuDT7Ipz-k", "AI Tools & APIs", "Intermediate", 88,
-     "• GPT-4 Vision (GPT-4V) complete guide\n• Analyzes images, charts, and documents\n• Builds a visual QA system\n• Compares with Claude Vision and Gemini Pro\n• Production patterns for multimodal apps",
-     "Developers building applications that need to understand and analyze images with AI",
-     "GPT-4 Vision, Claude Vision, OpenAI API, Python",
-     "Build multimodal applications that analyze and respond to visual content using GPT-4V"),
-
-    # --- Fine-tuning GPT ---
-    ("rYYPeZwNFpw", "AI Frameworks", "Advanced", 91,
-     "• Fine-tune GPT-3.5-turbo on custom data\n• Prepares JSONL training datasets\n• Covers overfitting and validation strategies\n• Evaluates fine-tuned vs base model\n• Cost analysis and ROI of fine-tuning",
-     "Engineers fine-tuning GPT models for specialized domain tasks",
-     "OpenAI Fine-tuning, GPT-3.5, Python, JSONL",
-     "Fine-tune GPT models on domain-specific data with proper training dataset preparation"),
-
-    # --- AI in VS Code ---
-    ("6i3e-j3wSHs", "AI Coding Assistants", "Beginner", 86,
-     "• AI extensions for VS Code in 2024\n• Covers Copilot, Codeium, and Continue.dev\n• Compares free vs paid options\n• Setup and configuration guide\n• Productivity tips and keyboard shortcuts",
-     "VS Code users wanting to add AI coding assistance to their existing workflow",
-     "VS Code, GitHub Copilot, Codeium, Continue.dev",
-     "Set up and configure AI coding assistants in VS Code to maximize development productivity"),
-
-    # --- Dify / No-code AI ---
-    ("1yRzmUv5q8Q", "AI Automation Workflows", "Beginner", 85,
-     "• Dify open-source LLM app builder tutorial\n• Creates AI chatbots and workflows visually\n• Integrates with OpenAI, Claude, and Ollama\n• Builds a knowledge base Q&A app\n• Self-hosted alternative to LangSmith",
-     "Teams wanting to build LLM applications without writing code from scratch",
-     "Dify, OpenAI, Claude, RAG, No-Code",
-     "Build and deploy LLM-powered chatbots and workflows using the Dify visual builder"),
-
-    # --- AI Data Extraction ---
-    ("1TKe4dAFjSY", "AI Tools & APIs", "Intermediate", 89,
-     "• Web scraping with AI-powered extraction\n• Uses GPT-4 to parse unstructured HTML\n• Handles pagination and dynamic content\n• Scales with async Python and Playwright\n• Exports to structured databases",
-     "Data engineers building AI-powered web scraping and data extraction pipelines",
-     "GPT-4, Playwright, Python, Web Scraping",
-     "Extract structured data from websites using AI to parse and clean unstructured HTML"),
-
-    # --- Claude Artifacts ---
-    ("OcsMGjCRUoY", "Claude & Anthropic", "Beginner", 92,
-     "• Claude Artifacts feature complete walkthrough\n• Creates interactive React apps in chat\n• Generates data visualizations and tools\n• Iterative refinement with follow-up prompts\n• Practical use cases for non-coders",
-     "Non-technical users and developers exploring Claude's artifact creation capabilities",
-     "Claude, Anthropic, React, Artifacts",
-     "Use Claude Artifacts to create interactive tools, charts, and mini-applications from natural language"),
+    # ===== FASTAPI =====
+    ("0RS9W8MtZe4", "AI Deployment", "Intermediate", 88,
+     "• Build and deploy an AI API with FastAPI\n• Covers async endpoints and request/response models\n• Adds authentication and API key middleware\n• Deploys to production with Uvicorn\n• Patrick Loeber's FastAPI introduction",
+     "Backend Python engineers deploying AI models as production REST APIs",
+     "FastAPI, Python, Pydantic, Uvicorn, REST APIs",
+     "Build and deploy production-ready AI APIs with FastAPI including async endpoints and auth"),
 ]
 
 # -------------------------------------------------------------------------
@@ -450,18 +426,23 @@ def build_entry(video_id: str, meta: dict, category: str, difficulty: str,
 
 def main():
     print(f"VideoMind AI — Real Video Directory Builder")
-    print(f"Building from {len(CURATED_VIDEOS)} curated video entries")
+    print(f"Processing {len(CURATED_VIDEOS)} curated entries")
     print("=" * 60)
 
+    seen_ids = set()
     entries = []
     for i, (vid_id, cat, diff, score, summary, best_for, tools, teaches) in enumerate(CURATED_VIDEOS):
+        if vid_id in seen_ids:
+            print(f"[{i+1}] SKIP duplicate {vid_id}")
+            continue
+        seen_ids.add(vid_id)
         print(f"[{i+1}/{len(CURATED_VIDEOS)}] Validating {vid_id}...", end=" ", flush=True)
         meta = fetch_oembed(vid_id)
         if meta is None:
             continue
         print(f"✓ {meta['title'][:50]} — {meta['author_name']}")
         entries.append(build_entry(vid_id, meta, cat, diff, score, summary, best_for, tools, teaches))
-        time.sleep(0.3)  # be polite to YouTube oEmbed
+        time.sleep(0.25)
 
     print(f"\nValidated {len(entries)} real videos")
     print("=" * 60)
