@@ -8,8 +8,27 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
+import os
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
 from config import settings
 from database import create_tables, get_database, engine
+
+# Initialize Sentry error monitoring (only if DSN is configured)
+_sentry_dsn = os.environ.get("SENTRY_DSN")
+if _sentry_dsn:
+    try:
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[StarletteIntegration(), FastApiIntegration()],
+            traces_sample_rate=0.1,
+            environment="production" if not settings.debug else "development",
+        )
+        print("✅ Sentry error monitoring enabled")
+    except Exception as _sentry_err:
+        print(f"⚠️ Sentry init failed: {_sentry_err}")
 from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin
 from job_health import router as job_health_router
 # Import PDF delivery system
@@ -24,7 +43,6 @@ except ImportError:
 from models.video import VideoJob, ProcessingTier
 from datetime import datetime
 from sqlalchemy.orm import Session
-import os
 
 # Create FastAPI app
 app = FastAPI(
@@ -52,7 +70,6 @@ app.add_middleware(
 )
 
 # Mount static files and templates
-import os
 from pathlib import Path
 
 # Dynamic template path detection for both local and production
@@ -204,11 +221,11 @@ async def job_status_page(request: Request, job_id: str):
         {"request": request, "job_id": job_id, "app_name": settings.app_name}
     )
 
-@app.get("/health", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/health-status", response_class=HTMLResponse, include_in_schema=False)
 async def job_health_page(request: Request):
     """Serve the customer-facing job health dashboard."""
     return templates.TemplateResponse(
-        "job_health.html", 
+        "job_health.html",
         {"request": request, "app_name": settings.app_name}
     )
 
