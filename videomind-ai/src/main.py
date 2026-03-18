@@ -29,6 +29,8 @@ if _sentry_dsn:
         print("✅ Sentry error monitoring enabled")
     except Exception as _sentry_err:
         print(f"⚠️ Sentry init failed: {_sentry_err}")
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin, leads as leads_api
 from job_health import router as job_health_router
 # Import PDF delivery system
@@ -103,6 +105,23 @@ app.include_router(auto_init.router, prefix="/api", tags=["Auto-Init"])
 app.include_router(tasks.router, prefix="/api", tags=["Tasks"])  
 app.include_router(jobs.router, prefix="/api", tags=["Jobs"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
+
+
+_nurture_scheduler = AsyncIOScheduler()
+
+
+async def _run_nurture_emails():
+    """Standalone nurture email job — creates its own DB session."""
+    from database import SessionLocal
+    from api.leads import send_nurture_emails as _send_nurture
+    db = SessionLocal()
+    try:
+        result = await _send_nurture(db=db)
+        print(f"📧 Nurture scheduler: sent={result.get('sent', 0)}, pending={result.get('total_pending', 0)}")
+    except Exception as e:
+        print(f"⚠️ Nurture scheduler error: {e}")
+    finally:
+        db.close()
 
 
 @app.on_event("startup")
@@ -197,7 +216,10 @@ async def startup_event():
         print(f"⚠️ Startup seeding check failed: {e}")
         print("📝 Manual seeding via /api/directory/seed still available")
 
-
+    # Start nurture email scheduler — runs every 6 hours
+    _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")
+    _nurture_scheduler.start()
+    print("⏰ Nurture email scheduler started (every 6 hours)")
 
 
 @app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
