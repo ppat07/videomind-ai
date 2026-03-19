@@ -9,7 +9,7 @@ import json
 import requests
 
 # Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
 
 from database import SessionLocal
 from models.directory import DirectoryEntry

@@ -12,11 +12,12 @@ services:
     healthCheckPath: /health
     # Custom loading page configuration
     preDeployCommand: echo "VideoMind AI deployment starting..."
-    autoDeploy: false
+    autoDeploy: true
     branch: main
     rootDir: .
     buildFilter:
       paths:
         - src/**
+        - templates/**
         - requirements.txt
         - .env
