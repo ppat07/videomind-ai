@@ -71,25 +71,41 @@ def upsert_directory_entry_from_job(db: Session, job: VideoJob):
     summary = enhanced.get("summary") or "Transcript processed and ready for training use."
     key_points = enhanced.get("key_points") or []
     topics = enhanced.get("topics") or []
+    full_summary = enhanced.get("full_summary") or summary
+    qa_pairs = enhanced.get("qa_pairs") or []
+    ai_teaches_agent_to = enhanced.get("teaches_agent_to") or ""
+    prerequisites = enhanced.get("prerequisites") or []
+    implementation_steps = enhanced.get("implementation_steps") or []
 
     # Enhanced category inference using tags and description
     category = infer_category(title, summary, topics, description, tags)
     difficulty = infer_difficulty(transcript.get("word_count") or 0)
     bullets = make_5_bullets(summary, key_points)
     tools = ", ".join(topics[:6]) if topics else "OpenClaw, VideoMind AI"
-    
+
     # Enhanced signal score using engagement metrics
     base_score = infer_signal_score(enhanced, transcript)
     engagement_bonus = min(20, engagement_metrics.get("engagement_score", 0) / 2)  # Cap at 20 bonus points
     popularity_bonus = min(10, (view_count / 10000))  # 1 point per 10k views, cap at 10
     subscriber_bonus = min(10, (subscriber_count / 100000))  # 1 point per 100k subs, cap at 10
-    
+
     enriched_score = min(100, base_score + engagement_bonus + popularity_bonus + subscriber_bonus)
-    
-    teaches_agent_to = build_teaches_agent_to(category)
+
+    teaches_agent_to = ai_teaches_agent_to or build_teaches_agent_to(category)
     prompt_template = build_prompt_template(title, category, tools)
     execution_checklist = build_execution_checklist(category)
-    agent_training_script = build_agent_training_script(title, bullets, execution_checklist)
+    agent_training_script = build_agent_training_script(
+        title=title,
+        summary_bullets=bullets,
+        checklist=execution_checklist,
+        full_summary=full_summary,
+        key_points=key_points,
+        qa_pairs=qa_pairs,
+        teaches_agent_to=teaches_agent_to,
+        prerequisites=prerequisites,
+        implementation_steps=implementation_steps,
+        topics=topics,
+    )
 
     existing = db.query(DirectoryEntry).filter(DirectoryEntry.video_url == job.youtube_url).first()
     

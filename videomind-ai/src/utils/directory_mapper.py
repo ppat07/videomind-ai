@@ -122,25 +122,90 @@ def build_execution_checklist(category: str) -> str:
     ])
 
 
-def build_agent_training_script(title: str, summary_bullets: str, checklist: str) -> str:
-    return (
-        f"# AI Training Script: {title}\\n\\n"
-        "## Training Objective\\n"
-        f"Learn to execute the workflow demonstrated in: {title}\\n\\n"
-        "## Key Learning Points\\n"
-        f"{summary_bullets or '• Review source video content and extract actionable steps'}\\n\\n"
-        "## Execution Checklist\\n"
-        f"{checklist}\\n\\n"
-        "## Success Criteria\\n"
-        "Agent should be able to:\\n"
-        "• Understand the core concept from this training content\\n"
-        "• Execute the demonstrated workflow independently\\n"
-        "• Troubleshoot common issues that may arise\\n"
-        "• Adapt the approach to similar scenarios\\n\\n"
-        "## Training Completion Report Format\\n"
-        "- **Objective:** [What was learned]\\n"
-        "- **Steps Executed:** [Specific actions taken]\\n"
-        "- **Outcome:** [Results achieved]\\n"
-        "- **Blockers:** [Issues encountered]\\n"
-        "- **Next Actions:** [What to do next]"
-    )
+def build_agent_training_script(
+    title: str,
+    summary_bullets: str,
+    checklist: str,
+    full_summary: str = "",
+    key_points: List[str] = None,
+    qa_pairs: List[Dict[str, str]] = None,
+    teaches_agent_to: str = "",
+    prerequisites: List[str] = None,
+    implementation_steps: List[str] = None,
+    topics: List[str] = None,
+) -> str:
+    key_points = key_points or []
+    qa_pairs = qa_pairs or []
+    prerequisites = prerequisites or []
+    implementation_steps = implementation_steps or []
+    topics = topics or []
+
+    lines = [f"# AI Training Script: {title}", ""]
+
+    # Overview
+    if full_summary:
+        lines += ["## Overview", full_summary, ""]
+    elif summary_bullets:
+        lines += ["## Overview", summary_bullets, ""]
+
+    # What this teaches
+    if teaches_agent_to:
+        lines += ["## Training Objective", f"After studying this content, an agent should be able to: **{teaches_agent_to}**", ""]
+    else:
+        lines += ["## Training Objective", f"Learn to execute the workflow demonstrated in: {title}", ""]
+
+    # Prerequisites
+    if prerequisites:
+        lines += ["## Prerequisites"]
+        lines += [f"- {p}" for p in prerequisites]
+        lines += [""]
+
+    # Key learning points
+    if key_points:
+        lines += ["## Key Learning Points"]
+        lines += [f"- {kp}" for kp in key_points]
+        lines += [""]
+    elif summary_bullets:
+        lines += ["## Key Learning Points", summary_bullets, ""]
+
+    # Implementation steps
+    if implementation_steps:
+        lines += ["## Implementation Steps"]
+        for i, step in enumerate(implementation_steps, 1):
+            lines.append(f"{i}. {step}")
+        lines += [""]
+
+    # Execution checklist
+    lines += ["## Execution Checklist", checklist, ""]
+
+    # Q&A pairs
+    if qa_pairs:
+        lines += ["## Concept Q&A"]
+        for pair in qa_pairs:
+            q = pair.get("question", "")
+            a = pair.get("answer", "")
+            if q and a:
+                lines += [f"**Q: {q}**", f"A: {a}", ""]
+
+    # Topic tags
+    if topics:
+        lines += ["## Topic Tags", ", ".join(f"`{t}`" for t in topics), ""]
+
+    # Success criteria
+    lines += [
+        "## Success Criteria",
+        "Agent should be able to:",
+        "- Understand the core concepts from this training content",
+        "- Execute the demonstrated workflow independently",
+        "- Troubleshoot common issues that may arise",
+        "- Adapt the approach to similar scenarios",
+        "",
+        "## Training Completion Report Format",
+        "- **Objective:** [What was learned]",
+        "- **Steps Executed:** [Specific actions taken]",
+        "- **Outcome:** [Results achieved]",
+        "- **Blockers:** [Issues encountered]",
+        "- **Next Actions:** [What to do next]",
+    ]
+
+    return "\\n".join(lines)
