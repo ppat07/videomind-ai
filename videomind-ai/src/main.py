@@ -132,85 +132,38 @@ async def startup_event():
     print(f"🔧 Debug mode: {settings.debug}")
     print(f"💾 Database: {settings.database_url}")
     
-    # Ensure directory has seed data (fallback safety net)
+    # Ensure directory has seed data — loads from src/data/seed_videos.json
     try:
+        import json as _json
+        from pathlib import Path as _Path
         from sqlalchemy.orm import sessionmaker
-        from models.directory import DirectoryEntry, ContentType
-        
+        from models.directory import DirectoryEntry
+
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = SessionLocal()
-        
+
         count = db.query(DirectoryEntry).count()
-        if count == 0:
-            print("📚 Directory empty, auto-seeding with OpenClaw videos...")
-            
-            # Create seed data directly (sync version)
-            seed_videos = [
-                {
-                    "title": "ClawdBot is the most powerful AI tool I've ever used in my life. Here's how to set it up",
-                    "source_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
-                    "video_url": "https://www.youtube.com/watch?v=Qkqe-uRhQJE&t=42s",
-                    "content_type": ContentType.VIDEO,
-                    "creator_name": "Alex Finn",
-                    "category_primary": "Setup & Onboarding",
-                    "difficulty": "Beginner",
-                    "tools_mentioned": "OpenClaw; CLI; OAuth/Auth setup",
-                    "summary_5_bullets": "• Introduces OpenClaw value\\n• Walkthrough setup\\n• Connect auth/models\\n• Run first workflow\\n• Quick-win setup tips",
-                    "best_for": "New users who want fast setup without mistakes",
-                    "signal_score": 82,
-                    "processing_status": "reviewed",
-                    "teaches_agent_to": "Execute setup and onboarding workflows quickly.",
-                    "prompt_template": "Implement a fast setup workflow for OpenClaw with clear commands and validation steps.",
-                    "execution_checklist": "[ ] Confirm prerequisites\\n[ ] Configure auth\\n[ ] Verify model\\n[ ] Run first task\\n[ ] Validate output",
-                    "agent_training_script": "TRAINING SCRIPT: Setup & onboarding workflow with clear commands and validation."
-                },
-                {
-                    "title": "You NEED to do this with OpenClaw immediately!",
-                    "source_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
-                    "video_url": "https://www.youtube.com/watch?v=Aj6hoC9JaLI",
-                    "content_type": ContentType.VIDEO,
-                    "creator_name": "Alex Finn", 
-                    "category_primary": "Automation Workflows",
-                    "difficulty": "Beginner",
-                    "tools_mentioned": "OpenClaw; workflow automation; model/session setup",
-                    "summary_5_bullets": "• High-impact immediate action\\n• Practical first wins\\n• Repeatable workflow\\n• Set defaults early\\n• Foundation for advanced use",
-                    "best_for": "Users who want fastest first ROI",
-                    "signal_score": 80,
-                    "processing_status": "reviewed",
-                    "teaches_agent_to": "Execute repeatable automation workflows quickly.",
-                    "prompt_template": "Build a repeatable automation workflow from this tutorial and include copy/paste commands.",
-                    "execution_checklist": "[ ] Define objective\\n[ ] Configure tools\\n[ ] Run workflow\\n[ ] Validate result\\n[ ] Document reusable steps",
-                    "agent_training_script": "TRAINING SCRIPT: Automation workflow execution with validation and documentation."
-                },
-                {
-                    "title": "Making $$$ with OpenClaw",
-                    "source_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s",
-                    "video_url": "https://www.youtube.com/watch?v=i13XK-uUOLQ&t=20s", 
-                    "content_type": ContentType.VIDEO,
-                    "creator_name": "Greg Isenberg",
-                    "category_primary": "Business Use Cases",
-                    "difficulty": "Intermediate",
-                    "tools_mentioned": "OpenClaw; automation workflows; lead/revenue systems",
-                    "summary_5_bullets": "• Monetization opportunities\\n• Revenue workflows\\n• Outreach/ops patterns\\n• Implementation focus\\n• OpenClaw as business leverage",
-                    "best_for": "Founders/solopreneurs turning automation into revenue",
-                    "signal_score": 86,
-                    "processing_status": "reviewed", 
-                    "teaches_agent_to": "Implement business-focused AI workflows that drive revenue outcomes.",
-                    "prompt_template": "Create a monetization-focused execution plan with steps, prompts, and KPI checks.",
-                    "execution_checklist": "[ ] Define revenue objective\\n[ ] Build workflow\\n[ ] Launch test\\n[ ] Measure KPI\\n[ ] Iterate",
-                    "agent_training_script": "TRAINING SCRIPT: Business workflow implementation focused on measurable outcomes."
-                }
-            ]
-            
+        seed_file = _Path(__file__).parent / "data" / "seed_videos.json"
+
+        if count < 50 and seed_file.exists():
+            print(f"📚 Directory has {count} entries (< 50), loading seed videos...")
+            with open(seed_file) as _f:
+                seed_videos = _json.load(_f)
+            added = 0
             for video_data in seed_videos:
-                entry = DirectoryEntry(**video_data)
-                db.add(entry)
-            
+                existing = db.query(DirectoryEntry).filter(
+                    DirectoryEntry.source_url == video_data.get("source_url")
+                ).first()
+                if not existing:
+                    entry = DirectoryEntry(**{k: v for k, v in video_data.items()
+                                              if hasattr(DirectoryEntry, k)})
+                    db.add(entry)
+                    added += 1
             db.commit()
-            print(f"✅ Startup auto-seeding completed - added {len(seed_videos)} OpenClaw videos")
+            print(f"✅ Startup seeding completed — added {added} videos ({db.query(DirectoryEntry).count()} total)")
         else:
             print(f"📚 Directory contains {count} entries, no seeding needed")
-            
+
         db.close()
     except Exception as e:
         print(f"⚠️ Startup seeding check failed: {e}")
@@ -234,6 +187,24 @@ async def startup_event():
                 print("✅ FOUNDING Stripe coupon created ($20/month off forever)")
     except Exception as _e:
         print(f"⚠️ Could not create FOUNDING Stripe coupon: {_e}")
+
+    # Ensure WEEK2 Stripe coupon exists (20% off, once — for nurture email campaign)
+    try:
+        from api.payments import stripe, stripe_ready
+        if stripe and stripe_ready:
+            try:
+                stripe.Coupon.retrieve("WEEK2")
+                print("✅ WEEK2 Stripe coupon already exists")
+            except Exception:
+                stripe.Coupon.create(
+                    id="WEEK2",
+                    name="Week 2 — 20% off",
+                    percent_off=20,
+                    duration="once",
+                )
+                print("✅ WEEK2 Stripe coupon created (20% off, once)")
+    except Exception as _e:
+        print(f"⚠️ Could not create WEEK2 Stripe coupon: {_e}")
 
     # Start nurture email scheduler — runs every 6 hours
     _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")
