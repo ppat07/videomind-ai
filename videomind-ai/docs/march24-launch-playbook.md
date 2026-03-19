@@ -21,8 +21,8 @@ Tuesday is the highest-traffic day on Product Hunt. Launching at 12:01 AM PT mea
 - [x] **SENDGRID_API_KEY** — ✅ Confirmed configured in Render (as of Mar 19)
 - [x] **WEEK2 Stripe coupon** — ✅ Exists and valid in live Stripe (as of Mar 19)
 - [x] **FOUNDING Stripe coupon** — ✅ Exists and valid in live Stripe (as of Mar 19)
-- [ ] **Take a screenshot for og-image** — Take a 1200×630 screenshot of the directory/homepage, save as `src/static/og-image.png` and commit. This makes social shares look professional.
-- [ ] **Verify production** — visit www.videomind-ai.com, click through to pricing, enter email in capture form, confirm you receive the email
+- [x] **OG image** — ✅ `src/static/og-image.png` created (1200×630), committed, and live in production (as of Mar 19). `og:image` meta tags verified on homepage.
+- [ ] **Verify email capture** — visit www.videomind-ai.com, enter email in capture form, confirm you receive the welcome email (technical check: all other production systems confirmed ✅ Mar 19)
 
 ### Social (30 min)
 
