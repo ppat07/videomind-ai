@@ -192,19 +192,26 @@ async def startup_event():
     try:
         from api.payments import stripe, stripe_ready
         if stripe and stripe_ready:
+            coupon_exists = False
             try:
                 stripe.Coupon.retrieve("WEEK2")
+                coupon_exists = True
                 print("✅ WEEK2 Stripe coupon already exists")
-            except Exception:
-                stripe.Coupon.create(
-                    id="WEEK2",
-                    name="Week 2 — 20% off",
-                    percent_off=20,
-                    duration="once",
-                )
-                print("✅ WEEK2 Stripe coupon created (20% off, once)")
+            except Exception as _retrieve_err:
+                print(f"ℹ️ WEEK2 coupon not found ({type(_retrieve_err).__name__}: {_retrieve_err}), creating...")
+            if not coupon_exists:
+                try:
+                    stripe.Coupon.create(
+                        id="WEEK2",
+                        name="Week 2 — 20% off",
+                        percent_off=20,
+                        duration="once",
+                    )
+                    print("✅ WEEK2 Stripe coupon created (20% off, once)")
+                except Exception as _create_err:
+                    print(f"❌ WEEK2 Stripe coupon creation FAILED: {type(_create_err).__name__}: {_create_err}")
     except Exception as _e:
-        print(f"⚠️ Could not create WEEK2 Stripe coupon: {_e}")
+        print(f"⚠️ WEEK2 coupon startup check error: {_e}")
 
     # Start nurture email scheduler — runs every 6 hours
     _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")

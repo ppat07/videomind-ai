@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 import secrets
+import os
 
 from database import get_database
 from config import settings
@@ -29,6 +30,58 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Basic"},
         )
     return credentials.username
+
+@router.get("/admin/health")
+async def admin_health_check(db: Session = Depends(get_database)):
+    """Diagnose production state: Stripe coupons, SendGrid, scheduler, database."""
+    from api.payments import stripe, stripe_ready
+    from models.directory import DirectoryEntry
+
+    result = {}
+
+    # --- Stripe checks ---
+    if not stripe or not stripe_ready:
+        result["stripe"] = {"error": "Stripe not configured or unavailable"}
+    else:
+        stripe_status = {}
+        for coupon_id in ("FOUNDING", "WEEK2"):
+            try:
+                coupon = stripe.Coupon.retrieve(coupon_id)
+                stripe_status[coupon_id.lower() + "_coupon"] = {
+                    "exists": True,
+                    "valid": coupon.valid,
+                    "name": coupon.name,
+                }
+            except Exception as e:
+                stripe_status[coupon_id.lower() + "_coupon"] = {
+                    "exists": False,
+                    "error": f"{type(e).__name__}: {e}",
+                }
+        result["stripe"] = stripe_status
+
+    # --- SendGrid check ---
+    sendgrid_key = os.getenv("SENDGRID_API_KEY", "")
+    result["sendgrid"] = {"configured": bool(sendgrid_key)}
+
+    # --- Database: video count ---
+    try:
+        result["database"] = {"videos": db.query(DirectoryEntry).count()}
+    except Exception as e:
+        result["database"] = {"error": str(e)}
+
+    # --- Scheduler check ---
+    try:
+        from main import _nurture_scheduler
+        jobs = [
+            {"id": job.id, "next_run": str(job.next_run_time)}
+            for job in _nurture_scheduler.get_jobs()
+        ]
+        result["scheduler"] = {"running": _nurture_scheduler.running, "jobs": jobs}
+    except Exception as e:
+        result["scheduler"] = {"running": False, "error": str(e)}
+
+    return result
+
 
 @router.get("/admin/batch-access")
 async def check_batch_access(admin_user: str = Depends(verify_admin)):
