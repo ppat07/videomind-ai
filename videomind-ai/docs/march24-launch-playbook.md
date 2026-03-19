@@ -16,19 +16,12 @@ Tuesday is the highest-traffic day on Product Hunt. Launching at 12:01 AM PT mea
 
 **Estimated time: 60 minutes**
 
-### Technical (30 min)
+### Technical (15 min)
 
-- [ ] **Add SENDGRID_API_KEY to Render** — Render Dashboard → VideoMind AI → Environment → Add variable
-  - Get free key at sendgrid.com (free tier: 100 emails/day)
-  - Without this, lead capture emails never send — you're leaving money on the table
-
-- [ ] **Create WEEK2 Stripe coupon** — Stripe Live Dashboard → Products → Coupons → Create
-  - Coupon ID: `WEEK2`
-  - Type: Percentage
-  - Percent off: `20`
-  - Duration: Once
-  - Redemption limit: 50 (optional — creates urgency)
-
+- [x] **SENDGRID_API_KEY** — ✅ Confirmed configured in Render (as of Mar 19)
+- [x] **WEEK2 Stripe coupon** — ✅ Exists and valid in live Stripe (as of Mar 19)
+- [x] **FOUNDING Stripe coupon** — ✅ Exists and valid in live Stripe (as of Mar 19)
+- [ ] **Take a screenshot for og-image** — Take a 1200×630 screenshot of the directory/homepage, save as `src/static/og-image.png` and commit. This makes social shares look professional.
 - [ ] **Verify production** — visit www.videomind-ai.com, click through to pricing, enter email in capture form, confirm you receive the email
 
 ### Social (30 min)
