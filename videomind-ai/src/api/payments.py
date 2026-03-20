@@ -168,6 +168,10 @@ async def create_checkout_session(request: Request):
         if product_type:
             session_params["metadata"] = {"product_type": product_type}
 
+        # Add 7-day free trial for subscription mode
+        if mode == "subscription":
+            session_params["subscription_data"] = {"trial_period_days": 7}
+
         # Pre-apply coupon if provided and valid
         if coupon_code:
             try:
