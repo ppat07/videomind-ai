@@ -141,7 +141,7 @@ def main():
 
     enhancer = ClaudeEnhancementService()
     if not enhancer.available:
-        print("ERROR: OPENAI_API_KEY not set. Cannot run AI enhancement.")
+        print("ERROR: ANTHROPIC_API_KEY not set. Cannot run AI enhancement.")
         sys.exit(1)
 
     entries = db.query(DirectoryEntry).all()
