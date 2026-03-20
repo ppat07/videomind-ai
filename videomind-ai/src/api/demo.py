@@ -87,7 +87,7 @@ def _download_and_transcribe(youtube_url: str, video_id: str) -> tuple:
         final_path = os.path.join(tmp_dir, f"{video_id}.mp3")
 
         ydl_opts = {
-            "format": "worstaudio/bestaudio[filesize<20M]/bestaudio",
+            "format": "bestaudio/best",
             "outtmpl": audio_path,
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
@@ -97,8 +97,6 @@ def _download_and_transcribe(youtube_url: str, video_id: str) -> tuple:
             "quiet": True,
             "no_warnings": True,
             "socket_timeout": 15,
-            # Limit to first 8 minutes so download stays fast
-            "external_downloader_args": {"ffmpeg_i": ["-t", "480"]},
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
