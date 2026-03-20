@@ -157,7 +157,7 @@ def main():
     updated = 0
 
     for entry in targets:
-        print(f"\n[{entry.identifier or entry.id}] {entry.title}")
+        print(f"\n[{entry.id}] {entry.title}")
         job = None
         if entry.source_job_id:
             job = db.query(VideoJob).filter(VideoJob.id == entry.source_job_id).first()

@@ -872,8 +872,7 @@ async def process_video_background(job_id: str):
         job.completed_at = datetime.utcnow()
 
         # Step 5: Create/update training directory entry automatically
-        # TODO: Fix variable name issue in upsert_directory_entry_from_job
-        # upsert_directory_entry_from_job(db, job)
+        upsert_directory_entry_from_job(db, job)
 
         db.commit()
 
