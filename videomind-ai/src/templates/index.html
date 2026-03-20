@@ -39,21 +39,14 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .hero-gradient { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%); }
+        .demo-input-glow:focus { box-shadow: 0 0 0 3px rgba(165,180,252,0.4); }
+        .feature-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .feature-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-4xl mx-auto px-4 py-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ app_name }}</h1>
-                <p class="text-gray-600 mt-2">Transform any YouTube video into AI-ready training data</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="/pricing" class="text-blue-600 font-semibold px-3 py-2 rounded hover:bg-blue-50">Pricing</a>
-                <a href="/directory" class="bg-gray-900 text-white px-4 py-2 rounded hover:bg-black">Open Directory</a>
-            </div>
-        </div>
-    </header>
 
     <!-- Product Hunt welcome banner (shown only for ?ref=producthunt visitors) -->
     <div id="phBanner" style="display:none;background:linear-gradient(90deg,#da552f,#ff6154);color:#fff;text-align:center;padding:12px 20px;font-size:15px;font-weight:600;">
@@ -61,14 +54,26 @@
         <a href="/pricing?coupon=WEEK2" style="color:#fff;text-decoration:underline;">Claim discount →</a>
     </div>
 
-    <!-- Lead magnet: free chapter offer (above the fold) -->
-    <div id="leadMagnetBanner" class="bg-indigo-700 text-white text-center py-3 px-4">
-        <span class="text-sm font-medium">📘 Free: Get the first 10 pages of <em>Video AI Training Data Mastery</em> — </span>
+    <!-- Slim announcement bar (lead magnet) -->
+    <div id="leadMagnetBanner" class="bg-indigo-600 text-white text-center py-2 px-4 text-sm">
+        <span class="font-medium">📘 Free guide:</span>
         <button onclick="document.getElementById('leadCaptureModal').classList.remove('hidden')"
-                class="text-sm font-bold underline hover:text-indigo-200 cursor-pointer bg-transparent border-none text-white">
-            Download free chapter →
+                class="font-bold underline hover:text-indigo-200 cursor-pointer bg-transparent border-none text-white ml-1">
+            Top 10 AI workflow videos for agent training →
         </button>
     </div>
+
+    <!-- Sticky nav -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/" class="text-xl font-extrabold text-indigo-700 tracking-tight">{{ app_name }}</a>
+            <nav class="flex items-center gap-1 sm:gap-3">
+                <a href="/directory" class="text-sm text-gray-500 hover:text-gray-800 px-2 py-1.5 rounded hidden sm:block">Browse Directory</a>
+                <a href="/pricing" class="text-sm text-gray-500 hover:text-gray-800 px-2 py-1.5 rounded">Pricing</a>
+                <a href="/pricing" class="text-sm bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Get Pro →</a>
+            </nav>
+        </div>
+    </header>
 
     <!-- Lead capture modal -->
     <div id="leadCaptureModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -94,125 +99,182 @@
         </div>
     </div>
 
-    <!-- Free tier usage banner (shown once email is entered) -->
-    <div id="upgradeBanner" class="hidden bg-blue-600 text-white text-center py-2 px-4 text-sm">
+    <!-- Free tier usage banner -->
+    <div id="upgradeBanner" class="hidden bg-indigo-600 text-white text-center py-2 px-4 text-sm">
         <span id="upgradeBannerText"></span>
         <a href="/pricing" class="ml-2 font-bold underline">Upgrade to Pro →</a>
     </div>
 
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        <!-- Hero Section -->
-        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-                    Turn Videos into AI Training Data
-                </h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Process YouTube or Rumble videos and get clean transcripts, summaries, Q&A pairs, and structured data perfect for training AI models.
-                </p>
-                <!-- Social proof stats -->
-                <div class="flex flex-wrap justify-center gap-6 mt-6 pt-6 border-t border-gray-100 text-center">
-                    <div>
-                        <p class="text-2xl font-extrabold text-gray-900">70+</p>
-                        <p class="text-xs text-gray-500 mt-0.5">AI workflow videos indexed</p>
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-16 px-4">
+        <div class="max-w-3xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                No sign-up required · Try it free below
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
+                Turn any AI video into<br class="hidden sm:block">
+                <span class="text-indigo-300">agent training data</span>
+            </h1>
+            <p class="text-indigo-200 text-lg sm:text-xl max-w-2xl mx-auto mb-10">
+                Paste a YouTube URL. Get structured transcripts, Q&amp;A pairs, and ready-to-use training scripts in under 60 seconds.
+            </p>
+
+            <!-- Inline demo widget -->
+            <div id="demoWidget" class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 max-w-2xl mx-auto">
+                <div class="flex gap-3 mb-4">
+                    <input
+                        type="url"
+                        id="demoUrl"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        class="flex-1 px-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none demo-input-glow"
+                    >
+                    <button
+                        id="demoBtn"
+                        onclick="runDemo()"
+                        class="bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-5 py-3 rounded-xl transition whitespace-nowrap text-sm"
+                    >
+                        Process Free →
+                    </button>
+                </div>
+
+                <!-- Spinner -->
+                <div id="demoSpinner" class="hidden text-center py-4">
+                    <div class="inline-block animate-spin rounded-full h-7 w-7 border-b-2 border-white mb-2"></div>
+                    <p id="demoSpinnerMsg" class="text-indigo-200 text-sm">Analyzing video with AI...</p>
+                </div>
+
+                <!-- Error message -->
+                <div id="demoError" class="hidden mt-3 bg-red-900/40 border border-red-400/30 rounded-xl p-4">
+                    <p id="demoErrorMsg" class="text-red-200 text-sm"></p>
+                </div>
+
+                <!-- Results card -->
+                <div id="demoResult" class="hidden mt-4 bg-white rounded-xl overflow-hidden text-left">
+                    <div class="flex gap-3 p-4 border-b border-gray-100 items-center">
+                        <img id="demoThumb" src="" alt="Video thumbnail" class="w-24 object-cover rounded-lg flex-shrink-0" style="height:3.5rem;">
+                        <div class="min-w-0">
+                            <h3 id="demoTitle" class="font-semibold text-gray-900 text-sm leading-snug mb-1"></h3>
+                            <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">✅ AI Preview Ready</span>
+                        </div>
                     </div>
-                    <div class="hidden sm:block border-l border-gray-200"></div>
-                    <div>
-                        <p class="text-2xl font-extrabold text-gray-900">500+</p>
-                        <p class="text-xs text-gray-500 mt-0.5">transcripts generated</p>
+                    <div class="p-4 border-b border-gray-100">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">AI Summary</h4>
+                        <p id="demoSummary" class="text-gray-700 text-sm leading-relaxed"></p>
                     </div>
-                    <div class="hidden sm:block border-l border-gray-200"></div>
-                    <div>
-                        <p class="text-2xl font-extrabold text-green-600">Free today</p>
-                        <p class="text-xs text-gray-500 mt-0.5">upgrade when ready</p>
+                    <div class="p-4 border-b border-gray-100">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Sample Q&amp;A Training Pairs</h4>
+                        <div id="demoQAs" class="space-y-2"></div>
+                    </div>
+                    <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 text-center">
+                        <p class="text-sm text-gray-600 mb-3">Preview only — unlock the full transcript, all Q&amp;A pairs, and structured training script.</p>
+                        <a href="/pricing" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-lg transition text-sm">
+                            Get the full training dataset →
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Processing Form -->
-            <form id="processForm" class="max-w-2xl mx-auto">
-                <div class="space-y-6">
-                    <!-- Video URL Input -->
+                <p class="text-indigo-300 text-xs mt-3 text-center">No account needed · Results in &lt;60s · Supports YouTube &amp; Rumble</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social proof bar -->
+    <div class="bg-white border-b border-gray-100">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex flex-wrap justify-center gap-8 text-center">
+            <div>
+                <p class="text-2xl font-extrabold text-gray-900">70+</p>
+                <p class="text-xs text-gray-500 mt-0.5">AI workflow videos indexed</p>
+            </div>
+            <div class="hidden sm:block border-l border-gray-200"></div>
+            <div>
+                <p class="text-2xl font-extrabold text-gray-900">500+</p>
+                <p class="text-xs text-gray-500 mt-0.5">transcripts generated</p>
+            </div>
+            <div class="hidden sm:block border-l border-gray-200"></div>
+            <div>
+                <p class="text-2xl font-extrabold text-indigo-600">Free</p>
+                <p class="text-xs text-gray-500 mt-0.5">to try, upgrade anytime</p>
+            </div>
+            <div class="hidden sm:block border-l border-gray-200"></div>
+            <div>
+                <a href="/directory" class="text-sm font-semibold text-indigo-600 hover:underline">Browse the directory →</a>
+                <p class="text-xs text-gray-500 mt-0.5">Curated AI training videos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-10">
+
+        <!-- Full pipeline form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-1">Process a video — full pipeline</h2>
+                <p class="text-sm text-gray-500">Get the complete training dataset: transcript, summary, all Q&amp;A pairs, topic tags, and structured JSONL. Results emailed to you.</p>
+            </div>
+            <form id="processForm" class="max-w-2xl">
+                <div class="space-y-5">
                     <div>
-                        <label for="youtubeUrl" class="block text-sm font-medium text-gray-700 mb-2">
-                            Video URL (YouTube or Rumble)
-                        </label>
-                        <input 
-                            type="url" 
-                            id="youtubeUrl" 
+                        <label for="youtubeUrl" class="block text-sm font-medium text-gray-700 mb-1.5">Video URL (YouTube or Rumble)</label>
+                        <input
+                            type="url"
+                            id="youtubeUrl"
                             name="youtube_url"
-                            placeholder="https://www.youtube.com/watch?v=... or https://rumble.com/v..."
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                             required
                         >
-                        <p class="text-xs text-gray-500 mt-1">
-                            Supports YouTube and Rumble videos
-                        </p>
                     </div>
-
-                    <!-- Email Input -->
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                            Email Address (for results)
-                        </label>
-                        <input 
-                            type="email" 
-                            id="email" 
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Email (we'll send you the results)</label>
+                        <input
+                            type="email"
+                            id="email"
                             name="email"
                             placeholder="your@email.com"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                             required
                         >
                     </div>
-
-                    <!-- Processing Tier -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Processing Tier
-                        </label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Basic Tier -->
-                            <label class="relative cursor-pointer">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Processing tier</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
                                 <input type="radio" name="tier" value="basic" class="sr-only" checked>
-                                <div class="tier-card border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="font-semibold text-gray-900">Basic</h3>
-                                        <span class="text-xl font-bold text-green-600">$3</span>
+                                <div class="tier-card border-2 border-gray-200 rounded-xl p-4 hover:border-indigo-300 transition">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="font-semibold text-gray-900 text-sm">Basic</span>
+                                        <span class="font-bold text-green-600">$3</span>
                                     </div>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• Clean transcript</li>
-                                        <li>• Summary</li>
-                                        <li>• 5 Q&A pairs</li>
+                                    <ul class="text-xs text-gray-500 space-y-0.5">
+                                        <li>✓ Clean transcript</li>
+                                        <li>✓ Summary</li>
+                                        <li>✓ 5 Q&amp;A pairs</li>
                                     </ul>
                                 </div>
                             </label>
-
-                            <!-- Detailed Tier -->
-                            <label class="relative cursor-pointer">
+                            <label class="cursor-pointer">
                                 <input type="radio" name="tier" value="detailed" class="sr-only">
-                                <div class="tier-card border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="font-semibold text-gray-900">Detailed</h3>
-                                        <span class="text-xl font-bold text-blue-600">$5</span>
+                                <div class="tier-card border-2 border-gray-200 rounded-xl p-4 hover:border-indigo-300 transition">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="font-semibold text-gray-900 text-sm">Detailed</span>
+                                        <span class="font-bold text-indigo-600">$5</span>
                                     </div>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• Everything in Basic</li>
-                                        <li>• Key concepts</li>
-                                        <li>• 10 Q&A pairs</li>
-                                        <li>• Topic tags</li>
+                                    <ul class="text-xs text-gray-500 space-y-0.5">
+                                        <li>✓ Everything in Basic</li>
+                                        <li>✓ Key concepts + tags</li>
+                                        <li>✓ 10 Q&amp;A pairs</li>
                                     </ul>
                                 </div>
                             </label>
                         </div>
                     </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center">
-                        <button 
+                    <div>
+                        <button
                             type="submit"
                             id="submitBtn"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                         >
                             Start Processing
                         </button>
@@ -221,118 +283,59 @@
             </form>
         </div>
 
-
-
-        <!-- Free Demo Widget -->
-        <div id="demoWidget" class="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl shadow-md p-8 mb-8">
-            <div class="text-center mb-6">
-                <span class="inline-block bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-3">No sign-up required</span>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Try VideoMind AI Free</h2>
-                <p class="text-gray-600">Paste any YouTube URL and see AI-generated insights instantly.</p>
+        <!-- Features Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <div class="feature-card bg-white rounded-2xl border border-gray-200 p-6">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-1.5">Clean Transcripts</h3>
+                <p class="text-gray-500 text-sm">Accurate, deduped transcripts ready for fine-tuning or RAG pipelines.</p>
             </div>
-            <div class="max-w-xl mx-auto">
-                <div class="flex gap-3">
-                    <input
-                        type="url"
-                        id="demoUrl"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
-                    >
-                    <button
-                        id="demoBtn"
-                        onclick="runDemo()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors whitespace-nowrap"
-                    >
-                        Process Video (Free)
-                    </button>
+            <div class="feature-card bg-white rounded-2xl border border-gray-200 p-6">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
                 </div>
-
-                <!-- Spinner -->
-                <div id="demoSpinner" class="hidden text-center py-6">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
-                    <p id="demoSpinnerMsg" class="text-gray-500 text-sm">Analyzing video with AI...</p>
+                <h3 class="font-semibold text-gray-900 mb-1.5">Q&amp;A Training Pairs</h3>
+                <p class="text-gray-500 text-sm">AI-generated question-answer pairs in JSONL format — drop into your fine-tuning job.</p>
+            </div>
+            <div class="feature-card bg-white rounded-2xl border border-gray-200 p-6">
+                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
                 </div>
-
-                <!-- Error message -->
-                <div id="demoError" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p id="demoErrorMsg" class="text-red-700 text-sm"></p>
-                </div>
-
-                <!-- Results card -->
-                <div id="demoResult" class="hidden mt-6 bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
-                    <!-- Video info header -->
-                    <div class="flex gap-4 p-4 border-b border-gray-100 items-center">
-                        <img id="demoThumb" src="" alt="Video thumbnail" class="w-28 h-18 object-cover rounded-lg flex-shrink-0" style="height:4.5rem;">
-                        <div class="min-w-0">
-                            <h3 id="demoTitle" class="font-semibold text-gray-900 text-sm leading-tight mb-1"></h3>
-                            <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">✅ AI Preview Ready</span>
-                        </div>
-                    </div>
-                    <!-- Summary -->
-                    <div class="p-4 border-b border-gray-100">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">AI Summary</h4>
-                        <p id="demoSummary" class="text-gray-700 text-sm leading-relaxed"></p>
-                    </div>
-                    <!-- Q&A pairs -->
-                    <div class="p-4 border-b border-gray-100">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Sample Q&amp;A Training Pairs</h4>
-                        <div id="demoQAs" class="space-y-3"></div>
-                    </div>
-                    <!-- CTA -->
-                    <div class="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 text-center">
-                        <p class="text-sm text-gray-600 mb-3">This is a preview — 3 of 5+ Q&amp;A pairs, summary only. Get the full dataset: transcript, all Q&amp;As, topic tags, and structured training data.</p>
-                        <a href="/pricing" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-lg transition-colors">
-                            Get the full training dataset →
-                        </a>
-                    </div>
-                </div>
+                <h3 class="font-semibold text-gray-900 mb-1.5">Agent Training Scripts</h3>
+                <p class="text-gray-500 text-sm">Structured prompts that teach AI agents to replicate the exact workflows shown in the video.</p>
             </div>
         </div>
 
-        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Get the weekly AI workflow digest</h3>
-            <p class="text-gray-600 text-sm mb-4">Top high-signal workflow videos from the directory, once a week.</p>
-            <div class="grid md:grid-cols-4 gap-3">
-                <input id="newsletterEmail" type="email" placeholder="you@email.com" class="border rounded px-3 py-2 md:col-span-3" />
-                <button id="newsletterBtn" class="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Subscribe</button>
+        <!-- Newsletter -->
+        <section class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-900 mb-0.5">Weekly AI workflow digest</h3>
+                    <p class="text-gray-500 text-sm">Top high-signal training videos from the directory, every week.</p>
+                </div>
+                <div class="flex gap-2 sm:flex-shrink-0">
+                    <input id="newsletterEmail" type="email" placeholder="you@email.com"
+                           class="border border-gray-300 rounded-xl px-3 py-2 text-sm flex-1 sm:w-48 focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                    <button id="newsletterBtn" class="bg-indigo-600 text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-indigo-700 transition whitespace-nowrap">Subscribe</button>
+                </div>
             </div>
-            <p id="newsletterMsg" class="text-sm text-gray-700 mt-2"></p>
-            <!-- Development buttons removed for professional customer experience -->
+            <p id="newsletterMsg" class="text-sm text-gray-600 mt-2"></p>
         </section>
 
-        <!-- Features Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="text-blue-600 mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-gray-900 mb-2">Clean Transcripts</h3>
-                <p class="text-gray-600 text-sm">Get accurate, timestamped transcripts perfect for AI training.</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="text-green-600 mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-gray-900 mb-2">AI Enhancement</h3>
-                <p class="text-gray-600 text-sm">Summaries, key points, and Q&A pairs generated by AI.</p>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="text-purple-600 mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-gray-900 mb-2">Multiple Formats</h3>
-                <p class="text-gray-600 text-sm">Download in JSON, CSV, or custom formats for your AI models.</p>
-            </div>
-        </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
+        <p>© 2026 {{ app_name }} · <a href="/directory" class="hover:underline">Directory</a> · <a href="/pricing" class="hover:underline">Pricing</a></p>
+    </footer>
 
     <!-- Status Modal -->
     <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
