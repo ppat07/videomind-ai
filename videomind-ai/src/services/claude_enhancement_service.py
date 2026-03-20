@@ -1,30 +1,30 @@
 """
-AI enhancement service for VideoMind AI — uses OpenAI to generate rich training data.
+AI enhancement service for VideoMind AI — uses Anthropic Claude to generate rich training data.
 """
 import os
 import json
 from typing import Dict, Tuple
 
-import openai
+import anthropic
 
 
 class ClaudeEnhancementService:
     """AI enhancement service that generates rich agent training data from video transcripts."""
 
     def __init__(self):
-        api_key = os.environ.get("OPENAI_API_KEY")
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.available = bool(api_key)
-        self.client = openai.OpenAI(api_key=api_key) if api_key else None
+        self.client = anthropic.Anthropic(api_key=api_key) if api_key else None
 
     def enhance_transcript(self, transcript_text: str, tier: str = "basic") -> Tuple[bool, Dict]:
         """
-        Enhance transcript using OpenAI to produce rich, structured agent training data.
+        Enhance transcript using Anthropic Claude to produce rich, structured agent training data.
 
         Returns:
             Tuple of (success, enhanced_data or error_dict)
         """
         if not self.client:
-            return False, {"error": "OPENAI_API_KEY not set"}
+            return False, {"error": "ANTHROPIC_API_KEY not set"}
 
         if tier == "detailed":
             qa_count, key_points_count = 10, 8
@@ -55,17 +55,16 @@ Return ONLY valid JSON with these fields:
 }}"""
 
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "You are an expert at analyzing video transcripts and creating structured training data for AI agents. Always respond with valid JSON only."},
-                    {"role": "user", "content": prompt}
-                ],
+            response = self.client.messages.create(
+                model="claude-haiku-4-5-20251001",
                 max_tokens=2000,
-                temperature=0.2
+                system="You are an expert at analyzing video transcripts and creating structured training data for AI agents. Always respond with valid JSON only.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            raw = response.choices[0].message.content.strip()
+            raw = response.content[0].text.strip()
 
             # Strip markdown fences if present
             if "```json" in raw:
@@ -87,7 +86,7 @@ Return ONLY valid JSON with these fields:
                 "prerequisites": data.get("prerequisites", []),
                 "implementation_steps": data.get("implementation_steps", []),
                 "word_count": len(transcript_text.split()),
-                "processing_model": "gpt-4o-mini",
+                "processing_model": "claude-haiku-4-5-20251001",
                 "enhancement_method": "ai_enhanced",
             }
             return True, result
