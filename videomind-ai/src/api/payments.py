@@ -311,6 +311,14 @@ async def stripe_webhook(
             db
         )
 
+    # Trial ending in 3 days — send conversion nudge
+    elif event["type"] == "customer.subscription.trial_will_end":
+        background_tasks.add_task(
+            handle_trial_will_end,
+            event["data"]["object"],
+            db
+        )
+
     return {"status": "success"}
 
 async def handle_payment_success(payment_intent: Dict[str, Any], db: Session):
@@ -539,6 +547,76 @@ async def handle_subscription_changed(subscription: Dict[str, Any], db: Session)
             print(f"✅ Subscription {subscription_id} updated: active={active}")
     except Exception as e:
         print(f"❌ handle_subscription_changed error: {e}")
+
+
+async def handle_trial_will_end(subscription: Dict[str, Any], db: Session):
+    """Send a conversion nudge email 3 days before trial expires."""
+    try:
+        customer_id = subscription.get("customer")
+        if not customer_id:
+            return
+
+        customer = stripe.Customer.retrieve(customer_id)
+        email = customer.get("email", "").lower()
+        if not email:
+            return
+
+        from config import settings
+        if not settings.sendgrid_api_key:
+            print(f"⚠️ SendGrid not configured — skipping trial_will_end email for {email}")
+            return
+
+        import sendgrid
+        from sendgrid.helpers.mail import Mail, To, From, Subject, HtmlContent
+
+        sg = sendgrid.SendGridAPIClient(api_key=settings.sendgrid_api_key)
+        html = """
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+          <h2 style="color:#1f2937;">Your free trial ends in 3 days</h2>
+          <p style="color:#374151;">
+            Your VideoMind AI Pro trial expires in 3 days. Keep your full access:
+          </p>
+          <ul style="color:#374151;">
+            <li>All 72 AI/ML training scripts (Karpathy, RAG, agents, and more)</li>
+            <li>Unlimited video processing — any YouTube URL to structured training data</li>
+            <li>JSON/CSV exports ready for fine-tuning and RAG pipelines</li>
+          </ul>
+          <p style="color:#374151;">
+            Lock in Founding Member pricing — <strong>$29/mo forever</strong> (vs $49/mo regular).
+            Use code <strong>FOUNDING</strong> at checkout.
+          </p>
+          <p style="margin:28px 0;">
+            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
+               style="background:#16a34a;color:#fff;padding:14px 28px;border-radius:6px;
+                      text-decoration:none;font-weight:700;font-size:16px;">
+              Keep Pro access — $29/mo with FOUNDING →
+            </a>
+          </p>
+          <p style="color:#6b7280;font-size:14px;">
+            After your trial ends, you'll drop to the free tier (3 videos/month).
+            Upgrade now to keep everything.
+          </p>
+          <hr style="margin:28px 0;border:none;border-top:1px solid #e5e7eb;"/>
+          <p style="color:#9ca3af;font-size:12px;">
+            You're receiving this because you started a VideoMind AI Pro trial.
+          </p>
+        </div>
+        """
+        message = Mail(
+            from_email=From(settings.from_email, "VideoMind AI"),
+            to_emails=To(email),
+            subject=Subject("Your free trial ends in 3 days — lock in $29/mo with FOUNDING"),
+            html_content=HtmlContent(html),
+        )
+        resp = sg.send(message)
+        if resp.status_code in (200, 202):
+            db.add(ConversionEvent(email=email, event="trial_will_end_email_sent"))
+            db.commit()
+            print(f"✅ Trial ending nudge sent to {email}")
+        else:
+            print(f"⚠️ Trial ending email failed for {email}: status {resp.status_code}")
+    except Exception as e:
+        print(f"❌ handle_trial_will_end error: {e}")
 
 
 # ---------------------------------------------------------------------------

@@ -136,7 +136,7 @@ def _send_free_chapter_email(email: str, db: Optional[Session] = None) -> bool:
 
 
 def _send_nurture_email(email: str) -> bool:
-    """Send day-2 nurture email with WEEK2 discount code."""
+    """Send day-2 nurture email with FOUNDING discount code."""
     if not settings.sendgrid_api_key:
         return False
 
@@ -153,12 +153,15 @@ def _send_nurture_email(email: str) -> bool:
             structured Q&amp;A pairs, workflow templates, and step-by-step agent training data
             for every video in our library.
           </p>
-          <p style="color:#374151;">Join Pro at $49/mo — use code <strong>WEEK2</strong> for <strong>20% off</strong> your first month.</p>
+          <p style="color:#374151;">
+            Join as a Founding Member at <strong>$29/mo forever</strong> (vs $49/mo regular).
+            Use code <strong>FOUNDING</strong> at checkout — this rate locks in permanently.
+          </p>
           <p style="margin:28px 0;">
-            <a href="https://videomind.ai/pricing?coupon=WEEK2"
+            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
                style="background:#16a34a;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
-              Get unlimited access — 20% off with WEEK2 →
+              Become a Founding Member — $29/mo forever →
             </a>
           </p>
           <hr style="margin:28px 0;border:none;border-top:1px solid #e5e7eb;"/>
@@ -170,7 +173,7 @@ def _send_nurture_email(email: str) -> bool:
         message = Mail(
             from_email=From(settings.from_email, "VideoMind AI"),
             to_emails=To(email),
-            subject=Subject("Liked your free training script? Get Pro access — 20% off with WEEK2"),
+            subject=Subject("Liked your free training script? Become a Founding Member — $29/mo forever"),
             html_content=HtmlContent(html),
         )
         resp = sg.send(message)
