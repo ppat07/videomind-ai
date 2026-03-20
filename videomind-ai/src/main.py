@@ -31,7 +31,7 @@ if _sentry_dsn:
         print(f"⚠️ Sentry init failed: {_sentry_err}")
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin, leads as leads_api
+from api import health, process, directory, newsletter, auto_init, tasks, jobs, admin, leads as leads_api, demo as demo_api
 from job_health import router as job_health_router
 # Import PDF delivery system
 import sys
@@ -89,6 +89,7 @@ app.include_router(health.router, prefix="/health", tags=["Health"])
 app.include_router(process.router, prefix="/api", tags=["Processing"])
 app.include_router(directory.router, prefix="/api", tags=["Directory"])
 
+app.include_router(demo_api.router, prefix="/api", tags=["Demo"])
 app.include_router(newsletter.router, prefix="/api", tags=["Newsletter"])
 app.include_router(leads_api.router, prefix="/api", tags=["Leads"])
 
