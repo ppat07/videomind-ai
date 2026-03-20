@@ -101,26 +101,46 @@ async def demo_process(
     youtube_url = data.youtube_url.strip()
     video_id = _extract_video_id(youtube_url)
 
-    # --- Cache: check for already-processed video ---
-    existing_entry = db.query(DirectoryEntry).filter(
-        (DirectoryEntry.video_url == youtube_url) | (DirectoryEntry.source_url == youtube_url)
-    ).first()
+    # --- Cache: check for already-processed video (match by video ID, not exact URL) ---
+    existing_entry = None
+    if video_id:
+        # Build all canonical forms of this video URL for matching
+        canonical_urls = [
+            youtube_url,
+            f"https://www.youtube.com/watch?v={video_id}",
+            f"https://youtu.be/{video_id}",
+        ]
+        for candidate in canonical_urls:
+            existing_entry = db.query(DirectoryEntry).filter(
+                (DirectoryEntry.video_url.contains(video_id)) |
+                (DirectoryEntry.source_url.contains(video_id))
+            ).first()
+            if existing_entry:
+                break
 
     if existing_entry:
-        # Try to get rich AI data from corresponding completed VideoJob
+        # Try to get rich AI data from corresponding completed VideoJob (match by video ID)
         existing_job = db.query(VideoJob).filter(
-            VideoJob.youtube_url == youtube_url,
+            VideoJob.youtube_url.contains(video_id),
             VideoJob.status == ProcessingStatus.COMPLETED.value,
         ).first()
 
         summary = ""
         qa_pairs = []
         if existing_job and existing_job.ai_enhanced:
-            summary = _truncate_to_sentences(existing_job.ai_enhanced.get("summary", ""), 3)
-            qa_pairs = (existing_job.ai_enhanced.get("qa_pairs") or [])[:3]
+            ai_data = existing_job.ai_enhanced
+            raw_summary = ai_data.get("summary", "")
+            # Skip generic fallback summaries
+            if raw_summary and "unavailable" not in raw_summary.lower() and len(raw_summary) > 40:
+                summary = _truncate_to_sentences(raw_summary, 3)
+            qa_pairs = (ai_data.get("qa_pairs") or [])[:3]
 
         if not summary:
-            summary = _truncate_to_sentences(existing_entry.summary_5_bullets or "", 3)
+            # Fall back to bullets or first sentences of the agent training script
+            bullets = existing_entry.summary_5_bullets or ""
+            summary = _truncate_to_sentences(bullets.replace("•", "").replace("\n", " "), 3)
+        if not summary:
+            summary = _truncate_to_sentences(existing_entry.agent_training_script or "", 3)
 
         thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg" if video_id else None
 
@@ -173,13 +193,13 @@ async def demo_process(
         except (asyncio.TimeoutError, Exception):
             pass  # Non-critical, keep default title
 
-    # Step 3: AI enhancement (timeout: 10s)
+    # Step 3: AI enhancement (timeout: 60s — local Ollama may need up to 30s)
     try:
         ai_success, ai_result = await asyncio.wait_for(
             asyncio.get_event_loop().run_in_executor(
                 None, transcription_service.enhance_with_ai, transcript_text, "basic"
             ),
-            timeout=10.0,
+            timeout=60.0,
         )
     except asyncio.TimeoutError:
         raise HTTPException(
