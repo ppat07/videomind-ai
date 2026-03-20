@@ -2,9 +2,16 @@
 Free demo endpoint — no auth required.
 Lets visitors preview AI output without signing up.
 Rate limited to 3 requests/IP/hour.
+
+Transcript fallback chain:
+  1. YouTube captions (instant, free)
+  2. yt-dlp audio download + local faster-whisper (45s timeout)
+  3. Friendly error with sign-up CTA
 """
+import os
 import re
 import asyncio
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -59,6 +66,81 @@ def _truncate_to_sentences(text: str, max_sentences: int = 3) -> str:
         return ""
     sentences = re.split(r'(?<=[.!?])\s+', text.strip())
     return " ".join(sentences[:max_sentences])
+
+
+def _download_and_transcribe(youtube_url: str, video_id: str) -> tuple:
+    """
+    Fallback: download audio with yt-dlp and transcribe with local faster-whisper.
+    Returns (success: bool, result: dict).
+    Saves to a temp file and cleans up after.
+    """
+    tmp_dir = None
+    try:
+        import yt_dlp
+        from faster_whisper import WhisperModel
+    except ImportError as e:
+        return False, {"error": f"Missing dependency: {e}"}
+
+    try:
+        tmp_dir = tempfile.mkdtemp(prefix="videomind_demo_")
+        audio_path = os.path.join(tmp_dir, f"{video_id}.%(ext)s")
+        final_path = os.path.join(tmp_dir, f"{video_id}.mp3")
+
+        ydl_opts = {
+            "format": "worstaudio/bestaudio[filesize<20M]/bestaudio",
+            "outtmpl": audio_path,
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "64",
+            }],
+            "quiet": True,
+            "no_warnings": True,
+            "socket_timeout": 15,
+            # Limit to first 8 minutes so download stays fast
+            "external_downloader_args": {"ffmpeg_i": ["-t", "480"]},
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([youtube_url])
+
+        # Find the downloaded file
+        candidates = [f for f in os.listdir(tmp_dir) if f.endswith(".mp3")]
+        if not candidates:
+            return False, {"error": "Audio download produced no file"}
+
+        audio_file = os.path.join(tmp_dir, candidates[0])
+        file_size = os.path.getsize(audio_file)
+        if file_size == 0:
+            return False, {"error": "Downloaded audio file is empty"}
+
+        # Transcribe with faster-whisper (tiny model — fastest, ~75MB)
+        model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        segments, info = model.transcribe(audio_file, beam_size=3)
+        full_text = " ".join(seg.text.strip() for seg in segments)
+
+        if not full_text.strip():
+            return False, {"error": "Transcription produced no text"}
+
+        return True, {
+            "success": True,
+            "method": "yt_dlp_whisper_fallback",
+            "language": info.language,
+            "full_text": full_text,
+            "word_count": len(full_text.split()),
+        }
+
+    except Exception as e:
+        return False, {"error": f"Audio transcription failed: {str(e)}"}
+
+    finally:
+        # Always clean up temp files
+        if tmp_dir and os.path.exists(tmp_dir):
+            import shutil
+            try:
+                shutil.rmtree(tmp_dir)
+            except Exception:
+                pass
 
 
 class DemoRequest(BaseModel):
@@ -173,10 +255,31 @@ async def demo_process(
         )
 
     if not transcript_success:
-        error_msg = transcript_result.get("error", "Could not get transcript for this video")
-        raise HTTPException(status_code=422, detail=error_msg)
+        # Fallback: attempt audio download + local Whisper (timeout: 90s)
+        try:
+            fallback_success, fallback_result = await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(
+                    None, _download_and_transcribe, youtube_url, video_id
+                ),
+                timeout=90.0,
+            )
+        except asyncio.TimeoutError:
+            fallback_success = False
+            fallback_result = {"error": "timeout"}
 
-    transcript_text = transcript_result["full_text"]
+        if not fallback_success:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "no_transcript",
+                    "message": "This video doesn't have auto-captions and couldn't be transcribed in time. Sign up free to process it with our full audio pipeline — results delivered to your inbox.",
+                    "cta": "Sign up free",
+                    "cta_url": "/",
+                },
+            )
+        transcript_text = fallback_result["full_text"]
+    else:
+        transcript_text = transcript_result["full_text"]
 
     # Step 2: Get video title from YouTube Data API (best effort)
     title = "YouTube Video"
