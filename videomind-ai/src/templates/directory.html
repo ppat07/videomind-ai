@@ -270,9 +270,9 @@
                             <div class="flex items-center gap-2">
                                 <button class="copyPromptBtn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-lg font-medium text-gray-700"
                                     data-prompt="${encodeURIComponent(item.agent_training_script || '')}">Copy script</button>
-                                <a href="${sourceUrl}" target="_blank"
-                                    class="${isArticle ? 'text-green-600 hover:text-green-700' : 'text-indigo-600 hover:text-indigo-700'} text-xs font-semibold">
-                                    ${isArticle ? 'Read →' : 'Watch →'}
+                                <a href="/training/${item.id}"
+                                    class="text-indigo-600 hover:text-indigo-700 text-xs font-semibold">
+                                    Full page →
                                 </a>
                             </div>
                         </div>

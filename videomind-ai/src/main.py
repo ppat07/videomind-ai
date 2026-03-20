@@ -278,6 +278,39 @@ async def directory_page(request: Request):
 
 
 
+@app.get("/training/{entry_id}", response_class=HTMLResponse, include_in_schema=False)
+async def training_detail_page(request: Request, entry_id: str, db: Session = Depends(get_database)):
+    """Individual training script page — SEO-optimized, one per directory entry."""
+    from models.directory import DirectoryEntry
+    entry = db.query(DirectoryEntry).filter(DirectoryEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Training script not found")
+
+    # Extract YouTube video ID for thumbnail
+    video_id = None
+    url = entry.source_url or entry.video_url or ""
+    import re
+    m = re.search(r'(?:v=|youtu\.be/)([^&\s?]+)', url)
+    if m:
+        video_id = m.group(1)
+
+    # Parse bullets into list
+    bullets = [b.lstrip("• \t").strip() for b in (entry.summary_5_bullets or "").splitlines() if b.strip()]
+    tools = [t.strip() for t in (entry.tools_mentioned or "").split(";") if t.strip()]
+
+    return templates.TemplateResponse(
+        "training_detail.html",
+        {
+            "request": request,
+            "app_name": settings.app_name,
+            "entry": entry,
+            "video_id": video_id,
+            "bullets": bullets,
+            "tools": tools,
+        }
+    )
+
+
 @app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
 async def checkout_page(request: Request):
     """Serve the checkout page with products."""
@@ -360,10 +393,8 @@ async def sitemap(request: Request, db: Session = Depends(get_database)):
         f"<url><loc>{base}/directory</loc><changefreq>daily</changefreq><priority>0.9</priority></url>",
     ]
     for entry in entries:
-        # Each directory entry gets its own URL slot in the sitemap
-        video_id = entry.source_url.split("v=")[-1].split("&")[0] if "v=" in (entry.source_url or "") else entry.id
         urls.append(
-            f"<url><loc>{base}/directory?v={video_id}</loc>"
+            f"<url><loc>{base}/training/{entry.id}</loc>"
             f"<changefreq>monthly</changefreq><priority>0.7</priority></url>"
         )
 
