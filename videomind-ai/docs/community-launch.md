@@ -23,7 +23,7 @@ YouTube tutorials.
 VideoMind AI solves this:
 - Paste a YouTube URL → get a timestamped transcript, AI summary, Q&A pairs,
   and a prompt template ready for fine-tuning or RAG pipelines
-- Browse 70+ pre-processed AI workflow videos organized by category
+- Browse 100+ pre-processed AI workflow videos organized by category
   (LLMs, agents, RAG, prompt engineering, AI coding tools)
 - Export full datasets in JSON or CSV
 
@@ -43,7 +43,7 @@ learned about video-sourced training data.
 
 ## Reddit — r/MachineLearning
 
-**Title:** I built a pipeline that converts YouTube AI/ML videos into LLM training data (70+ pre-processed, free to browse)
+**Title:** I built a pipeline that converts YouTube AI/ML videos into LLM training data (100+ pre-processed, free to browse)
 
 **Body:**
 
@@ -61,7 +61,7 @@ as YouTube videos. None of it is in any training dataset.
 2. Generates an AI summary, Q&A pairs, and a prompt template from the video
 3. Exports structured JSON/CSV for your fine-tuning or RAG pipeline
 
-**What's live now:** 70+ pre-processed AI/ML videos covering:
+**What's live now:** 100+ pre-processed AI/ML videos covering:
 - LLM fundamentals (Karpathy, Attention is All You Need walkthroughs)
 - RAG architectures and vector databases
 - AI agent design patterns
@@ -97,7 +97,7 @@ usable structured data. I built one.
 
 **What it does:**
 - Processes YouTube URLs → transcripts + AI-generated Q&A + prompt templates
-- Directory of 70+ curated AI/ML videos, pre-processed and ready to export
+- Directory of 100+ curated AI/ML videos, pre-processed and ready to export
 - PDF guide ($39) with the full methodology for building video-sourced datasets
 
 **The build:**
@@ -118,14 +118,14 @@ What would make you want to try it?
 
 ## Reddit — r/artificial
 
-**Title:** Built a free directory of 70+ AI workflow videos converted to structured training data — Karpathy, 3Blue1Brown, and more
+**Title:** Built a free directory of 100+ AI workflow videos converted to structured training data — Karpathy, 3Blue1Brown, and more
 
 **Body:**
 
 ```
 Hi r/artificial,
 
-I processed 70+ of the best AI/ML YouTube videos into structured training data
+I processed 100+ of the best AI/ML YouTube videos into structured training data
 and made it free to browse.
 
 The directory includes videos from:
@@ -166,7 +166,7 @@ No existing tool converts them into structured training data.
 **What I built:**
 - Video processing pipeline: YouTube URL → transcript + AI summary + Q&A pairs +
   prompt template
-- Free curated directory of 70+ AI/ML videos (Karpathy, 3Blue1Brown, RAG tutorials)
+- Free curated directory of 100+ AI/ML videos (Karpathy, 3Blue1Brown, RAG tutorials)
 - PDF guide ($39) with the full methodology
 
 **The tech:**
@@ -195,7 +195,7 @@ Building in public from here — will share weekly revenue updates.
 
 **Tweet 1 (main):**
 ```
-I turned 70+ YouTube AI/ML lectures into LLM training data and made them free to browse.
+I turned 100+ YouTube AI/ML lectures into LLM training data and made them free to browse.
 
 Videos from @karpathy, @3blue1brown, Harrison Chase, and more — converted to:
 → Timestamped transcripts
@@ -258,7 +258,7 @@ VideoMind AI fixes this. It converts YouTube AI/ML videos into:
 → AI-generated summaries and Q&A pairs
 → Prompt templates ready for fine-tuning or RAG pipelines
 
-I pre-processed 70+ high-signal videos and made them free to browse.
+I pre-processed 100+ high-signal videos and made them free to browse.
 
 The PDF guide ($39) covers the full methodology: how to source and filter videos
 at scale, quality control, legal framework, and automation scripts.
