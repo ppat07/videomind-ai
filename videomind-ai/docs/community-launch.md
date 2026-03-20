@@ -2,7 +2,7 @@
 
 > Ready-to-paste for Reddit, Indie Hackers, Hacker News.
 > Post these TODAY — they don't require any deploy and can drive immediate traffic.
-> Use code **WEEK2** at checkout for 20% off Pro.
+> Use code **FOUNDING** at checkout for $29/mo forever (vs $49/mo standard). Posts from launch day forward should use FOUNDING — WEEK2 expires March 24.
 
 ---
 
@@ -43,7 +43,7 @@ learned about video-sourced training data.
 
 ## Reddit — r/MachineLearning
 
-**Title:** I built a pipeline that converts YouTube AI/ML videos into LLM training data (100+ pre-processed, free to browse)
+**Title:** I built a pipeline that converts YouTube AI/ML videos into LLM training data (70+ pre-processed, free to browse)
 
 **Body:**
 
@@ -118,7 +118,7 @@ What would make you want to try it?
 
 ## Reddit — r/artificial
 
-**Title:** Built a free directory of 100+ AI workflow videos converted to structured training data — Karpathy, 3Blue1Brown, and more
+**Title:** Built a free directory of 70+ AI workflow videos converted to structured training data — Karpathy, 3Blue1Brown, and more
 
 **Body:**
 
@@ -141,7 +141,7 @@ a prompt template. You can filter by category and export to JSON/CSV.
 Free to browse: **https://videomind-ai.com**
 
 If you want the full methodology for building your own video-sourced LLM training
-dataset, there's a $39 PDF guide. Use **WEEK2** for 20% off this week.
+dataset, there's a $39 PDF guide. Use **FOUNDING** for $29/mo forever (launch discount).
 ```
 
 ---
@@ -166,7 +166,7 @@ No existing tool converts them into structured training data.
 **What I built:**
 - Video processing pipeline: YouTube URL → transcript + AI summary + Q&A pairs +
   prompt template
-- Free curated directory of 100+ AI/ML videos (Karpathy, 3Blue1Brown, RAG tutorials)
+- Free curated directory of 70+ AI/ML videos (Karpathy, 3Blue1Brown, RAG tutorials)
 - PDF guide ($39) with the full methodology
 
 **The tech:**
@@ -184,7 +184,7 @@ No existing tool converts them into structured training data.
 - What's the first thing that's unclear?
 - Would you pay $39 for the PDF guide? Why or why not?
 
-Using **WEEK2** for 20% off the PDF this week.
+Use **FOUNDING** for $29/mo forever (launch discount).
 
 Building in public from here — will share weekly revenue updates.
 ```
@@ -258,7 +258,7 @@ VideoMind AI fixes this. It converts YouTube AI/ML videos into:
 → AI-generated summaries and Q&A pairs
 → Prompt templates ready for fine-tuning or RAG pipelines
 
-I pre-processed 100+ high-signal videos and made them free to browse.
+I pre-processed 70+ high-signal videos and made them free to browse.
 
 The PDF guide ($39) covers the full methodology: how to source and filter videos
 at scale, quality control, legal framework, and automation scripts.
@@ -268,7 +268,7 @@ Built entirely with Claude Code. Shipped in 14 days.
 Honest question: Is this useful to you? What am I missing?
 
 Browse free → https://videomind-ai.com
-Use WEEK2 for 20% off this week.
+Use **FOUNDING** for $29/mo forever (launch discount).
 
 #AI #MachineLearning #LLM #TrainingData #IndieHacker #BuildInPublic
 ```
