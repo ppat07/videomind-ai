@@ -55,6 +55,12 @@
         </div>
     </header>
 
+    <!-- Product Hunt welcome banner (shown only for ?ref=producthunt visitors) -->
+    <div id="phBanner" style="display:none;background:linear-gradient(90deg,#da552f,#ff6154);color:#fff;text-align:center;padding:12px 20px;font-size:15px;font-weight:600;">
+        👋 Hey Product Hunter! Use code <strong>WEEK2</strong> for 20% off Pro — expires March 24. &nbsp;
+        <a href="/pricing?coupon=WEEK2" style="color:#fff;text-decoration:underline;">Claim discount →</a>
+    </div>
+
     <!-- Lead magnet: free chapter offer (above the fold) -->
     <div id="leadMagnetBanner" class="bg-indigo-700 text-white text-center py-3 px-4">
         <span class="text-sm font-medium">📘 Free: Get the first 10 pages of <em>Video AI Training Data Mastery</em> — </span>
@@ -275,6 +281,16 @@
     </div>
 
     <script>
+        // Show Product Hunt welcome banner for PH referrals
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const ref = params.get('ref') || '';
+            if (ref === 'producthunt' || ref === 'ph') {
+                document.getElementById('phBanner').style.display = 'block';
+                document.getElementById('leadMagnetBanner').style.display = 'none';
+            }
+        })();
+
         // Handle tier selection visual feedback
         document.querySelectorAll('input[name="tier"]').forEach(radio => {
             radio.addEventListener('change', function() {
