@@ -65,7 +65,7 @@ async def health_check():
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.debug else ["https://videomind.ai"],
+    allow_origins=["*"] if settings.debug else ["https://videomind-ai.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -382,7 +382,7 @@ async def sitemap(request: Request, db: Session = Depends(get_database)):
     from fastapi.responses import Response
     from models.directory import DirectoryEntry
 
-    base = "https://videomind.ai"
+    base = "https://videomind-ai.com"
     entries = db.query(DirectoryEntry).filter(
         DirectoryEntry.processing_status == "completed"
     ).all()
@@ -412,7 +412,7 @@ async def robots_txt():
     """robots.txt pointing crawlers to sitemap."""
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
-        "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: https://videomind.ai/sitemap.xml\n"
+        "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: https://videomind-ai.com/sitemap.xml\n"
     )
 
 

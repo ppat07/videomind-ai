@@ -98,14 +98,14 @@ def _send_welcome_email(email: str, db: Session) -> bool:
             Ready to unlock all 72 training scripts plus unlimited video processing?
           </p>
           <p style="margin:0 0 28px;">
-            <a href="https://videomind.ai/pricing?coupon=WEEK2"
+            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
                style="background:#2563eb;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
               Get unlimited access — join Pro at $49/mo →
             </a>
           </p>
           <p style="color:#6b7280;font-size:14px;">
-            Use code <strong>WEEK2</strong> at checkout for 20% off your first month.
+            Use code <strong>FOUNDING</strong> at checkout — lock in $29/mo forever.
           </p>
           <hr style="margin:28px 0;border:none;border-top:1px solid #e5e7eb;"/>
           <p style="color:#9ca3af;font-size:12px;">
