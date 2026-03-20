@@ -141,8 +141,8 @@ def main():
 
     enhancer = ClaudeEnhancementService()
     if not enhancer.available:
-        print("ERROR: ANTHROPIC_API_KEY not set. Cannot run AI enhancement.")
-        sys.exit(1)
+        print("WARNING: ANTHROPIC_API_KEY not set. Running metadata-based enrichment only (no AI transcript analysis).")
+        print("         Set ANTHROPIC_API_KEY in .env to enable full AI enrichment from video transcripts.")
 
     entries = db.query(DirectoryEntry).all()
     targets = []
