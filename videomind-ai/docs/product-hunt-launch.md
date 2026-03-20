@@ -27,7 +27,7 @@ Three options, each under 260 chars:
 > VideoMind AI processes YouTube and Rumble videos into clean transcripts, AI summaries, Q&A pairs, and prompt templates — structured training data ready for fine-tuning or RAG pipelines. Built for AI developers and ML teams.
 
 **Option B** — Directory-first:
-> Browse 100+ curated AI workflow videos, or process your own. VideoMind turns any video into transcripts, Q&A pairs, and agent training scripts. The fastest way to build a video-sourced LLM dataset.
+> Browse 70+ curated AI workflow videos, or process your own. VideoMind turns any video into transcripts, Q&A pairs, and agent training scripts. The fastest way to build a video-sourced LLM dataset.
 
 **Option C** — Problem-first:
 > Most AI training data is stale text. VideoMind AI unlocks video — the richest knowledge format — into structured Q&As, summaries, and prompt templates your models can actually learn from.
@@ -52,7 +52,7 @@ VideoMind AI solves this in three layers:
 
 1. **Processing pipeline** — paste a YouTube URL, get back a clean timestamped transcript, AI-generated summary, Q&A pairs, and a ready-to-use prompt template.
 
-2. **Curated directory** — we've pre-processed 100+ high-signal AI workflow videos and organized them by category, difficulty, and what the video "teaches an agent to do." You can export the full dataset in JSON or CSV.
+2. **Curated directory** — we've pre-processed 70+ high-signal AI workflow videos and organized them by category, difficulty, and what the video "teaches an agent to do." You can export the full dataset in JSON or CSV.
 
 3. **Agent training scripts** — for each video, we auto-generate a structured training script in a format your fine-tuning pipeline can ingest directly.
 
@@ -70,7 +70,7 @@ Three options for the hero thumbnail:
 
 1. **"YouTube → AI Training Data"** with sub-line: *Transcripts · Q&As · Prompt Templates*
 2. **"Turn Any Video Into LLM Training Data"** — clean dark background, no sub-line
-3. **"100+ AI Workflow Videos, Pre-Processed"** with sub-line: *Free to browse. $39 for the full dataset.*
+3. **"70+ AI Workflow Videos, Pre-Processed"** with sub-line: *Free to browse. $39 for the full dataset.*
 
 **Recommendation:** Option 1 is the most scannable at thumbnail scale. Use a dark background with a subtle video-to-data flow diagram.
 
@@ -85,7 +85,7 @@ Take 5 screenshots and use these captions:
 > The main processing interface: enter a video URL and email, choose Basic (transcript + 5 Q&As) or Detailed (enhanced summary + 10 Q&As + key concepts), and VideoMind processes it in the background.
 
 ### Screenshot 2 — Directory
-> **"100+ pre-processed AI workflow videos, ready to export"**
+> **"70+ pre-processed AI workflow videos, ready to export"**
 > Browse the curated directory of high-signal AI videos organized by category (Setup & Onboarding, Automation Workflows, Business Use Cases) and difficulty. Filter, search, and export to JSON or CSV.
 
 ### Screenshot 3 — Video Detail

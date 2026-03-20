@@ -23,7 +23,7 @@ YouTube tutorials.
 VideoMind AI solves this:
 - Paste a YouTube URL → get a timestamped transcript, AI summary, Q&A pairs,
   and a prompt template ready for fine-tuning or RAG pipelines
-- Browse 100+ pre-processed AI workflow videos organized by category
+- Browse 70+ pre-processed AI workflow videos organized by category
   (LLMs, agents, RAG, prompt engineering, AI coding tools)
 - Export full datasets in JSON or CSV
 
@@ -61,7 +61,7 @@ as YouTube videos. None of it is in any training dataset.
 2. Generates an AI summary, Q&A pairs, and a prompt template from the video
 3. Exports structured JSON/CSV for your fine-tuning or RAG pipeline
 
-**What's live now:** 100+ pre-processed AI/ML videos covering:
+**What's live now:** 70+ pre-processed AI/ML videos covering:
 - LLM fundamentals (Karpathy, Attention is All You Need walkthroughs)
 - RAG architectures and vector databases
 - AI agent design patterns
@@ -97,7 +97,7 @@ usable structured data. I built one.
 
 **What it does:**
 - Processes YouTube URLs → transcripts + AI-generated Q&A + prompt templates
-- Directory of 100+ curated AI/ML videos, pre-processed and ready to export
+- Directory of 70+ curated AI/ML videos, pre-processed and ready to export
 - PDF guide ($39) with the full methodology for building video-sourced datasets
 
 **The build:**
@@ -125,7 +125,7 @@ What would make you want to try it?
 ```
 Hi r/artificial,
 
-I processed 100+ of the best AI/ML YouTube videos into structured training data
+I processed 70+ of the best AI/ML YouTube videos into structured training data
 and made it free to browse.
 
 The directory includes videos from:
@@ -195,7 +195,7 @@ Building in public from here — will share weekly revenue updates.
 
 **Tweet 1 (main):**
 ```
-I turned 100+ YouTube AI/ML lectures into LLM training data and made them free to browse.
+I turned 70+ YouTube AI/ML lectures into LLM training data and made them free to browse.
 
 Videos from @karpathy, @3blue1brown, Harrison Chase, and more — converted to:
 → Timestamped transcripts
