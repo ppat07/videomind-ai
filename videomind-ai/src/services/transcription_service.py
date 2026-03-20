@@ -1,6 +1,9 @@
 """
 Real transcription and AI enhancement services.
-Handles YouTube transcript extraction, Whisper API, and GPT enhancement.
+Handles YouTube transcript extraction, local Whisper, and AI enhancement.
+Priority order:
+  Transcription: YouTube captions (free) → faster-whisper local → OpenAI Whisper API
+  Enrichment:    Ollama local (free) → Claude → OpenAI GPT fallback
 """
 import openai
 import os
@@ -14,6 +17,7 @@ from config import settings
 from utils.helpers import format_bytes
 from .assembly_ai_service import assembly_ai_service
 from .claude_enhancement_service import claude_enhancement_service
+from .ollama_enhancement_service import ollama_enhancement_service
 
 
 class TranscriptionService:
@@ -205,39 +209,97 @@ class TranscriptionService:
         except Exception as e:
             return False, f"Audio conversion error: {str(e)}"
     
-    def transcribe_audio_with_production_ai(self, audio_file_path: str, prefer_assembly: bool = True) -> Tuple[bool, Dict]:
+    def transcribe_audio_with_local_whisper(self, audio_file_path: str, model_size: str = "base") -> Tuple[bool, Dict]:
         """
-        PRODUCTION TRANSCRIPTION: Try Assembly.ai first, fallback to Whisper.
-        Assembly.ai is more reliable and handles edge cases better.
-        
+        Transcribe audio using faster-whisper running fully locally — zero API cost.
+        Model is downloaded once (~142 MB for 'base') and cached in ~/.cache/huggingface.
+
         Args:
             audio_file_path: Path to audio file
-            prefer_assembly: Whether to try Assembly.ai first
-            
+            model_size: 'tiny' (75MB), 'base' (142MB), 'small' (466MB), 'medium' (1.5GB)
+
         Returns:
             Tuple of (success, transcript_data or error_dict)
         """
+        try:
+            from faster_whisper import WhisperModel
+        except ImportError:
+            return False, {"error": "faster-whisper not installed. Run: pip install faster-whisper"}
+
+        try:
+            if not os.path.exists(audio_file_path):
+                return False, {"error": "Audio file does not exist"}
+
+            file_size = os.path.getsize(audio_file_path)
+            if file_size == 0:
+                return False, {"error": "Audio file is empty"}
+
+            print(f"🎙️ Local Whisper ({model_size}): transcribing {format_bytes(file_size)}...")
+
+            model = WhisperModel(model_size, device="cpu", compute_type="int8")
+            segments, info = model.transcribe(audio_file_path, beam_size=5)
+
+            segment_list = []
+            full_text_parts = []
+            for seg in segments:
+                segment_list.append({
+                    "start": round(seg.start, 2),
+                    "end": round(seg.end, 2),
+                    "text": seg.text.strip()
+                })
+                full_text_parts.append(seg.text.strip())
+
+            full_text = " ".join(full_text_parts)
+
+            print(f"✅ Local Whisper complete: {len(full_text.split())} words, lang={info.language}")
+
+            return True, {
+                "success": True,
+                "method": "faster_whisper_local",
+                "language": info.language,
+                "duration": round(info.duration, 1) if hasattr(info, "duration") else 0,
+                "full_text": full_text,
+                "segments": segment_list,
+                "segment_count": len(segment_list),
+                "word_count": len(full_text.split()),
+                "char_count": len(full_text),
+            }
+
+        except Exception as e:
+            return False, {"error": f"Local Whisper transcription failed: {str(e)}"}
+
+    def transcribe_audio_with_production_ai(self, audio_file_path: str, prefer_assembly: bool = True) -> Tuple[bool, Dict]:
+        """
+        PRODUCTION TRANSCRIPTION: Try local faster-whisper first (free), then cloud fallbacks.
+        Priority: local Whisper → Assembly.ai → OpenAI Whisper API
+
+        Args:
+            audio_file_path: Path to audio file
+            prefer_assembly: Whether to try Assembly.ai if local Whisper fails
+
+        Returns:
+            Tuple of (success, transcript_data or error_dict)
+        """
+        # Try local faster-whisper first — zero cost
+        print(f"🏠 Attempting local Whisper transcription (free)...")
+        local_success, local_result = self.transcribe_audio_with_local_whisper(audio_file_path)
+        if local_success:
+            return True, local_result
+        print(f"⚠️ Local Whisper failed: {local_result.get('error')} — trying cloud fallback")
+
         if prefer_assembly and assembly_ai_service.is_available():
-            print(f"🚀 PRODUCTION: Using Assembly.ai for transcription (more reliable)")
-            
-            # Try Assembly.ai first
+            print(f"🚀 Trying Assembly.ai...")
             assembly_success, assembly_result = assembly_ai_service.transcribe_file(
-                audio_file_path, 
-                enhance=True  # Use enhanced features for better quality
+                audio_file_path,
+                enhance=True
             )
-            
             if assembly_success:
-                print(f"✅ Assembly.ai success: {assembly_result['word_count']} words, {assembly_result['confidence']:.2f} confidence")
+                print(f"✅ Assembly.ai success: {assembly_result['word_count']} words")
                 return True, assembly_result
-            else:
-                print(f"⚠️ Assembly.ai failed: {assembly_result.get('error')}")
-                
-                # Fallback to Whisper
-                print(f"🔄 Falling back to OpenAI Whisper...")
-                return self.transcribe_audio_with_whisper(audio_file_path)
-        else:
-            # Use Whisper directly (original method)
-            return self.transcribe_audio_with_whisper(audio_file_path)
+            print(f"⚠️ Assembly.ai failed: {assembly_result.get('error')}")
+
+        print(f"🔄 Falling back to OpenAI Whisper API...")
+        return self.transcribe_audio_with_whisper(audio_file_path)
     
     def transcribe_audio_with_whisper(self, audio_file_path: str) -> Tuple[bool, Dict]:
         """
@@ -351,14 +413,25 @@ class TranscriptionService:
         Returns:
             Tuple of (success, enhanced_data or error_dict)
         """
-        # Try Claude enhancement first (more reliable)
-        print(f"🤖 Using Claude enhancement (production reliable)")
+        # Try Ollama local first — free, no API key needed
+        print(f"🏠 Attempting Ollama local enrichment (free)...")
+        if ollama_enhancement_service.is_available():
+            ollama_success, ollama_result = ollama_enhancement_service.enhance_transcript(transcript_text, tier)
+            if ollama_success:
+                print(f"✅ Ollama enrichment successful ({ollama_result.get('processing_model')})")
+                return True, ollama_result
+            print(f"⚠️ Ollama enrichment failed: {ollama_result.get('error')} — trying Claude")
+        else:
+            print(f"⚠️ Ollama not available — trying Claude")
+
+        # Try Claude enhancement next
+        print(f"🤖 Using Claude enhancement...")
         claude_success, claude_result = claude_enhancement_service.enhance_transcript(transcript_text, tier)
-        
+
         if claude_success:
             print(f"✅ Claude enhancement successful: {len(claude_result['qa_pairs'])} Q&As")
             return True, claude_result
-        
+
         # Fallback to original OpenAI method if Claude fails
         print(f"🔄 Claude enhancement failed, trying OpenAI fallback...")
         

@@ -78,9 +78,15 @@ def infer_difficulty(transcript_word_count: int) -> str:
 def make_5_bullets(summary: str, key_points: List[str]) -> str:
     points = [p for p in (key_points or []) if p][:5]
     if len(points) < 5 and summary:
-        points = points + [summary]
-    points = points[:5]
-    return "\n".join([f"• {p}" for p in points])
+        # If summary is already a bullet-formatted multi-line string, split it into lines
+        if "\n" in summary or summary.startswith("•"):
+            extra = [ln.lstrip("• \t").strip() for ln in summary.splitlines() if ln.strip()]
+        else:
+            extra = [summary]
+        points = (points + extra)[:5]
+    # Strip any leading bullet characters to prevent double-bullet accumulation on re-runs
+    cleaned = [p.lstrip("• \t").strip() for p in points]
+    return "\n".join([f"• {p}" for p in cleaned if p])
 
 
 def infer_signal_score(ai_enhanced: Dict[str, Any], transcript: Dict[str, Any]) -> int:

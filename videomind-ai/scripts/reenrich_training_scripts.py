@@ -27,6 +27,7 @@ from config import settings
 from models.directory import DirectoryEntry
 from models.video import VideoJob
 from services.claude_enhancement_service import ClaudeEnhancementService
+from services.ollama_enhancement_service import OllamaEnhancementService, ollama_enhancement_service
 from utils.directory_mapper import (
     make_5_bullets,
     build_teaches_agent_to,
@@ -52,7 +53,7 @@ def is_stale(script: str) -> bool:
     return any(m.lower() in low for m in PLACEHOLDER_MARKERS)
 
 
-def reenrich_entry(entry: DirectoryEntry, job: VideoJob, enhancer: ClaudeEnhancementService, dry_run: bool) -> bool:
+def reenrich_entry(entry: DirectoryEntry, job: VideoJob, enhancer, dry_run: bool) -> bool:
     """Re-generate training data for a single directory entry. Returns True if updated."""
     transcript_data = job.transcript if job else None
     existing_enhanced = job.ai_enhanced if job else None
@@ -139,10 +140,17 @@ def main():
     Session = sessionmaker(bind=engine)
     db = Session()
 
-    enhancer = ClaudeEnhancementService()
-    if not enhancer.available:
-        print("WARNING: ANTHROPIC_API_KEY not set. Running metadata-based enrichment only (no AI transcript analysis).")
-        print("         Set ANTHROPIC_API_KEY in .env to enable full AI enrichment from video transcripts.")
+    # Prefer Ollama (local, free) — fall back to Claude if Ollama is not available
+    if ollama_enhancement_service.is_available():
+        enhancer = ollama_enhancement_service
+        print("✅ Using Ollama local enrichment (free, no API key needed).")
+    else:
+        enhancer = ClaudeEnhancementService()
+        if not enhancer.available:
+            print("WARNING: Neither Ollama nor ANTHROPIC_API_KEY is available.")
+            print("         Start Ollama or set ANTHROPIC_API_KEY in .env for AI enrichment.")
+        else:
+            print("ℹ️  Ollama not running — using Claude API for enrichment.")
 
     entries = db.query(DirectoryEntry).all()
     targets = []

@@ -73,3 +73,4 @@ wcwidth==0.6.0
 websockets==15.0.1
 youtube-transcript-api==1.2.4
 yt-dlp==2023.12.30
+faster-whisper>=1.0.0
