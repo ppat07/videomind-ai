@@ -163,7 +163,7 @@
         <p class="subtitle">Transform any video into structured AI training data</p>
 
         <div id="urgencyBanner" class="urgency-banner" style="display:none">
-            ⏰ Week 2 Launch Special: 20% off with code <strong>WEEK2</strong> — expires March 24
+            🚀 Launch Special: Lock in Pro at <strong>$29/mo forever</strong> with code <strong>FOUNDING</strong> — expires April 15
         </div>
 
         <div class="product">
@@ -186,7 +186,7 @@
                 <input type="hidden" name="product_type" value="pdf" />
                 <input type="hidden" name="coupon_code" id="pdfCouponInput" value="" />
                 <div class="promo-row">
-                    <input type="text" id="pdfPromoCode" placeholder="Promo code (e.g. WEEK2)" maxlength="20" />
+                    <input type="text" id="pdfPromoCode" placeholder="Promo code (e.g. FOUNDING)" maxlength="20" />
                     <button type="button" class="apply-btn" onclick="applyPromo('pdf')">Apply</button>
                 </div>
                 <div id="pdfPromoMsg" class="promo-msg"></div>
@@ -214,7 +214,7 @@
                 <input type="hidden" name="mode" value="subscription" />
                 <input type="hidden" name="coupon_code" id="proCouponInput" value="" />
                 <div class="promo-row">
-                    <input type="text" id="proPromoCode" placeholder="Promo code (e.g. WEEK2)" maxlength="20" />
+                    <input type="text" id="proPromoCode" placeholder="Promo code (e.g. FOUNDING)" maxlength="20" />
                     <button type="button" class="apply-btn" onclick="applyPromo('pro')">Apply</button>
                 </div>
                 <div id="proPromoMsg" class="promo-msg"></div>
@@ -227,9 +227,9 @@
         </div>
     </div>
     <script>
-        // Show urgency banner if before March 24, 2026
+        // Show urgency banner if before April 16, 2026 (FOUNDING offer expires Apr 15)
         (function() {
-            var expiry = new Date('2026-03-24T23:59:59Z');
+            var expiry = new Date('2026-04-16T07:59:59Z');
             if (new Date() < expiry) {
                 document.getElementById('urgencyBanner').style.display = 'block';
             }
