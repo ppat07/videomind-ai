@@ -577,7 +577,7 @@ async def handle_trial_will_end(subscription: Dict[str, Any], db: Session):
             Your VideoMind AI Pro trial expires in 3 days. Keep your full access:
           </p>
           <ul style="color:#374151;">
-            <li>All 72 AI/ML training scripts (Karpathy, RAG, agents, and more)</li>
+            <li>All 70+ AI/ML training scripts (Karpathy, RAG, agents, and more)</li>
             <li>Unlimited video processing — any YouTube URL to structured training data</li>
             <li>JSON/CSV exports ready for fine-tuning and RAG pipelines</li>
           </ul>

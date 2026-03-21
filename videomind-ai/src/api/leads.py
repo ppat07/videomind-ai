@@ -95,7 +95,7 @@ def _send_welcome_email(email: str, db: Session) -> bool:
           </p>
           {script_section}
           <p style="color:#374151;margin:20px 0 8px;">
-            Ready to unlock all 72 training scripts plus unlimited video processing?
+            Ready to unlock all 70+ training scripts plus unlimited video processing?
           </p>
           <p style="margin:0 0 28px;">
             <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
@@ -149,7 +149,7 @@ def _send_nurture_email(email: str) -> bool:
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
           <h2 style="color:#1f2937;">Liked your free training script?</h2>
           <p style="color:#374151;">
-            VideoMind AI Pro gives you all 72 training scripts plus unlimited video processing —
+            VideoMind AI Pro gives you all 70+ training scripts plus unlimited video processing —
             structured Q&amp;A pairs, workflow templates, and step-by-step agent training data
             for every video in our library.
           </p>
