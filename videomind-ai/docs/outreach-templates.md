@@ -16,7 +16,7 @@ When you're building training datasets for your models, how do you handle
 video content? I built VideoMind AI to extract structured Q&As and transcripts
 from YouTube lectures.
 
-72 pre-processed AI/ML videos free to browse. Would love your take on whether
+70+ pre-processed AI/ML videos free to browse. Would love your take on whether
 the output format is useful for your workflow.
 
 https://videomind-ai.com
@@ -35,7 +35,7 @@ VideoMind AI processes these into transcripts + Q&A pairs + prompt templates
 for agent fine-tuning. Curious if this format would be useful for what you're
 building.
 
-https://videomind-ai.com — free directory of 72 AI/agent videos.
+https://videomind-ai.com — free directory of 70+ AI/agent videos.
 ```
 
 ### Template 3 — Indie Hacker / Builder
@@ -68,7 +68,7 @@ that might be relevant to your team.
 VideoMind AI converts any YouTube video into structured LLM training data:
 timestamped transcripts, AI summaries, Q&A pairs, and prompt templates.
 
-We have 72 pre-processed AI/ML videos free to browse — Karpathy's LLM lectures,
+We have 70+ pre-processed AI/ML videos free to browse — Karpathy's LLM lectures,
 RAG tutorials, agent design patterns, etc. Most ML teams I've talked to have
 this exact gap: high-quality video content with no path to their training pipeline.
 
@@ -90,7 +90,7 @@ The core use case: AI teams spend hours manually transcribing + annotating
 video content. VideoMind automates this into structured JSON exports (transcripts,
 Q&As, prompt templates) ready for fine-tuning or RAG pipelines.
 
-72 curated AI/ML videos pre-processed and free to explore at videomind-ai.com.
+70+ curated AI/ML videos pre-processed and free to explore at videomind-ai.com.
 
 If this solves a problem your team has, I'd love 15 minutes to understand your
 workflow better.
@@ -117,7 +117,7 @@ I built VideoMind AI to solve this. It processes any YouTube URL into:
 - AI-generated summaries + Q&A pairs
 - Prompt templates for fine-tuning/RAG
 
-72 pre-processed AI/ML videos free to browse now at videomind-ai.com.
+70+ pre-processed AI/ML videos free to browse now at videomind-ai.com.
 
 If this matches a problem your team has, would love to connect.
 

@@ -105,7 +105,7 @@ Even the low case ($294) gets us most of the way to $400. The high case takes us
 
 - [ ] **Post PH result update** on all channels (HN, Reddit, Twitter, LinkedIn, IH)
   - Template: "We hit #X on Product Hunt yesterday. Here's what we learned + what we're building next."
-- [ ] **Email all leads** captured during launch with thank-you + WEEK2 code (if SendGrid is set up)
+- [ ] **Email all leads** captured during launch with thank-you + FOUNDING code (if SendGrid is set up)
 - [ ] **Stripe dashboard** — review every successful and failed checkout attempt
 
 ---
@@ -115,7 +115,7 @@ Even the low case ($294) gets us most of the way to $400. The high case takes us
 If PH doesn't generate traction by noon, fall back to:
 
 1. **Direct DM outreach** — Twitter/LinkedIn to ML engineers and AI team leads
-   - Message: "I built a tool that converts YouTube AI tutorials into LLM training data. 72 pre-processed videos free. Would love your feedback." + link
+   - Message: "I built a tool that converts YouTube AI tutorials into LLM training data. 70+ pre-processed videos free. Would love your feedback." + link
    - Target 50 DMs in the afternoon
 
 2. **Specific Discord/Slack communities** to post in:
@@ -131,7 +131,7 @@ If PH doesn't generate traction by noon, fall back to:
 - Product: https://www.videomind-ai.com
 - Pricing: https://www.videomind-ai.com/pricing
 - Directory: https://www.videomind-ai.com/directory
-- WEEK2 checkout link: https://www.videomind-ai.com/checkout?coupon=WEEK2
+- FOUNDING checkout link: https://www.videomind-ai.com/checkout?coupon=FOUNDING
 
 ---
 
