@@ -212,10 +212,10 @@
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Sample Q&amp;A Training Pairs</h4>
                         <div id="demoQAs" class="space-y-2"></div>
                     </div>
-                    <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 text-center">
-                        <p class="text-sm text-gray-600 mb-1">Preview only — unlock the full transcript, all Q&amp;A pairs, and structured training script.</p>
-                        <p class="text-xs text-indigo-600 font-semibold mb-3">Founding rate: $29/mo forever (expires Apr 15)</p>
-                        <div class="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                    <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <p class="text-sm text-gray-600 mb-1 text-center">Preview only — unlock the full transcript, all Q&amp;A pairs, and structured training script.</p>
+                        <p class="text-xs text-indigo-600 font-semibold mb-3 text-center">Founding rate: $29/mo forever (expires Apr 15)</p>
+                        <div class="flex flex-col sm:flex-row gap-2 justify-center items-center mb-3">
                             <a href="/checkout?coupon=FOUNDING" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-lg transition text-sm">
                                 Start 7-day free trial →
                             </a>
@@ -224,6 +224,18 @@
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                                 Share on X
                             </a>
+                        </div>
+                        <!-- Lead capture fallback for non-converters -->
+                        <div class="border-t border-indigo-100 pt-3">
+                            <p class="text-xs text-gray-500 text-center mb-2">Not ready to upgrade? Get the full training script for this video — free by email.</p>
+                            <form id="demoLeadForm" onsubmit="submitDemoLead(event)" class="flex gap-2 max-w-sm mx-auto">
+                                <input type="email" id="demoLeadEmail" placeholder="your@email.com" required
+                                    class="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:border-indigo-400">
+                                <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition whitespace-nowrap">
+                                    Send free →
+                                </button>
+                            </form>
+                            <p id="demoLeadSuccess" class="hidden text-xs text-green-600 text-center mt-2 font-semibold">✅ Check your inbox — full script on its way!</p>
                         </div>
                     </div>
                 </div>
@@ -611,6 +623,21 @@
         function fillDemo(url) {
             document.getElementById('demoUrl').value = url;
             runDemo();
+        }
+
+        async function submitDemoLead(e) {
+            e.preventDefault();
+            const email = document.getElementById('demoLeadEmail').value.trim();
+            if (!email) return;
+            try {
+                await fetch('/api/leads/capture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, source: 'demo_result' }),
+                });
+            } catch (_) {}
+            document.getElementById('demoLeadForm').classList.add('hidden');
+            document.getElementById('demoLeadSuccess').classList.remove('hidden');
         }
 
         async function runDemo() {
