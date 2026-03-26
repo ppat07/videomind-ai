@@ -98,7 +98,7 @@ def _send_welcome_email(email: str, db: Session) -> bool:
             Ready to unlock all 70+ training scripts plus unlimited video processing?
           </p>
           <p style="margin:0 0 28px;">
-            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
+            <a href="https://videomind-ai.com/checkout?coupon=FOUNDING"
                style="background:#2563eb;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
               Get unlimited access — join Pro at $49/mo →
@@ -158,7 +158,7 @@ def _send_nurture_email(email: str) -> bool:
             Use code <strong>FOUNDING</strong> at checkout — this rate locks in permanently.
           </p>
           <p style="margin:28px 0;">
-            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
+            <a href="https://videomind-ai.com/checkout?coupon=FOUNDING"
                style="background:#16a34a;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
               Become a Founding Member — $29/mo forever →

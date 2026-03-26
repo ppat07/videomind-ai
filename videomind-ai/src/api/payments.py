@@ -586,7 +586,7 @@ async def handle_trial_will_end(subscription: Dict[str, Any], db: Session):
             Use code <strong>FOUNDING</strong> at checkout.
           </p>
           <p style="margin:28px 0;">
-            <a href="https://videomind-ai.com/pricing?coupon=FOUNDING"
+            <a href="https://videomind-ai.com/checkout?coupon=FOUNDING"
                style="background:#16a34a;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
               Keep Pro access — $29/mo with FOUNDING →
