@@ -677,8 +677,20 @@ async def get_free_usage(email: str, db: Session = Depends(get_database)):
         FreeTierUsage.year_month == year_month,
     ).first()
 
+    from models.subscription import ProSubscriber
+    is_pro = db.query(ProSubscriber).filter(
+        ProSubscriber.email == email,
+        ProSubscriber.active == True,  # noqa: E712
+    ).first() is not None
+
     used = usage.count if usage else 0
-    return {"email": email, "used": used, "limit": FREE_LIMIT, "remaining": max(0, FREE_LIMIT - used)}
+    return {
+        "email": email,
+        "used": used,
+        "limit": FREE_LIMIT,
+        "remaining": max(0, FREE_LIMIT - used),
+        "is_pro": is_pro,
+    }
 
 
 # ---------------------------------------------------------------------------

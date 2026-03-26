@@ -191,7 +191,7 @@ async def submit_video_for_processing(
                     detail={
                         "error": "free_tier_limit_reached",
                         "message": f"You've used all {FREE_TIER_LIMIT} free videos this month.",
-                        "upgrade_url": "/pricing",
+                        "upgrade_url": "/checkout?coupon=FOUNDING",
                     }
                 )
         # --- End free tier enforcement ---
