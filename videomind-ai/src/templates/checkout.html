@@ -163,7 +163,7 @@
         <p class="subtitle">Transform any video into structured AI training data</p>
 
         <div id="urgencyBanner" class="urgency-banner" style="display:none">
-            🚀 Launch Special: Lock in Pro at <strong>$29/mo forever</strong> with code <strong>FOUNDING</strong> — expires April 15
+            🚀 Founding rate: <strong>$29/mo forever</strong> — code <strong>FOUNDING</strong> expires in <span id="checkoutCd" style="font-variant-numeric:tabular-nums;"></span>
         </div>
 
         <div class="product">
@@ -227,12 +227,23 @@
         </div>
     </div>
     <script>
-        // Show urgency banner if before April 16, 2026 (FOUNDING offer expires Apr 15)
+        // Show urgency banner with live countdown (FOUNDING offer expires Apr 15)
         (function() {
             var expiry = new Date('2026-04-16T07:59:59Z');
-            if (new Date() < expiry) {
-                document.getElementById('urgencyBanner').style.display = 'block';
+            if (new Date() >= expiry) return;
+            document.getElementById('urgencyBanner').style.display = 'block';
+            function tick() {
+                var diff = expiry - new Date();
+                if (diff <= 0) { document.getElementById('checkoutCd').textContent = '(expired)'; return; }
+                var d = Math.floor(diff / 86400000);
+                var h = Math.floor((diff % 86400000) / 3600000);
+                var m = Math.floor((diff % 3600000) / 60000);
+                var s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('checkoutCd').textContent =
+                    d + 'd ' + String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+                setTimeout(tick, 1000);
             }
+            tick();
         })();
 
         // Pre-fill coupon from URL ?coupon=WEEK2
