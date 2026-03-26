@@ -163,16 +163,36 @@ async def startup_event():
         count = db.query(DirectoryEntry).count()
         seed_file = _Path(__file__).parent / "data" / "seed_videos.json"
 
-        if count < 50 and seed_file.exists():
-            print(f"📚 Directory has {count} entries (< 50), loading seed videos...")
-            import uuid as _uuid, re as _re
-            _DIR_NS = _uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
-            def _stable_id(url: str) -> str:
-                m = _re.search(r'[?&]v=([^&]+)', url)
-                key = f"youtube:{m.group(1)}" if m else url.split('?')[0]
-                return str(_uuid.uuid5(_DIR_NS, key))
+        import uuid as _uuid, re as _re
+        _DIR_NS = _uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
+        def _stable_id(url: str) -> str:
+            m = _re.search(r'[?&]v=([^&]+)', url)
+            key = f"youtube:{m.group(1)}" if m else url.split('?')[0]
+            return str(_uuid.uuid5(_DIR_NS, key))
+
+        # Detect if entries have wrong (non-stable) IDs — wipe and reseed
+        needs_reseed = False
+        if count > 0 and seed_file.exists():
             with open(seed_file) as _f:
                 seed_videos = _json.load(_f)
+            first_src = seed_videos[0].get("source_url", "") if seed_videos else ""
+            if first_src:
+                expected_id = _stable_id(first_src)
+                first_entry = db.query(DirectoryEntry).filter(
+                    DirectoryEntry.source_url == first_src
+                ).first()
+                if first_entry and first_entry.id != expected_id:
+                    print(f"⚠️ Entries have non-stable IDs (found {first_entry.id[:8]}..., expected {expected_id[:8]}...). Reseeding.")
+                    db.query(DirectoryEntry).delete()
+                    db.commit()
+                    count = 0
+                    needs_reseed = True
+
+        if (count < 50 or needs_reseed) and seed_file.exists():
+            if not needs_reseed:
+                print(f"📚 Directory has {count} entries (< 50), loading seed videos...")
+                with open(seed_file) as _f:
+                    seed_videos = _json.load(_f)
             added = 0
             for video_data in seed_videos:
                 src_url = video_data.get("source_url", "")
@@ -190,7 +210,7 @@ async def startup_event():
             db.commit()
             print(f"✅ Startup seeding completed — added {added} videos ({db.query(DirectoryEntry).count()} total)")
         else:
-            print(f"📚 Directory contains {count} entries, no seeding needed")
+            print(f"📚 Directory contains {count} stable-ID entries, no seeding needed")
 
         db.close()
     except Exception as e:
