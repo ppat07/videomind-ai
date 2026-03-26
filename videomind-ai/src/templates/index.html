@@ -48,13 +48,35 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- Product Hunt welcome banner (shown only for ?ref=producthunt visitors) -->
-    <div id="phBanner" style="display:none;background:linear-gradient(90deg,#da552f,#ff6154);color:#fff;text-align:center;padding:12px 20px;font-size:15px;font-weight:600;">
-        👋 Hey Product Hunter! Use code <strong>FOUNDING</strong> — lock in Pro at $29/mo forever. &nbsp;
-        <a href="/pricing?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim Founding rate →</a>
-    </div>
+    <!-- Founding Member urgency banner (shown to all visitors until Apr 15; PH variant for referrals) -->
+    <div id="phBanner" style="display:none;color:#fff;text-align:center;padding:12px 20px;font-size:15px;font-weight:600;"></div>
+    <script>
+    (function() {
+        var deadline = new Date('2026-04-16T07:59:59Z');
+        if (new Date() >= deadline) return;
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref') || '';
+        var isPH = ref === 'producthunt' || ref === 'ph';
+        var el = document.getElementById('phBanner');
+        el.style.background = isPH ? 'linear-gradient(90deg,#da552f,#ff6154)' : 'linear-gradient(90deg,#dc2626,#ea580c)';
+        var prefix = isPH ? '👋 Hey Product Hunter! ' : '🚀 Founding Member rate: ';
+        el.innerHTML = prefix + 'Lock in Pro at <strong>$29/mo forever</strong> — code <strong>FOUNDING</strong>, expires in <span id="homeCd" style="font-variant-numeric:tabular-nums;"></span> &nbsp;<a href="/pricing?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim rate →</a>';
+        el.style.display = 'block';
+        document.getElementById('leadMagnetBanner').style.display = 'none';
+        function tick() {
+            var diff = deadline - new Date();
+            if (diff <= 0) { document.getElementById('homeCd').textContent = '(expired)'; return; }
+            var d = Math.floor(diff / 86400000);
+            var h = Math.floor((diff % 86400000) / 3600000);
+            var m = Math.floor((diff % 3600000) / 60000);
+            document.getElementById('homeCd').textContent = d + 'd ' + String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm';
+            setTimeout(tick, 60000);
+        }
+        tick();
+    })();
+    </script>
 
-    <!-- Slim announcement bar (lead magnet) -->
+    <!-- Slim announcement bar (lead magnet) — hidden when urgency banner is active -->
     <div id="leadMagnetBanner" class="bg-indigo-600 text-white text-center py-2 px-4 text-sm">
         <span class="font-medium">📘 Free guide:</span>
         <button onclick="document.getElementById('leadCaptureModal').classList.remove('hidden')"
@@ -350,16 +372,6 @@
     </div>
 
     <script>
-        // Show Product Hunt welcome banner for PH referrals
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const ref = params.get('ref') || '';
-            if (ref === 'producthunt' || ref === 'ph') {
-                document.getElementById('phBanner').style.display = 'block';
-                document.getElementById('leadMagnetBanner').style.display = 'none';
-            }
-        })();
-
         // Handle tier selection visual feedback
         document.querySelectorAll('input[name="tier"]').forEach(radio => {
             radio.addEventListener('change', function() {

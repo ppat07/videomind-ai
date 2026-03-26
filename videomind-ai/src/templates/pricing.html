@@ -47,13 +47,28 @@
 
     <!-- Urgency banner: Founding Member rate (auto-hides after April 15) -->
     <div id="week2Banner" style="display:none;background:linear-gradient(90deg,#dc2626,#ea580c);color:#fff;text-align:center;padding:11px 20px;font-weight:600;font-size:15px;">
-        🚀 Launch Special: Lock in Pro at <strong>$29/mo forever</strong> with code <strong>FOUNDING</strong> &nbsp;
-        <a href="/checkout?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim Founding rate →</a>
+        🚀 Founding Member rate: Lock in Pro at <strong>$29/mo forever</strong> with code <strong>FOUNDING</strong> — expires in <span id="foundingCountdown" style="font-variant-numeric:tabular-nums;"></span> &nbsp;
+        <a href="/checkout?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim rate →</a>
     </div>
     <script>
-        if (new Date() < new Date('2026-04-16T07:59:59Z')) {
+        (function() {
+            var deadline = new Date('2026-04-16T07:59:59Z');
+            var now = new Date();
+            if (now >= deadline) return;
             document.getElementById('week2Banner').style.display = 'block';
-        }
+            function tick() {
+                var diff = deadline - new Date();
+                if (diff <= 0) { document.getElementById('foundingCountdown').textContent = '(expired)'; return; }
+                var d = Math.floor(diff / 86400000);
+                var h = Math.floor((diff % 86400000) / 3600000);
+                var m = Math.floor((diff % 3600000) / 60000);
+                var s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('foundingCountdown').textContent =
+                    d + 'd ' + String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+                setTimeout(tick, 1000);
+            }
+            tick();
+        })();
     </script>
 
     <main class="max-w-5xl mx-auto px-4 py-16">
