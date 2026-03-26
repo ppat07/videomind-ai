@@ -160,10 +160,18 @@
 
             <!-- Inline demo widget -->
             <div id="demoWidget" class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 max-w-2xl mx-auto">
+                <!-- Example quick-fill chips -->
+                <div class="flex flex-wrap gap-2 mb-3 text-xs">
+                    <span class="text-indigo-200 opacity-70 self-center">Try:</span>
+                    <button onclick="fillDemo('https://www.youtube.com/watch?v=zjkBMFhNj_g')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full transition border border-white/20">Karpathy: Build GPT</button>
+                    <button onclick="fillDemo('https://www.youtube.com/watch?v=kCc8FmEb1nY')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full transition border border-white/20">Karpathy: Neural Nets</button>
+                    <button onclick="fillDemo('https://www.youtube.com/watch?v=hhiLw5Q_UFg')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full transition border border-white/20">Claude Code Workflow</button>
+                </div>
                 <div class="flex gap-3 mb-4">
                     <input
                         type="url"
                         id="demoUrl"
+                        value="https://www.youtube.com/watch?v=zjkBMFhNj_g"
                         placeholder="https://www.youtube.com/watch?v=..."
                         class="flex-1 px-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none demo-input-glow"
                     >
@@ -600,6 +608,11 @@
         }
     </script>
     <script>
+        function fillDemo(url) {
+            document.getElementById('demoUrl').value = url;
+            runDemo();
+        }
+
         async function runDemo() {
             const url = (document.getElementById('demoUrl').value || '').trim();
             if (!url) {
