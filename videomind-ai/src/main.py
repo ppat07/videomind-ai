@@ -125,6 +125,23 @@ async def _run_nurture_emails():
         db.close()
 
 
+async def _keep_alive_ping():
+    """Self-ping /health every 10 min to prevent Render free-tier spin-down.
+    Once the service is warm, this keeps it warm between user visits."""
+    import os
+    import asyncio
+    port = os.environ.get("PORT", "8000")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "curl", "-sf", f"http://localhost:{port}/health",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await proc.wait()
+    except Exception:
+        pass  # silent — keep-alive is best-effort
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup."""
@@ -216,8 +233,11 @@ async def startup_event():
 
     # Start nurture email scheduler — runs every 6 hours
     _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")
+    # Keep-alive: ping /health every 10 min so Render free tier doesn't spin down
+    _nurture_scheduler.add_job(_keep_alive_ping, "interval", minutes=10, id="keep_alive")
     _nurture_scheduler.start()
     print("⏰ Nurture email scheduler started (every 6 hours)")
+    print("💓 Keep-alive ping scheduled (every 10 minutes)")
 
 
 @app.get("/loading", response_class=HTMLResponse, include_in_schema=False)
