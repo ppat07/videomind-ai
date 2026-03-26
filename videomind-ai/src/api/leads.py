@@ -95,17 +95,17 @@ def _send_welcome_email(email: str, db: Session) -> bool:
           </p>
           {script_section}
           <p style="color:#374151;margin:20px 0 8px;">
-            Ready to unlock all 70+ training scripts plus unlimited video processing?
+            Ready to unlock all 72+ training scripts plus unlimited video processing?
           </p>
           <p style="margin:0 0 28px;">
             <a href="https://videomind-ai.com/checkout?coupon=FOUNDING"
                style="background:#2563eb;color:#fff;padding:14px 28px;border-radius:6px;
                       text-decoration:none;font-weight:700;font-size:16px;">
-              Get unlimited access — join Pro at $49/mo →
+              Get unlimited access — Founding rate $29/mo forever →
             </a>
           </p>
           <p style="color:#6b7280;font-size:14px;">
-            Use code <strong>FOUNDING</strong> at checkout — lock in $29/mo forever.
+            Founding rate expires <strong>April 15</strong>. Regular price is $49/mo.
           </p>
           <hr style="margin:28px 0;border:none;border-top:1px solid #e5e7eb;"/>
           <p style="color:#9ca3af;font-size:12px;">
@@ -149,7 +149,7 @@ def _send_nurture_email(email: str) -> bool:
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
           <h2 style="color:#1f2937;">Liked your free training script?</h2>
           <p style="color:#374151;">
-            VideoMind AI Pro gives you all 70+ training scripts plus unlimited video processing —
+            VideoMind AI Pro gives you all 72+ training scripts plus unlimited video processing —
             structured Q&amp;A pairs, workflow templates, and step-by-step agent training data
             for every video in our library.
           </p>
