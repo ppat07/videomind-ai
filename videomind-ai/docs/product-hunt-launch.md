@@ -27,7 +27,7 @@ Three options, each under 260 chars:
 > VideoMind AI processes YouTube and Rumble videos into clean transcripts, AI summaries, Q&A pairs, and prompt templates — structured training data ready for fine-tuning or RAG pipelines. Built for AI developers and ML teams.
 
 **Option B** — Directory-first:
-> Browse 70+ curated AI workflow videos, or process your own. VideoMind turns any video into transcripts, Q&A pairs, and agent training scripts. The fastest way to build a video-sourced LLM dataset.
+> Browse 72+ curated AI workflow videos, or process your own. VideoMind turns any video into transcripts, Q&A pairs, and agent training scripts. The fastest way to build a video-sourced LLM dataset.
 
 **Option C** — Problem-first:
 > Most AI training data is stale text. VideoMind AI unlocks video — the richest knowledge format — into structured Q&As, summaries, and prompt templates your models can actually learn from.
@@ -52,7 +52,7 @@ VideoMind AI solves this in three layers:
 
 1. **Processing pipeline** — paste a YouTube URL, get back a clean timestamped transcript, AI-generated summary, Q&A pairs, and a ready-to-use prompt template.
 
-2. **Curated directory** — we've pre-processed 70+ high-signal AI workflow videos and organized them by category, difficulty, and what the video "teaches an agent to do." You can export the full dataset in JSON or CSV.
+2. **Curated directory** — we've pre-processed 72+ high-signal AI workflow videos and organized them by category, difficulty, and what the video "teaches an agent to do." You can export the full dataset in JSON or CSV.
 
 3. **Agent training scripts** — for each video, we auto-generate a structured training script in a format your fine-tuning pipeline can ingest directly.
 
@@ -85,7 +85,7 @@ Take 5 screenshots and use these captions:
 > The main processing interface: enter a video URL and email, choose Basic (transcript + 5 Q&As) or Detailed (enhanced summary + 10 Q&As + key concepts), and VideoMind processes it in the background.
 
 ### Screenshot 2 — Directory
-> **"70+ pre-processed AI workflow videos, ready to export"**
+> **"72+ pre-processed AI workflow videos, ready to export"**
 > Browse the curated directory of high-signal AI videos organized by category (Setup & Onboarding, Automation Workflows, Business Use Cases) and difficulty. Filter, search, and export to JSON or CSV.
 
 ### Screenshot 3 — Video Detail
@@ -116,20 +116,21 @@ Tag these 3-5 topics on Product Hunt:
 
 ## 7. Launch Timing Recommendation
 
-**Best day:** Tuesday
+**Best day:** Tuesday March 31, 2026
 **Best time:** 12:01am PT (as soon as Product Hunt's daily cycle resets)
 
 **Why Tuesday:**
 - Product Hunt resets at midnight PT — launching at 12:01am gives you the full 24-hour cycle
 - Tuesday is historically the highest-traffic day on Product Hunt (Monday launches compete with weekend backlog; Wednesday+ traffic drops)
 - Avoid Mondays (lower engagement) and Fridays (people check out early)
+- Launching March 31 gives 15 days before FOUNDING expires April 15 — enough time to convert PH traffic
 
-**Pre-launch checklist (day before):**
-- [ ] Post a teaser on Twitter/X with the Product Hunt link scheduled for launch day
-- [ ] DM 10-20 people who would genuinely find this useful and ask them to check it out on launch day (not to upvote — against Product Hunt rules)
-- [ ] Make sure the site is stable and `/checkout` works end-to-end (see VID-14 smoke test findings)
-- [ ] Confirm the free chapter PDF is accessible at `/static/free-chapter.pdf`
+**Pre-launch checklist (day before — Sunday March 30):**
+- [ ] Post a teaser on Twitter/X: "Launching on Product Hunt tomorrow..."
+- [ ] DM 10-20 people who would genuinely find this useful and ask them to check it out (not to upvote — against PH rules)
+- [ ] Verify `/checkout?coupon=FOUNDING` loads and coupon auto-applies
 - [ ] Have the founder comment text ready to paste within 5 minutes of launch
+- [ ] Confirm the site is healthy: `https://videomind-ai.com/health`
 
 **What NOT to do:**
 - Do not ask for upvotes directly (Product Hunt penalizes this)
