@@ -404,7 +404,7 @@ async def sitemap(request: Request, db: Session = Depends(get_database)):
 
     base = "https://videomind-ai.com"
     entries = db.query(DirectoryEntry).filter(
-        DirectoryEntry.processing_status == "completed"
+        DirectoryEntry.processing_status.in_(["completed", "processed"])
     ).all()
 
     urls = [
