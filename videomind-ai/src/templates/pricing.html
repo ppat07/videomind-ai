@@ -33,6 +33,39 @@
       }
     }
     </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What counts as one video in VideoMind AI?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Each YouTube URL submitted for processing counts as one video. Free accounts get 3 per month; Pro is unlimited."}
+        },
+        {
+          "@type": "Question",
+          "name": "What output formats does VideoMind AI produce?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Structured JSON (transcripts, Q&A pairs, summaries, key topics), downloadable PDFs, and plain text — ready to drop into any LLM fine-tuning pipeline."}
+        },
+        {
+          "@type": "Question",
+          "name": "Can I cancel my VideoMind AI Pro subscription anytime?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Cancel immediately from the Stripe billing portal. Pro access stays active until the end of the billing period."}
+        },
+        {
+          "@type": "Question",
+          "name": "Does VideoMind AI support long videos?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Yes — up to 2 hours per video. Most tutorial and lecture videos fall well within that limit."}
+        },
+        {
+          "@type": "Question",
+          "name": "Does VideoMind AI have an API?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Pro subscribers get REST API access to submit videos and retrieve results programmatically. Documentation is available after subscribing."}
+        }
+      ]
+    }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -329,15 +362,18 @@
         <!-- CTA strip -->
         <div class="mt-20 bg-blue-600 rounded-2xl p-10 text-center">
             <h2 class="text-2xl font-bold text-white mb-3">Ready to scale your AI training data?</h2>
-            <p class="text-blue-100 mb-6">Join teams turning hours of video into structured training data in minutes.</p>
+            <p class="text-blue-100 mb-2">Join teams turning hours of video into structured training data in minutes.</p>
+            <p class="text-yellow-200 text-sm font-semibold mb-6">Founding rate: $29/mo forever — expires <span id="ctaCountdown"></span></p>
             <form action="/api/payments/create-checkout-session" method="POST" class="inline" onsubmit="logCheckoutClick()">
                 <input type="hidden" name="price_id" value="price_1T9GxGC5Bp5rIHQP2AOxHFMf" />
                 <input type="hidden" name="mode" value="subscription" />
+                <input type="hidden" name="coupon_code" value="FOUNDING" />
                 <button type="submit"
                     class="bg-white text-blue-600 font-bold py-3 px-10 rounded-lg hover:bg-blue-50 transition-colors text-lg">
-                    Get Pro for $49/month
+                    Start Free Trial — $29/mo Founding Rate
                 </button>
             </form>
+            <p class="text-blue-200 text-xs mt-3">7 days free · $29/mo locked forever · Cancel anytime</p>
         </div>
 
     </main>
@@ -380,6 +416,22 @@
 
         // Log pricing page view with UTM data
         logEvent('pricing_viewed');
+
+        // Countdown for CTA strip
+        (function() {
+            var deadline = new Date('2026-04-16T07:59:59Z');
+            var el = document.getElementById('ctaCountdown');
+            if (!el) return;
+            function tick() {
+                var diff = deadline - new Date();
+                if (diff <= 0) { el.textContent = 'Apr 15'; return; }
+                var d = Math.floor(diff / 86400000);
+                var h = Math.floor((diff % 86400000) / 3600000);
+                el.textContent = 'Apr 15 (' + d + 'd ' + String(h).padStart(2,'0') + 'h)';
+                setTimeout(tick, 60000);
+            }
+            tick();
+        })();
 
         // Exit-intent nudge: show free chapter banner if user leaves without buying
         let exitNudgeShown = false;
