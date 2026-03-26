@@ -270,8 +270,10 @@ async def demo_process(
             summary = _truncate_to_sentences(existing_entry.agent_training_script or "", 3)
 
         # If no Q&A pairs from VideoJob, generate from DirectoryEntry structured data
+        qa_source = "job"
         if not qa_pairs:
             qa_pairs = _generate_qa_from_entry(existing_entry)
+            qa_source = "entry" if qa_pairs else "none"
 
         thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg" if video_id else None
 
@@ -282,6 +284,7 @@ async def demo_process(
             "thumbnail": thumbnail,
             "summary": summary,
             "qa_pairs": qa_pairs,
+            "qa_source": qa_source,
             "source_url": youtube_url,
         }
 
