@@ -207,9 +207,16 @@
                     <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 text-center">
                         <p class="text-sm text-gray-600 mb-1">Preview only — unlock the full transcript, all Q&amp;A pairs, and structured training script.</p>
                         <p class="text-xs text-indigo-600 font-semibold mb-3">Founding rate: $29/mo forever (expires Apr 15)</p>
-                        <a href="/checkout?coupon=FOUNDING" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-lg transition text-sm">
-                            Start 7-day free trial →
-                        </a>
+                        <div class="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                            <a href="/checkout?coupon=FOUNDING" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-lg transition text-sm">
+                                Start 7-day free trial →
+                            </a>
+                            <a id="demoShareBtn" href="#" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                Share on X
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -678,6 +685,16 @@
 
                 result.classList.remove('hidden');
                 result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                // Wire up the X share button with video title
+                const shareBtn = document.getElementById('demoShareBtn');
+                if (shareBtn) {
+                    const videoTitle = (data.title || 'this YouTube video').substring(0, 60);
+                    const tweetText = encodeURIComponent(
+                        'Just got AI training data from "' + videoTitle + '" using @videomindai \n\nFree to try — videomind-ai.com'
+                    );
+                    shareBtn.href = 'https://x.com/intent/tweet?text=' + tweetText;
+                }
 
             } catch (e) {
                 errorMsg.textContent = 'Network error. Please try again.';
