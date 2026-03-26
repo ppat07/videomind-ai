@@ -3,120 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Successful - VideoMind AI</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            background: white;
-            border-radius: 16px;
-            padding: 50px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }
-        .success-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            animation: bounce 1s ease-in-out;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-        h1 {
-            color: #4CAF50;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-        }
-        .description {
-            color: #666;
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        .next-steps {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 25px;
-            margin: 25px 0;
-            border-left: 4px solid #4CAF50;
-        }
-        .next-steps h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .next-steps p {
-            color: #666;
-            margin-bottom: 10px;
-        }
-        button { 
-            background: linear-gradient(45deg, #5469d4, #8b5cf6); 
-            color: white; 
-            border: none; 
-            padding: 15px 30px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            font-weight: 600;
-            margin: 10px;
-            transition: all 0.3s ease;
-        }
-        button:hover { 
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(84, 105, 212, 0.3);
-        }
-        .link-button {
-            display: inline-block;
-            background: transparent;
-            color: #5469d4;
-            border: 2px solid #5469d4;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .link-button:hover {
-            background: #5469d4;
-            color: white;
-        }
-    </style>
+    <title>You're in — VideoMind AI Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="success-icon">🎉</div>
-        <h1>Payment Successful!</h1>
-        <p class="description">Thank you for your purchase! Your payment has been processed successfully.</p>
-        
-        <div class="next-steps">
-            <h3>📧 What happens next?</h3>
-            <p>• You'll receive a confirmation email within 5 minutes</p>
-            <p>• PDF downloads will be sent to your email address</p>
-            <p>• Pro subscription access is activated immediately</p>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-10 text-center">
+
+        <div class="text-6xl mb-4">🎉</div>
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">You're in!</h1>
+        <p class="text-gray-500 mb-2">Payment confirmed. Check your email for full details.</p>
+        <p class="text-indigo-600 font-semibold text-sm mb-8">Pro subscribers: access is active right now ↓</p>
+
+        <!-- Primary CTA -->
+        <a href="/"
+           class="block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl text-lg transition-colors mb-3">
+            Process your first video →
+        </a>
+        <a href="/directory"
+           class="block text-sm text-indigo-600 hover:underline mb-8">
+            Browse 70+ pre-processed training scripts →
+        </a>
+
+        <!-- Quick start steps -->
+        <div class="bg-indigo-50 rounded-xl p-6 text-left mb-6">
+            <h2 class="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">Quick start (2 minutes)</h2>
+            <ol class="space-y-3 text-sm text-gray-700">
+                <li class="flex items-start gap-3">
+                    <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Go to <strong>videomind-ai.com</strong> and paste any YouTube AI/ML tutorial URL</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Enter your email — full transcript, Q&amp;A pairs, and training script delivered in &lt;60s</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Export as JSON/CSV and drop into your fine-tuning or RAG pipeline</span>
+                </li>
+            </ol>
         </div>
 
+        <!-- Social share -->
+        <div class="border border-gray-100 rounded-xl p-4 mb-6 text-left">
+            <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-2">Share the love</p>
+            <a href="https://twitter.com/intent/tweet?text=Just%20joined%20%40VideoMindAI%20as%20a%20Founding%20Member%20%E2%80%94%20turns%20YouTube%20AI%20videos%20into%20LLM%20training%20data%20in%20%3C60s.%20Free%20to%20try%3A%20videomind-ai.com"
+               target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 text-sm text-blue-500 hover:text-blue-600 font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Tweet about VideoMind AI
+            </a>
+        </div>
+
+        <!-- Confirmation note -->
+        <p class="text-xs text-gray-400">A confirmation email is on its way. Questions? Reply to that email — we read every one.</p>
+
         {% if session_id %}
-        <form action="/api/payments/create-portal-session" method="POST" style="display: inline;">
+        <form action="/api/payments/create-portal-session" method="POST" class="mt-4">
             <input type="hidden" name="session_id" value="{{ session_id }}" />
-            <button type="submit">Manage Billing</button>
+            <button type="submit" class="text-xs text-gray-400 hover:text-gray-600 underline bg-transparent border-none cursor-pointer">
+                Manage billing
+            </button>
         </form>
         {% endif %}
 
-        <div style="margin-top: 30px;">
-            <a href="/" class="link-button">← Back to VideoMind AI</a>
-        </div>
     </div>
 </body>
 </html>
