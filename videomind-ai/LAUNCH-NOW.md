@@ -1,79 +1,85 @@
-# LAUNCH NOW — 15-Minute Action Plan
-*Created March 25, 2026 — 21 days to $1K MRR deadline (April 15)*
+# LAUNCH NOW — Action Plan
+*Updated March 26, 2026 — 20 days to $1K MRR deadline (April 15)*
 
 The site converts. The funnel is tight. All CTAs route to `/checkout?coupon=FOUNDING`.
 **The only missing ingredient is traffic.** This doc makes it a 15-minute job.
 
 ---
 
-## Action 1 — Hacker News (5 min) 🔴 DO THIS FIRST
+## Action 1 — Twitter/X Thread (10 min) 🔴 DO THIS FIRST
 
-**Best time:** Any weekday 7–10 AM PT. Go now if it's that window.
+1. Open `docs/twitter-thread.md`
+2. Copy each tweet in sequence as a reply-chain
+3. Post tweet 1, then reply to it with tweet 2, etc.
+4. Reply to EVERY comment within 2 hours — early engagement boosts ranking
+5. Retweet with comment the next morning
+
+**Best time:** Weekday 9–11 AM PT or 6–8 PM PT
+
+---
+
+## Action 2 — Hacker News Show HN (5 min)
 
 1. Go to: **https://news.ycombinator.com/submit**
-2. Title (copy exactly):
-   ```
-   Show HN: I built a tool that turns YouTube AI videos into LLM training data
-   ```
+2. Title: `Show HN: I built a tool that turns YouTube AI videos into LLM training data`
 3. URL: `https://videomind-ai.com`
-4. Text (copy from `docs/community-launch.md` → "Hacker News — Show HN" section)
-5. Click Submit
+4. Body: copy from `docs/community-launch.md` → "Hacker News" section
+5. Best time: Mon–Thu 7–10 AM PT
 
-**That's it.** A front-page HN post drives 500–2,000 visitors. Even page 2 gets 100–300.
+A front-page HN post drives 500–2,000 visitors.
 
 ---
 
-## Action 2 — Reddit r/MachineLearning (3 min)
+## Action 3 — Reddit r/MachineLearning (3 min)
 
 1. Go to: **https://reddit.com/r/MachineLearning/submit**
-2. Title (copy exactly):
-   ```
-   I built a pipeline that converts YouTube AI/ML videos into LLM training data (70+ pre-processed, free to browse)
-   ```
-3. Body: copy from `docs/community-launch.md` → "Reddit — r/MachineLearning" section
-4. Submit
+2. Title: `I built a pipeline that converts YouTube AI/ML videos into LLM training data (72 pre-processed, free to browse)`
+3. Body: copy from `docs/community-launch.md` → "Reddit" section
 
 ---
 
-## Action 3 — Indie Hackers (3 min)
+## Action 4 — Indie Hackers (3 min)
 
-1. Go to: **https://indiehackers.com/post/new**
-2. Copy the "Indie Hackers — Launch Post" from `docs/community-launch.md`
-3. Submit
+Copy the "Indie Hackers" post from `docs/community-launch.md`.
 
 ---
 
-## Action 4 — r/SideProject (2 min)
+## Action 5 — r/SideProject (2 min)
 
 Same as r/MachineLearning but use the r/SideProject copy from `docs/community-launch.md`.
 
 ---
 
-## Action 5 — Reply to Comments (ongoing, same day)
+## What the Agents Shipped (March 25–26)
 
-When your HN/Reddit posts get comments, reply to every single one within 2 hours.
-Early engagement boosts algorithm ranking. Even "Thanks for the feedback!" counts.
+**Deployed to production (14 commits since March 24):**
+- ✅ Live countdown timers on pricing, checkout, homepage (expires Apr 15)
+- ✅ Site-wide FOUNDING urgency banner for all visitors
+- ✅ Every CTA routes to `/checkout?coupon=FOUNDING`
+- ✅ Email capture on 72 training detail pages (for SEO visitors)
+- ✅ FAQ schema on pricing page (Google featured snippets)
+- ✅ Keep-alive self-ping (APScheduler) + hourly CCR trigger (no more cold starts)
+- ✅ is_pro check in free-usage API (pro subscribers don't see upgrade banner)
+- ✅ Rewritten success page (activation-focused)
+- ✅ Revenue metrics in admin health endpoint
+- ✅ Sitemap now includes all 72 training detail pages (Google indexing)
+- ✅ Featured Training Scripts section on homepage (real content = product proof)
+- ✅ Related Scripts section on each training detail page (SEO internal linking)
+
+**Ready for David to execute:**
+- 📋 Twitter thread: `docs/twitter-thread.md`
+- 📋 HN/Reddit/IH posts: `docs/community-launch.md`
+- 📋 DM templates: `docs/outreach-templates.md`
+- 📋 Product Hunt launch: `docs/product-hunt-launch.md`
 
 ---
 
 ## Why This Works
 
-- HN/Reddit are the primary communities for your exact buyer (ML engineers, AI builders)
-- The copy is already written and optimized — you're just copy-pasting
-- The FOUNDING countdown timer is now live on every page — visitors see urgency immediately
-- The checkout flow is one click from any CTA, coupon pre-applied
+- HN/Reddit/Twitter are where your exact buyer lives (ML engineers, AI builders)
+- All copy is written and ready — you're just copy-pasting
+- The FOUNDING countdown timer creates urgency on every page
+- Checkout is one click from any CTA, coupon pre-applied
+- Training detail pages with thumbnails from Karpathy, 3Blue1Brown etc. = instant credibility
 
----
-
-## What the Agents Have Already Done
-
-All engineering work from this session (March 25):
-- ✅ Live countdown timer on every page (pricing, checkout, upgrade modal)
-- ✅ Site-wide FOUNDING urgency banner for all visitors
-- ✅ Every CTA routes directly to `/checkout?coupon=FOUNDING`
-- ✅ Email capture on 70+ training detail pages (SEO visitors)
-- ✅ FAQ schema on pricing page (Google featured snippets)
-- ✅ Keep-alive ping so Render doesn't sleep between visitors
-- ✅ 7 commits deployed to production
-
-The product is ready. Go post.
+**20 days. 20 subscribers. $29/mo. That's $1K MRR. Go post.**
