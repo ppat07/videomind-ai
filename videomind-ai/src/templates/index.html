@@ -60,7 +60,7 @@
         var el = document.getElementById('phBanner');
         el.style.background = isPH ? 'linear-gradient(90deg,#da552f,#ff6154)' : 'linear-gradient(90deg,#dc2626,#ea580c)';
         var prefix = isPH ? '👋 Hey Product Hunter! ' : '🚀 Founding Member rate: ';
-        el.innerHTML = prefix + 'Lock in Pro at <strong>$29/mo forever</strong> — code <strong>FOUNDING</strong>, expires in <span id="homeCd" style="font-variant-numeric:tabular-nums;"></span> &nbsp;<a href="/pricing?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim rate →</a>';
+        el.innerHTML = prefix + 'Lock in Pro at <strong>$29/mo forever</strong> — code <strong>FOUNDING</strong>, expires in <span id="homeCd" style="font-variant-numeric:tabular-nums;"></span> &nbsp;<a href="/checkout?coupon=FOUNDING" style="color:#fff;text-decoration:underline;">Claim rate →</a>';
         el.style.display = 'block';
         document.getElementById('leadMagnetBanner').style.display = 'none';
         function tick() {
@@ -73,6 +73,22 @@
             setTimeout(tick, 60000);
         }
         tick();
+    })();
+    </script>
+
+
+    <!-- Pre-launch PH teaser — shows March 27–30 only -->
+    <div id="phLaunchBanner" style="display:none;background:linear-gradient(90deg,#da552f,#ff6154);color:#fff;text-align:center;padding:10px 20px;font-size:14px;font-weight:600;">
+        🚀 Launching on <strong>Product Hunt on March 31</strong> — <a href="https://www.producthunt.com/products/videomind-ai" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;">Follow us for launch day</a> &nbsp;·&nbsp; Use code <strong>FOUNDING</strong> for $29/mo forever
+    </div>
+    <script>
+    (function() {
+        var now = new Date();
+        var start = new Date('2026-03-27T00:00:00Z');
+        var end = new Date('2026-03-31T07:01:00Z'); // show until PH goes live
+        if (now >= start && now < end) {
+            document.getElementById('phLaunchBanner').style.display = 'block';
+        }
     })();
     </script>
 
@@ -211,8 +227,8 @@
             </div>
             <div class="hidden sm:block border-l border-gray-200"></div>
             <div>
-                <p class="text-2xl font-extrabold text-gray-900">500+</p>
-                <p class="text-xs text-gray-500 mt-0.5">transcripts generated</p>
+                <p class="text-2xl font-extrabold text-gray-900">7 days</p>
+                <p class="text-xs text-gray-500 mt-0.5">free trial, no card needed</p>
             </div>
             <div class="hidden sm:block border-l border-gray-200"></div>
             <div>
