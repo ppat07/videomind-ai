@@ -36,7 +36,7 @@
         <a href="/" class="text-xl font-bold text-indigo-700">{{ app_name }}</a>
         <nav class="flex items-center gap-4">
             <a href="/directory" class="text-sm text-gray-500 hover:text-gray-800">Directory</a>
-            <a href="/pricing" class="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition">Get Pro →</a>
+            <a href="/checkout?coupon=FOUNDING" class="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition">Get Pro — $29/mo →</a>
         </nav>
     </div>
 </header>
@@ -154,11 +154,14 @@
             <!-- CTA card -->
             <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 text-white sticky top-20">
                 <h3 class="font-bold text-lg mb-2">Get this in your AI pipeline</h3>
-                <p class="text-indigo-100 text-sm mb-5">Process any YouTube video → structured training data. Fine-tune your agents, build Q&A bots, export JSONL.</p>
-                <a href="/" class="block bg-white text-indigo-700 font-bold text-center py-2.5 px-4 rounded-lg hover:bg-indigo-50 transition mb-3">
-                    Try it free →
+                <p class="text-indigo-100 text-sm mb-3">Process any YouTube video → structured training data. Fine-tune your agents, build Q&A bots, export JSONL.</p>
+                <div class="bg-white bg-opacity-20 rounded-lg px-3 py-2 text-xs mb-4">
+                    🚀 Founding rate: <strong>$29/mo forever</strong> · expires Apr 15
+                </div>
+                <a href="/checkout?coupon=FOUNDING" class="block bg-white text-indigo-700 font-bold text-center py-2.5 px-4 rounded-lg hover:bg-indigo-50 transition mb-3">
+                    Start 7-day free trial →
                 </a>
-                <a href="/pricing" class="block text-center text-indigo-200 text-sm hover:text-white">View pricing</a>
+                <a href="/" class="block text-center text-indigo-200 text-sm hover:text-white">Try free (no signup) →</a>
             </div>
 
             <!-- Metadata -->

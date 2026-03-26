@@ -124,7 +124,7 @@
     <!-- Free tier usage banner -->
     <div id="upgradeBanner" class="hidden bg-indigo-600 text-white text-center py-2 px-4 text-sm">
         <span id="upgradeBannerText"></span>
-        <a href="/pricing" class="ml-2 font-bold underline">Upgrade to Pro →</a>
+        <a href="/checkout?coupon=FOUNDING" class="ml-2 font-bold underline">Start free trial — FOUNDING rate →</a>
     </div>
 
     <!-- Hero Section -->
@@ -495,16 +495,31 @@
         }
 
         function showUpgradeModal(message) {
+            var deadline = new Date('2026-04-16T07:59:59Z');
+            var now = new Date();
+            var cdHtml = '';
+            if (now < deadline) {
+                var diff = deadline - now;
+                var d = Math.floor(diff / 86400000);
+                var h = Math.floor((diff % 86400000) / 3600000);
+                cdHtml = '<p class="text-xs text-red-600 font-semibold mt-1">⏰ Founding rate expires in ' + d + 'd ' + h + 'h</p>';
+            }
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50';
             modal.innerHTML = `
                 <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
                     <div class="text-4xl mb-4">🚀</div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">You've hit the free limit</h2>
-                    <p class="text-gray-600 mb-6">${message} Upgrade to Pro for unlimited video processing.</p>
-                    <a href="/pricing" class="block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors mb-3">
-                        See Pro plans →
+                    <p class="text-gray-600 mb-2">${message} Upgrade to Pro for unlimited video processing.</p>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-5 text-sm">
+                        <p class="font-bold text-green-800">Founding Member rate: <strong>$29/mo forever</strong></p>
+                        <p class="text-green-700">Use code <strong>FOUNDING</strong> — locked in permanently.</p>
+                        ${cdHtml}
+                    </div>
+                    <a href="/checkout?coupon=FOUNDING" class="block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors mb-3">
+                        Start 7-day free trial (FOUNDING rate) →
                     </a>
+                    <a href="/pricing" class="block text-sm text-gray-500 hover:text-gray-700 mb-3">See all plans →</a>
                     <button onclick="this.closest('.fixed').remove()" class="text-sm text-gray-400 hover:text-gray-600">
                         Maybe later
                     </button>
