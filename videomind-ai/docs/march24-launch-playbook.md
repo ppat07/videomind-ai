@@ -115,7 +115,7 @@ Even the low case ($294) gets us most of the way to $400. The high case takes us
 If PH doesn't generate traction by noon, fall back to:
 
 1. **Direct DM outreach** — Twitter/LinkedIn to ML engineers and AI team leads
-   - Message: "I built a tool that converts YouTube AI tutorials into LLM training data. 70+ pre-processed videos free. Would love your feedback." + link
+   - Message: "I built a tool that converts YouTube AI tutorials into LLM training data. 72+ pre-processed videos free. Would love your feedback." + link
    - Target 50 DMs in the afternoon
 
 2. **Specific Discord/Slack communities** to post in:

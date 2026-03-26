@@ -70,7 +70,7 @@ Three options for the hero thumbnail:
 
 1. **"YouTube → AI Training Data"** with sub-line: *Transcripts · Q&As · Prompt Templates*
 2. **"Turn Any Video Into LLM Training Data"** — clean dark background, no sub-line
-3. **"70+ AI Workflow Videos, Pre-Processed"** with sub-line: *Free to browse. $39 for the full dataset.*
+3. **"72+ AI Workflow Videos, Pre-Processed"** with sub-line: *Free to browse. $39 for the full dataset.*
 
 **Recommendation:** Option 1 is the most scannable at thumbnail scale. Use a dark background with a subtle video-to-data flow diagram.
 
