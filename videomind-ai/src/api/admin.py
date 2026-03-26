@@ -63,9 +63,22 @@ async def admin_health_check(db: Session = Depends(get_database)):
     sendgrid_key = os.getenv("SENDGRID_API_KEY", "")
     result["sendgrid"] = {"configured": bool(sendgrid_key)}
 
-    # --- Database: video count ---
+    # --- Database: video count + revenue data ---
     try:
-        result["database"] = {"videos": db.query(DirectoryEntry).count()}
+        from models.leads import Lead
+        from models.subscription import ProSubscriber, ConversionEvent
+        from sqlalchemy import func
+
+        active_pro = db.query(func.count(ProSubscriber.id)).filter(
+            ProSubscriber.active == True  # noqa: E712
+        ).scalar() or 0
+        total_leads = db.query(func.count(Lead.id)).scalar() or 0
+        result["database"] = {
+            "videos": db.query(DirectoryEntry).count(),
+            "active_pro_subscribers": active_pro,
+            "mrr_usd": active_pro * 29,  # FOUNDING rate
+            "leads_captured": total_leads,
+        }
     except Exception as e:
         result["database"] = {"error": str(e)}
 
