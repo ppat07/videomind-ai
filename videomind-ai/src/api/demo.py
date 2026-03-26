@@ -141,6 +141,53 @@ def _download_and_transcribe(youtube_url: str, video_id: str) -> tuple:
                 pass
 
 
+def _generate_qa_from_entry(entry: "DirectoryEntry") -> list:
+    """
+    Generate 3 synthetic Q&A training pairs from DirectoryEntry structured fields.
+    Used when no completed VideoJob exists for the cached entry.
+    """
+    pairs = []
+
+    # Q1: What will you learn?
+    objective = entry.teaches_agent_to or ""
+    if not objective and entry.agent_training_script:
+        m = re.search(r'Training Objective\n.*?(?:be able to:?\s*)(.+)', entry.agent_training_script)
+        if m:
+            objective = m.group(1).strip().strip("**")
+    if objective:
+        pairs.append({
+            "question": "What will an AI agent learn from this video?",
+            "answer": objective,
+        })
+
+    # Q2: Key tools / technologies
+    if entry.tools_mentioned:
+        tools = [t.strip() for t in entry.tools_mentioned.replace(";", ",").split(",") if t.strip()][:4]
+        if tools:
+            pairs.append({
+                "question": "What tools and technologies are covered in this tutorial?",
+                "answer": ", ".join(tools),
+            })
+
+    # Q3: Top learning point from bullets
+    if entry.summary_5_bullets:
+        bullets = [b.lstrip("•- \t").strip() for b in entry.summary_5_bullets.splitlines() if b.strip()]
+        if bullets:
+            pairs.append({
+                "question": "What is the most important concept explained in this video?",
+                "answer": bullets[0],
+            })
+
+    # Q4: Best for (if still need more)
+    if len(pairs) < 3 and entry.best_for:
+        pairs.append({
+            "question": "Who is this video best suited for?",
+            "answer": entry.best_for,
+        })
+
+    return pairs[:3]
+
+
 class DemoRequest(BaseModel):
     youtube_url: str
 
@@ -221,6 +268,10 @@ async def demo_process(
             summary = _truncate_to_sentences(bullets.replace("•", "").replace("\n", " "), 3)
         if not summary:
             summary = _truncate_to_sentences(existing_entry.agent_training_script or "", 3)
+
+        # If no Q&A pairs from VideoJob, generate from DirectoryEntry structured data
+        if not qa_pairs:
+            qa_pairs = _generate_qa_from_entry(existing_entry)
 
         thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg" if video_id else None
 
