@@ -126,14 +126,19 @@ async def _run_nurture_emails():
 
 
 async def _keep_alive_ping():
-    """Self-ping /health every 10 min to prevent Render free-tier spin-down.
-    Once the service is warm, this keeps it warm between user visits."""
+    """Ping external health URL every 10 min to prevent Render free-tier spin-down.
+    Uses RENDER_EXTERNAL_URL if set (counts as real traffic), falls back to localhost."""
     import os
     import asyncio
-    port = os.environ.get("PORT", "8000")
+    render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
+    if render_url:
+        target = f"{render_url}/health"
+    else:
+        port = os.environ.get("PORT", "8000")
+        target = f"http://localhost:{port}/health"
     try:
         proc = await asyncio.create_subprocess_exec(
-            "curl", "-sf", f"http://localhost:{port}/health",
+            "curl", "-sf", target,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
         )
