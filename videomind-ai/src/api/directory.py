@@ -4,7 +4,19 @@ Directory endpoints for browsing training entries.
 from typing import Optional
 import csv
 import io
+import re
+import uuid
 from datetime import datetime
+
+# Stable UUID namespace for deterministic entry IDs
+_DIR_NS = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')  # uuid.NAMESPACE_URL
+
+
+def _stable_entry_id(video_url: str) -> str:
+    """Derive a deterministic UUID from a video URL so IDs survive DB reseeds."""
+    m = re.search(r'[?&]v=([^&]+)', video_url)
+    key = f"youtube:{m.group(1)}" if m else video_url.split('?')[0]
+    return str(uuid.uuid5(_DIR_NS, key))
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
@@ -300,6 +312,7 @@ async def seed_directory_entries(db: Session = Depends(get_database)):
             continue
         # Ensure source_url is set for database compatibility
         seed["source_url"] = seed.get("video_url", seed.get("source_url"))
+        seed["id"] = _stable_entry_id(seed["source_url"])
         db.add(DirectoryEntry(**seed))
         created += 1
 
@@ -387,12 +400,14 @@ async def bulk_add_directory_entries(
                 skipped += 1
                 continue
         
-        # Create new entry
+        # Create new entry with deterministic ID
         from models.directory import ContentType
+        _src = entry_data.get("source_url", "")
         new_entry = DirectoryEntry(
+            id=_stable_entry_id(_src) if _src else None,
             title=entry_data.get("title", ""),
             video_url=entry_data.get("source_url", ""),  # Legacy compatibility
-            source_url=entry_data.get("source_url", ""),
+            source_url=_src,
             content_type=ContentType.VIDEO,  # Default to video
             creator_name=entry_data.get("creator_name", ""),
             category_primary=entry_data.get("category_primary", "OpenClaw Tutorials"),

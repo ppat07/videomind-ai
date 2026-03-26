@@ -165,16 +165,26 @@ async def startup_event():
 
         if count < 50 and seed_file.exists():
             print(f"📚 Directory has {count} entries (< 50), loading seed videos...")
+            import uuid as _uuid, re as _re
+            _DIR_NS = _uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
+            def _stable_id(url: str) -> str:
+                m = _re.search(r'[?&]v=([^&]+)', url)
+                key = f"youtube:{m.group(1)}" if m else url.split('?')[0]
+                return str(_uuid.uuid5(_DIR_NS, key))
             with open(seed_file) as _f:
                 seed_videos = _json.load(_f)
             added = 0
             for video_data in seed_videos:
+                src_url = video_data.get("source_url", "")
                 existing = db.query(DirectoryEntry).filter(
-                    DirectoryEntry.source_url == video_data.get("source_url")
+                    DirectoryEntry.source_url == src_url
                 ).first()
                 if not existing:
-                    entry = DirectoryEntry(**{k: v for k, v in video_data.items()
-                                              if hasattr(DirectoryEntry, k)})
+                    fields = {k: v for k, v in video_data.items()
+                              if hasattr(DirectoryEntry, k)}
+                    if src_url and "id" not in fields:
+                        fields["id"] = _stable_id(src_url)
+                    entry = DirectoryEntry(**fields)
                     db.add(entry)
                     added += 1
             db.commit()
