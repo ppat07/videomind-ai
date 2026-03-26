@@ -214,6 +214,49 @@
 
 </main>
 
+{% if related %}
+<!-- Related Scripts — same category, SEO internal linking -->
+<section class="bg-gray-50 border-t border-gray-200 py-10 px-4">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">More {{ entry.category_primary }} scripts</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for r in related %}
+            <a href="/training/{{ r.id }}" class="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:border-indigo-200 transition">
+                {% if r.video_id %}
+                <div class="h-24 bg-gray-900 overflow-hidden">
+                    <img src="https://img.youtube.com/vi/{{ r.video_id }}/mqdefault.jpg"
+                         alt="{{ r.title }}"
+                         class="w-full h-full object-cover opacity-90"
+                         loading="lazy">
+                </div>
+                {% endif %}
+                <div class="p-3">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="text-xs text-gray-400">Signal {{ r.signal_score or '–' }}/100</span>
+                        {% if r.difficulty %}
+                        <span class="text-xs px-1.5 py-0.5 rounded-full
+                            {% if r.difficulty == 'Beginner' %}bg-green-100 text-green-700
+                            {% elif r.difficulty == 'Intermediate' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ r.difficulty }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">{{ r.title }}</p>
+                    {% if r.creator_name %}<p class="text-xs text-gray-500 mt-0.5">{{ r.creator_name }}</p>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="mt-4 text-center">
+            <a href="/directory?category={{ entry.category_primary | urlencode }}" class="text-sm font-semibold text-indigo-600 hover:underline">
+                View all {{ entry.category_primary }} scripts →
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- Bottom email capture — shown to SEO visitors who read the full page -->
 <section class="bg-indigo-900 text-white py-12 px-4 mt-0">
     <div class="max-w-xl mx-auto text-center">

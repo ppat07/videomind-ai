@@ -318,6 +318,31 @@ async def training_detail_page(request: Request, entry_id: str, db: Session = De
     bullets = [b.lstrip("• \t").strip() for b in (entry.summary_5_bullets or "").splitlines() if b.strip()]
     tools = [t.strip() for t in (entry.tools_mentioned or "").split(";") if t.strip()]
 
+    # Related entries: same category, exclude self, up to 4
+    related_entries = (
+        db.query(DirectoryEntry)
+        .filter(
+            DirectoryEntry.category_primary == entry.category_primary,
+            DirectoryEntry.id != entry.id,
+        )
+        .order_by(DirectoryEntry.signal_score.desc())
+        .limit(4)
+        .all()
+    )
+    # Extract video IDs for related thumbnails
+    related = []
+    for r in related_entries:
+        r_url = r.source_url or r.video_url or ""
+        r_m = re.search(r'(?:v=|youtu\.be/)([^&\s?]+)', r_url)
+        related.append({
+            "id": r.id,
+            "title": r.title,
+            "creator_name": r.creator_name,
+            "difficulty": r.difficulty,
+            "signal_score": r.signal_score,
+            "video_id": r_m.group(1) if r_m else None,
+        })
+
     return templates.TemplateResponse(
         "training_detail.html",
         {
@@ -327,6 +352,7 @@ async def training_detail_page(request: Request, entry_id: str, db: Session = De
             "video_id": video_id,
             "bullets": bullets,
             "tools": tools,
+            "related": related,
         }
     )
 
