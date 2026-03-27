@@ -79,8 +79,6 @@ FOUNDING rate: $29/mo forever, expires April 15.
 
 ---
 
----
-
 ## ⚠️ Pre-Launch: Protect Lead Data (Optional but Recommended)
 
 **Problem:** Render free tier uses ephemeral disk — SQLite resets on every cold start, wiping captured leads and nurture schedules. Pro subscriber access is protected (Stripe sync runs on startup), but email leads are not.

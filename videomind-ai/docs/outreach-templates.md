@@ -143,3 +143,59 @@ If this matches a problem your team has, would love to connect.
 - Twitter DMs: 30-50 (personalized, reference something specific)
 - LinkedIn DMs: 20-30
 - Cold emails: 10-15 (company targets)
+
+---
+
+## Pre-PH Soft Launch — Trusted Contacts (Send TODAY, March 27-28)
+
+Send to 5-10 people who:
+- Work in AI/ML
+- Have given you honest feedback before
+- Would genuinely use this tool
+- Are active on Twitter/X
+
+**Goal:** Get real usage + 1-2 honest tweets before PH day. Social proof before launch dramatically improves PH performance.
+
+### Email / Direct Message Template
+
+```
+Subject: honest feedback on something I built?
+
+Hey [name],
+
+I've been building VideoMind AI for the past few weeks — it converts
+YouTube AI/ML tutorials into structured LLM training data (transcripts,
+Q&A pairs, training scripts).
+
+Would love your honest take before I launch on Product Hunt next Tuesday.
+
+Try the free demo here: https://videomind-ai.com
+(paste any YouTube ML tutorial URL — Karpathy's stuff works great)
+
+Two questions:
+1. Is the output actually useful for what you're doing?
+2. What would make you pay $29/mo for unlimited access?
+
+If you find it useful, any tweet about it before Tuesday would be huge.
+No pressure either way — the honest feedback matters more.
+
+[Your name]
+```
+
+### Twitter/X DM Version (shorter)
+
+```
+Hey — I built something you might find useful: VideoMind AI converts
+YouTube AI tutorials into LLM training data (Q&A pairs, training scripts).
+
+Free demo: videomind-ai.com — try pasting any Karpathy video.
+
+Launching on Product Hunt Tuesday. Honest take?
+```
+
+### What to ask them to do (if they like it)
+- Tweet: "Just tried @videomindai — it turns [video title] into structured LLM training data. If you work with fine-tuning, check this out: videomind-ai.com"
+- Or just: "Looks useful, will share before PH day"
+
+**5 genuine users + 2 tweets > 100 cold DMs**
+
