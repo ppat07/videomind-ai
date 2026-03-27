@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from database import get_database
 from models.video import VideoJob, ProcessingStatus
 from models.directory import DirectoryEntry
+from models.subscription import ConversionEvent
 from services.transcription_service import transcription_service
 from services.youtube_data_service import youtube_data_service as _yt_data_svc
 from utils.validators import validate_video_url
@@ -275,6 +276,12 @@ async def demo_process(
 
         thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg" if video_id else None
 
+        try:
+            db.add(ConversionEvent(email=ip, event="demo_cached"))
+            db.commit()
+        except Exception:
+            db.rollback()
+
         return {
             "success": True,
             "cached": True,
@@ -365,6 +372,12 @@ async def demo_process(
     summary = _truncate_to_sentences(ai_result.get("summary", ""), 3)
     qa_pairs = (ai_result.get("qa_pairs") or [])[:3]
     thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+
+    try:
+        db.add(ConversionEvent(email=ip, event="demo_fresh"))
+        db.commit()
+    except Exception:
+        db.rollback()
 
     return {
         "success": True,

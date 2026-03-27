@@ -96,6 +96,39 @@ async def admin_health_check(db: Session = Depends(get_database)):
     return result
 
 
+@router.get("/admin/funnel")
+async def admin_funnel(
+    admin_user: str = Depends(verify_admin),
+    db: Session = Depends(get_database),
+):
+    """Conversion funnel metrics for the last 24h and 7d."""
+    from models.subscription import ConversionEvent
+    from models.leads import Lead
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+
+    now = datetime.utcnow()
+    since_24h = now - timedelta(hours=24)
+    since_7d = now - timedelta(days=7)
+
+    def count_event(event_type, since):
+        return db.query(func.count(ConversionEvent.id)).filter(
+            ConversionEvent.event == event_type,
+            ConversionEvent.created_at >= since,
+        ).scalar() or 0
+
+    def count_leads(since):
+        return db.query(func.count(Lead.id)).filter(
+            Lead.created_at >= since,
+        ).scalar() or 0
+
+    events = ["demo_cached", "demo_fresh", "limit_hit", "video_processed", "subscribed"]
+    return {
+        "24h": {e: count_event(e, since_24h) for e in events} | {"leads": count_leads(since_24h)},
+        "7d":  {e: count_event(e, since_7d)  for e in events} | {"leads": count_leads(since_7d)},
+    }
+
+
 @router.get("/admin/batch-access")
 async def check_batch_access(admin_user: str = Depends(verify_admin)):
     """Check if user has admin access to batch features."""
