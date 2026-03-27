@@ -75,6 +75,7 @@ FOUNDING rate: $29/mo forever, expires April 15.
 | Directory | `videomind-ai.com/directory` |
 | Karpathy GPT page | `videomind-ai.com/training/397b2584-1051-5e56-8632-ed76347aec1e` |
 | Admin health | `videomind-ai.com/api/admin/health` (basic auth) |
+| **Funnel metrics (24h/7d)** | **`videomind-ai.com/api/admin/funnel` (basic auth)** |
 
 ---
 
