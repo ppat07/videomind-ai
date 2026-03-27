@@ -88,6 +88,8 @@
         var end = new Date('2026-03-31T07:01:00Z'); // show until PH goes live
         if (now >= start && now < end) {
             document.getElementById('phLaunchBanner').style.display = 'block';
+            // Hide FOUNDING banner while PH teaser is active to avoid double-banner
+            document.getElementById('phBanner').style.display = 'none';
         }
     })();
     </script>
