@@ -266,6 +266,51 @@ async def startup_event():
     except Exception as _e:
         print(f"⚠️ WEEK2 coupon startup check error: {_e}")
 
+    # Sync active Stripe subscribers into SQLite on every startup.
+    # Render free tier wipes ephemeral SQLite on restarts; this ensures Pro
+    # subscribers never lose access after a cold start.
+    try:
+        from api.payments import stripe, stripe_ready
+        from models.subscription import ProSubscriber
+        from sqlalchemy.orm import sessionmaker as _sm
+        if stripe and stripe_ready:
+            _SL = _sm(autocommit=False, autoflush=False, bind=engine)
+            _db = _SL()
+            try:
+                subs = stripe.Subscription.list(status="active", limit=100)
+                synced = 0
+                for sub in subs.auto_paging_iter():
+                    email = (sub.get("metadata") or {}).get("email") or ""
+                    if not email:
+                        # Try customer email
+                        try:
+                            cust = stripe.Customer.retrieve(sub["customer"])
+                            email = cust.get("email") or ""
+                        except Exception:
+                            pass
+                    if not email:
+                        continue
+                    exists = _db.query(ProSubscriber).filter(
+                        ProSubscriber.stripe_subscription_id == sub["id"]
+                    ).first()
+                    if not exists:
+                        _db.add(ProSubscriber(
+                            email=email.lower(),
+                            stripe_customer_id=sub["customer"],
+                            stripe_subscription_id=sub["id"],
+                            active=True,
+                        ))
+                        synced += 1
+                _db.commit()
+                total = _db.query(ProSubscriber).count()
+                print(f"✅ Stripe sync: {synced} new subscribers restored, {total} total active")
+            except Exception as _se:
+                print(f"⚠️ Stripe subscriber sync failed: {_se}")
+            finally:
+                _db.close()
+    except Exception as _e:
+        print(f"⚠️ Stripe sync setup error: {_e}")
+
     # Start nurture email scheduler — runs every 6 hours
     _nurture_scheduler.add_job(_run_nurture_emails, "interval", hours=6, id="nurture_emails")
     # Keep-alive: ping /health every 10 min so Render free tier doesn't spin down
