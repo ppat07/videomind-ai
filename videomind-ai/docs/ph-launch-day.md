@@ -79,4 +79,22 @@ FOUNDING rate: $29/mo forever, expires April 15.
 
 ---
 
+---
+
+## ⚠️ Pre-Launch: Protect Lead Data (Optional but Recommended)
+
+**Problem:** Render free tier uses ephemeral disk — SQLite resets on every cold start, wiping captured leads and nurture schedules. Pro subscriber access is protected (Stripe sync runs on startup), but email leads are not.
+
+**Quick fix before March 31 (~5 min):**
+1. In Render dashboard → your service → **Disks** → Add Disk
+   - Name: `videomind-db`
+   - Mount Path: `/data`
+   - Size: 1 GB (costs ~$0.25/mo on paid plan, or free on Starter disk)
+2. Add env var in Render: `DATABASE_URL=sqlite:////data/videomind.db`
+3. Redeploy — SQLite will now persist across restarts
+
+**If you skip this:** Welcome emails still fire immediately on lead capture, so leads get contacted. But the 48hr nurture email sequence won't run for leads captured before a restart.
+
+---
+
 *Ready to launch. The product works. The funnel is tight. Go get those subscribers.*
