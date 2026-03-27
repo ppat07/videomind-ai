@@ -631,11 +631,12 @@
             e.preventDefault();
             const email = document.getElementById('demoLeadEmail').value.trim();
             if (!email) return;
+            const video_url = (document.getElementById('demoUrl').value || '').trim();
             try {
                 await fetch('/api/leads/capture', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, source: 'demo_result' }),
+                    body: JSON.stringify({ email, source: 'demo_result', video_url }),
                 });
             } catch (_) {}
             document.getElementById('demoLeadForm').classList.add('hidden');

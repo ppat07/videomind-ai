@@ -22,6 +22,7 @@ router = APIRouter()
 class LeadCaptureRequest(BaseModel):
     email: EmailStr
     source: str = "homepage"
+    video_url: Optional[str] = None  # context from demo result for personalized email
 
 
 def _get_featured_entry(db: Session) -> Optional[DirectoryEntry]:
@@ -72,7 +73,19 @@ def _format_training_script_html(entry: Optional[DirectoryEntry]) -> str:
     """
 
 
-def _send_welcome_email(email: str, db: Session) -> bool:
+def _get_entry_for_video_url(db: Session, video_url: str) -> Optional[DirectoryEntry]:
+    """Look up a directory entry matching a YouTube video URL."""
+    import re
+    m = re.search(r'(?:v=|youtu\.be/)([A-Za-z0-9_-]{11})', video_url)
+    if not m:
+        return None
+    vid = m.group(1)
+    return db.query(DirectoryEntry).filter(
+        DirectoryEntry.video_url.contains(vid)
+    ).first()
+
+
+def _send_welcome_email(email: str, db: Session, video_url: Optional[str] = None) -> bool:
     """Send welcome email with one free training script via SendGrid. Returns True on success."""
     if not settings.sendgrid_api_key:
         print(f"⚠️ SendGrid not configured — skipping email to {email}")
@@ -82,8 +95,20 @@ def _send_welcome_email(email: str, db: Session) -> bool:
         import sendgrid
         from sendgrid.helpers.mail import Mail, To, From, Subject, HtmlContent
 
-        featured = _get_featured_entry(db)
+        # Use the video they just demoed (if known), otherwise top-ranked entry
+        featured = None
+        if video_url:
+            featured = _get_entry_for_video_url(db, video_url)
+        if not featured:
+            featured = _get_featured_entry(db)
         script_section = _format_training_script_html(featured)
+
+        video_title = featured.title if featured else None
+        subject_line = (
+            f'Your free training script: "{video_title}"'
+            if video_title
+            else "Your free training script from VideoMind AI"
+        )
 
         sg = sendgrid.SendGridAPIClient(api_key=settings.sendgrid_api_key)
         html = f"""
@@ -116,7 +141,7 @@ def _send_welcome_email(email: str, db: Session) -> bool:
         message = Mail(
             from_email=From(settings.from_email, "VideoMind AI"),
             to_emails=To(email),
-            subject=Subject("Your free training script from VideoMind AI"),
+            subject=Subject(subject_line),
             html_content=HtmlContent(html),
         )
         resp = sg.send(message)
@@ -192,7 +217,7 @@ async def capture_lead(payload: LeadCaptureRequest, db: Session = Depends(get_da
     existing = db.query(Lead).filter(Lead.email == email).first()
     if existing:
         if not existing.free_chapter_sent:
-            sent = _send_welcome_email(email, db)
+            sent = _send_welcome_email(email, db, video_url=payload.video_url)
             if sent:
                 existing.free_chapter_sent = True
                 db.commit()
@@ -214,7 +239,7 @@ async def capture_lead(payload: LeadCaptureRequest, db: Session = Depends(get_da
         return {"success": True, "message": "Check your email for your free training script!", "new": False}
 
     # Send free training script welcome email
-    sent = _send_welcome_email(email, db)
+    sent = _send_welcome_email(email, db, video_url=payload.video_url)
     if sent:
         lead.free_chapter_sent = True
         db.commit()
