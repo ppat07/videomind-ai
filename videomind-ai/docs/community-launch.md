@@ -287,3 +287,42 @@ Use **FOUNDING** for $29/mo forever (launch discount).
 
 **Best time to post HN:** Tuesday–Thursday, 7–9am PT (when US traffic peaks)
 **Best time to post Reddit:** Tuesday–Thursday, 10am–12pm ET
+
+---
+
+## 🎯 High-Value Communities (researched March 27)
+
+These are specific, high-conversion targets beyond the generic lists above.
+
+### Karpathy "Zero to Hero" Discord
+**Link:** discord.com/invite/zth  
+**Audience:** Developers working through Karpathy's neural networks course — exact target user  
+**How to engage:** Don't drop a link cold. First ask/answer a question in #general or #study-help. Then share naturally: "I built a tool to get structured training data from Karpathy's videos — might be useful for anyone going through the course: videomind-ai.com"  
+**Note:** The content in our directory is literally from his course videos. This is the most targeted community possible.
+
+### Karpathy Repo Issues/Discussions
+**Link:** github.com/karpathy/nn-zero-to-hero  
+**Audience:** 27k+ stars, active discussions tab  
+**How to engage:** Check if there's a "resources" discussion thread. If so, add a comment pointing to the pre-processed training scripts.
+
+### r/LocalLLaMA
+**Audience:** Practitioners fine-tuning local models — they actively need training data  
+**Post angle:** "I processed 72 AI workflow videos into structured fine-tuning datasets — free to browse" with link to the directory  
+**Best post time:** Tuesday–Thursday 10am–2pm ET
+
+### r/LanguageModelTraining (niche, high intent)
+**Audience:** Small but extremely targeted — people actively building training datasets  
+**Post angle:** Same as r/LocalLLaMA but even more direct about the fine-tuning use case
+
+### Hugging Face Discord
+**Link:** huggingface.co — their Discord is linked from the site  
+**Audience:** ML practitioners building models, datasets, pipelines  
+**Channel to target:** #datasets or #fine-tuning channels
+
+### Twitter/X — Specific Accounts to DM or @ mention
+People who regularly discuss Karpathy content + training data:
+- Search: `from:@karpathy -filter:replies` — find his recent posts, reply with genuine value  
+- Search: `"zero to hero" karpathy` — find people currently going through the course  
+- Search: `"fine-tuning" "training data" youtube` — find people with the exact pain point
+
+---
