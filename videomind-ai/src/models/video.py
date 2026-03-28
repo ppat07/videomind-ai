@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from sqlalchemy import Column, String, DateTime, Float, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import String as SQLString
-from pydantic import BaseModel, HttpUrl, EmailStr, validator
+from pydantic import BaseModel, HttpUrl, EmailStr, Field, validator
 
 from database import Base
 
@@ -65,24 +65,26 @@ class VideoJob(Base):
 
 class VideoJobCreate(BaseModel):
     """Schema for creating a new video job."""
-    youtube_url: HttpUrl  # Keep name for backwards compatibility
+    video_url: HttpUrl = Field(..., alias="youtube_url")  # Accept both field names
     email: EmailStr
     tier: ProcessingTier = ProcessingTier.BASIC
-    
-    @validator('youtube_url')
+
+    class Config:
+        populate_by_name = True  # Allow both 'video_url' and 'youtube_url'
+
+    @validator('video_url', pre=True)
     def validate_video_url(cls, v):
-        """Ensure URL is from supported platforms (YouTube or Rumble)."""
+        """Ensure URL is HTTPS and from a domain yt-dlp can handle."""
         url_str = str(v)
-        supported_domains = ['youtube.com', 'youtu.be', 'rumble.com']
-        if not any(domain in url_str for domain in supported_domains):
-            raise ValueError('URL must be from YouTube or Rumble')
+        if not url_str.startswith('https://'):
+            raise ValueError('Only HTTPS video URLs are supported')
         return v
 
 
 class VideoJobResponse(BaseModel):
     """Schema for video job responses."""
     id: str
-    youtube_url: str
+    video_url: str = Field(..., alias="youtube_url")  # DB column is still youtube_url
     status: ProcessingStatus
     email: str
     tier: ProcessingTier
@@ -91,9 +93,10 @@ class VideoJobResponse(BaseModel):
     cost: Optional[float]
     error_message: Optional[str]
     download_links: Optional[Dict[str, str]]
-    
+
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class VideoJobStatus(BaseModel):

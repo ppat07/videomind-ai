@@ -5,7 +5,7 @@ Handles video submission and processing orchestration.
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
 from typing import List
 
 from database import get_database
@@ -38,9 +38,12 @@ router = APIRouter()
 
 class BatchVideoJobCreate(BaseModel):
     """Schema for batch video submission."""
-    youtube_urls: List[str]
+    video_urls: List[str] = Field(..., alias="youtube_urls")  # Accept both field names
     email: EmailStr
     tier: str = "basic"
+
+    class Config:
+        populate_by_name = True  # Allow both 'video_urls' and 'youtube_urls'
 
 
 
@@ -161,11 +164,11 @@ async def submit_video_for_processing(
         Job submission response with job_id
     """
     try:
-        # Validate video URL (YouTube or Rumble)
-        is_valid, result = validate_video_url(str(job_data.youtube_url))
+        # Validate video URL
+        is_valid, result = validate_video_url(str(job_data.video_url))
         if not is_valid:
             raise HTTPException(status_code=400, detail=f"Invalid video URL: {result}")
-        
+
         # Validate email
         if not validate_email(job_data.email):
             raise HTTPException(status_code=400, detail="Invalid email address")
@@ -196,7 +199,7 @@ async def submit_video_for_processing(
                 )
         # --- End free tier enforcement ---
 
-        video_url = str(job_data.youtube_url)
+        video_url = str(job_data.video_url)
         
         # Enhanced deduplication: Check both VideoJob and DirectoryEntry tables
         # 1. Check if there's an active/completed VideoJob for this URL
@@ -230,15 +233,14 @@ async def submit_video_for_processing(
                 "note": "This video has already been processed and added to the training directory"
             }
         
-        # Get video information first (FIXED: Use YouTube Data API to avoid bot detection)
-        if _yt_data_svc.is_available():
-            # Use YouTube Data API to avoid bot detection
-            success, video_info = _yt_data_svc.get_basic_video_info(str(job_data.youtube_url))
+        # Get video information — use YouTube Data API for YouTube URLs, yt-dlp for everything else
+        platform = result.get("platform", "generic") if isinstance(result, dict) else "generic"
+        if platform == "youtube" and _yt_data_svc.is_available():
+            success, video_info = _yt_data_svc.get_basic_video_info(video_url)
             print(f"✅ Used YouTube Data API for video info (avoiding bot detection)")
         else:
-            # Fallback to yt-dlp method only if Data API unavailable
-            success, video_info = youtube_service.get_video_info(str(job_data.youtube_url))
-            print(f"⚠️ Fallback to yt-dlp for video info (YouTube Data API unavailable)")
+            success, video_info = youtube_service.get_video_info(video_url)
+            print(f"ℹ️ Used yt-dlp for video info (platform: {platform})")
             
         if not success:
             raise HTTPException(status_code=400, detail=video_info.get("error", "Could not retrieve video information"))
@@ -256,7 +258,7 @@ async def submit_video_for_processing(
         job_id = generate_job_id()
         db_job = VideoJob(
             id=job_id,
-            youtube_url=str(job_data.youtube_url),
+            youtube_url=video_url,  # DB column is still youtube_url
             email=job_data.email,
             tier=job_data.tier,
             status=ProcessingStatus.PENDING.value,
@@ -365,7 +367,7 @@ async def submit_batch_videos_for_processing(
     if batch_data.tier not in {"basic", "detailed", "bulk"}:
         raise HTTPException(status_code=400, detail="tier must be one of: basic, detailed, bulk")
 
-    for raw_url in batch_data.youtube_urls:
+    for raw_url in batch_data.video_urls:
         url = (raw_url or "").strip()
         if not url:
             continue
@@ -387,11 +389,11 @@ async def submit_batch_videos_for_processing(
             skipped.append({"youtube_url": url, "reason": f"already_exists:{existing.status}", "job_id": existing.id})
             continue
 
-        # Try YouTube Data API first for video info (avoids bot detection)
-        if _yt_data_svc.is_available():
+        # Use YouTube Data API for YouTube URLs, yt-dlp for everything else
+        batch_platform = result.get("platform", "generic") if isinstance(result, dict) else "generic"
+        if batch_platform == "youtube" and _yt_data_svc.is_available():
             success, video_info = _yt_data_svc.get_basic_video_info(url)
         else:
-            # Fallback to yt-dlp method
             success, video_info = youtube_service.get_video_info(url)
             
         if not success:
@@ -687,16 +689,20 @@ async def process_video_background(job_id: str):
         
         print(f"🚀 Starting real processing for job {job_id}")
         
-        # Step 0: YouTube Data API Metadata Enrichment (NEW!)
+        # Detect platform for this job
+        from utils.validators import validate_video_url as _validate_url
+        _is_valid, _val_result = _validate_url(job.youtube_url)
+        job_platform = _val_result.get("platform", "generic") if isinstance(_val_result, dict) else "generic"
+
+        # Step 0: YouTube Data API Metadata Enrichment (YouTube only)
         enriched_metadata = None
-        if youtube_data_service.is_available():
+        if job_platform == "youtube" and youtube_data_service.is_available():
             print(f"🎯 Enriching metadata with YouTube Data API...")
-            
+
             success, enriched_data = youtube_data_service.get_enriched_video_data(job.youtube_url)
             if success:
                 enriched_metadata = enriched_data
-                
-                # Update job's video metadata with enriched data
+
                 original_metadata = job.video_metadata or {}
                 original_metadata.update({
                     "youtube_data_api": enriched_data["video"],
@@ -706,23 +712,24 @@ async def process_video_background(job_id: str):
                 })
                 job.video_metadata = original_metadata
                 db.commit()
-                
+
                 print(f"✅ Metadata enriched: {enriched_data['video']['title']} | {enriched_data['video']['view_count']:,} views | {enriched_data['engagement_metrics']['engagement_score']:.1f}% engagement")
                 if enriched_data["channel"]:
                     print(f"📢 Channel: {enriched_data['channel']['title']} | {enriched_data['channel']['subscriber_count']:,} subscribers")
             else:
                 print(f"⚠️ YouTube Data API enrichment failed: {enriched_data.get('error', 'Unknown error')}")
+        elif job_platform != "youtube":
+            print(f"ℹ️ Skipping YouTube Data API enrichment for {job_platform} video")
         else:
             print(f"ℹ️ YouTube Data API not configured - skipping metadata enrichment")
         
-        # Determine processing method
+        # Determine processing method based on platform
         processing_method = youtube_service.determine_processing_method(job.youtube_url)
-        print(f"📋 Processing method: {processing_method} (FIXED: YouTube Transcript API PRIMARY for reliability)")
-        
-        # Step 1: Get video content (FORCE YouTube Transcript API for ALL YouTube videos)
-        # OVERRIDE: Always use YouTube Transcript API for YouTube videos to avoid bot detection
-        if 'youtube.com' in job.youtube_url or 'youtu.be' in job.youtube_url:
-            processing_method = 'youtube_transcript'  # Force YouTube Transcript API
+        print(f"📋 Processing method: {processing_method} (platform: {job_platform})")
+
+        # Force YouTube Transcript API for YouTube videos to avoid bot detection
+        if job_platform == 'youtube':
+            processing_method = 'youtube_transcript'
             
         if processing_method == 'youtube_transcript':
             # Use YouTube Transcript API (PROVEN WORKING)

@@ -2,7 +2,7 @@
 Validation utilities for VideoMind AI.
 """
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 
@@ -58,24 +58,57 @@ def sanitize_video_url(url: str) -> str:
                 parsed.query,
                 ''  # Remove fragment
             ))
-        
-        # For other URLs, basic cleaning
-        return url.strip()
+
+        # X/Twitter URL cleaning — normalise x.com / twitter.com and strip tracking params
+        elif parsed.netloc in ('twitter.com', 'www.twitter.com', 'x.com', 'www.x.com'):
+            # Keep only the status path, drop query & fragment
+            return urlunparse((
+                parsed.scheme or 'https',
+                parsed.netloc,
+                parsed.path,
+                '',
+                '',
+                ''
+            ))
+
+        # Vimeo URL cleaning
+        elif 'vimeo.com' in parsed.netloc:
+            return urlunparse((
+                parsed.scheme or 'https',
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                '',   # Drop query params (tracking)
+                ''    # Drop fragment
+            ))
+
+        # Generic URL cleaning — strip fragment, keep everything else
+        return urlunparse((
+            parsed.scheme or 'https',
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            ''
+        ))
         
     except Exception:
         # If parsing fails, return original URL
         return url.strip()
 
 
-def validate_video_url(url: str) -> Tuple[bool, Optional[str]]:
+def validate_video_url(url: str) -> Tuple[bool, Union[dict, str]]:
     """
-    Validate video URL from supported platforms (YouTube, Rumble) and extract video info.
-    
+    Validate video URL from supported platforms and extract video info.
+
+    Supported: YouTube, Rumble, X/Twitter, Vimeo, Dailymotion.
+    Unknown HTTPS URLs are accepted as 'generic' (validated at download time by yt-dlp).
+
     Args:
         url: Video URL to validate
-        
+
     Returns:
-        Tuple of (is_valid, platform_info or error_message)
+        Tuple of (is_valid, platform_info_dict or error_message)
     """
     try:
         # YouTube URL patterns
@@ -86,13 +119,31 @@ def validate_video_url(url: str) -> Tuple[bool, Optional[str]]:
             r'(?:https?://)?(?:www\.)?youtu\.be/([^&\n?#]+)',
             r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([^&\n?#]+)'
         ]
-        
+
         # Rumble URL patterns
         rumble_patterns = [
             r'(?:https?://)?(?:www\.)?rumble\.com/v([^/\n?#]+?)(?:\.html)?(?:[/?#]|$)',
             r'(?:https?://)?(?:www\.)?rumble\.com/embed/v([^/\n?#]+?)(?:\.html)?(?:[/?#]|$)',
         ]
-        
+
+        # X/Twitter URL patterns
+        twitter_patterns = [
+            r'(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/\w+/status/(\d+)',
+            r'(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/i/status/(\d+)',
+        ]
+
+        # Vimeo URL patterns
+        vimeo_patterns = [
+            r'(?:https?://)?(?:www\.)?vimeo\.com/(\d+)',
+            r'(?:https?://)?player\.vimeo\.com/video/(\d+)',
+        ]
+
+        # Dailymotion URL patterns
+        dailymotion_patterns = [
+            r'(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)',
+            r'(?:https?://)?dai\.ly/([a-zA-Z0-9]+)',
+        ]
+
         # Check YouTube patterns
         for pattern in youtube_patterns:
             match = re.search(pattern, url, re.IGNORECASE)
@@ -103,24 +154,58 @@ def validate_video_url(url: str) -> Tuple[bool, Optional[str]]:
                     return True, {"platform": "youtube", "video_id": video_id}
                 else:
                     return False, "Invalid YouTube video ID format"
-        
+
         # Check Rumble patterns
         for pattern in rumble_patterns:
             match = re.search(pattern, url, re.IGNORECASE)
             if match:
                 video_id = match.group(1)
-                # Rumble video IDs are more flexible
                 if len(video_id) > 2:
                     return True, {"platform": "rumble", "video_id": video_id}
                 else:
                     return False, "Invalid Rumble video ID format"
-        
-        # Check if it's a valid URL but unsupported platform
-        if url.startswith(('http://', 'https://')) or '.' in url:
-            return False, "Unsupported platform. Please use YouTube or Rumble URLs."
-        
-        return False, "Invalid URL format. Please enter a valid YouTube or Rumble URL."
-        
+
+        # Check X/Twitter patterns
+        for pattern in twitter_patterns:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                tweet_id = match.group(1)
+                if len(tweet_id) >= 10:
+                    return True, {"platform": "twitter", "video_id": tweet_id}
+                else:
+                    return False, "Invalid X/Twitter status ID format"
+
+        # Check Vimeo patterns
+        for pattern in vimeo_patterns:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                video_id = match.group(1)
+                if len(video_id) >= 1:
+                    return True, {"platform": "vimeo", "video_id": video_id}
+                else:
+                    return False, "Invalid Vimeo video ID format"
+
+        # Check Dailymotion patterns
+        for pattern in dailymotion_patterns:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                video_id = match.group(1)
+                if len(video_id) >= 2:
+                    return True, {"platform": "dailymotion", "video_id": video_id}
+                else:
+                    return False, "Invalid Dailymotion video ID format"
+
+        # Generic HTTPS fallback — accept any HTTPS URL and let yt-dlp validate at extraction time
+        if url.startswith('https://'):
+            parsed = urlparse(url.strip())
+            if parsed.netloc and '.' in parsed.netloc:
+                return True, {"platform": "generic", "video_id": None}
+
+        if url.startswith('http://'):
+            return False, "Only HTTPS URLs are supported for security. Please use an https:// URL."
+
+        return False, "Invalid URL format. Please enter a valid video URL (YouTube, X, Vimeo, etc.)."
+
     except Exception as e:
         return False, f"URL validation error: {str(e)}"
 
@@ -155,23 +240,22 @@ def extract_video_id_from_url(url: str) -> Optional[str]:
 def extract_video_info(url: str) -> dict:
     """
     Extract basic info from supported video platform URLs.
-    
+
     Args:
-        url: Video URL (YouTube or Rumble)
-        
+        url: Video URL
+
     Returns:
         Dictionary with video info
     """
     is_valid, result = validate_video_url(url)
-    
+
     if not is_valid:
         return {"valid": False, "error": result}
-    
+
     platform = result["platform"]
     video_id = result["video_id"]
-    
+
     if platform == "youtube":
-        # Determine YouTube URL type
         url_type = "unknown"
         if "youtu.be" in url:
             url_type = "short"
@@ -181,7 +265,7 @@ def extract_video_info(url: str) -> dict:
             url_type = "embed"
         elif "youtube.com/shorts" in url:
             url_type = "shorts"
-        
+
         return {
             "valid": True,
             "platform": "youtube",
@@ -191,11 +275,9 @@ def extract_video_info(url: str) -> dict:
             "embed_url": f"https://www.youtube.com/embed/{video_id}",
             "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
         }
-    
+
     elif platform == "rumble":
-        # Determine Rumble URL type
         url_type = "watch" if "/v" in url else "embed"
-        
         return {
             "valid": True,
             "platform": "rumble",
@@ -203,9 +285,53 @@ def extract_video_info(url: str) -> dict:
             "url_type": url_type,
             "watch_url": f"https://rumble.com/v{video_id}",
             "embed_url": f"https://rumble.com/embed/v{video_id}",
-            "thumbnail_url": None  # Rumble doesn't have predictable thumbnail URLs
+            "thumbnail_url": None
         }
-    
+
+    elif platform == "twitter":
+        return {
+            "valid": True,
+            "platform": "twitter",
+            "video_id": video_id,
+            "url_type": "status",
+            "watch_url": f"https://x.com/i/status/{video_id}",
+            "embed_url": None,
+            "thumbnail_url": None
+        }
+
+    elif platform == "vimeo":
+        return {
+            "valid": True,
+            "platform": "vimeo",
+            "video_id": video_id,
+            "url_type": "watch",
+            "watch_url": f"https://vimeo.com/{video_id}",
+            "embed_url": f"https://player.vimeo.com/video/{video_id}",
+            "thumbnail_url": None  # Vimeo thumbnails require API call
+        }
+
+    elif platform == "dailymotion":
+        return {
+            "valid": True,
+            "platform": "dailymotion",
+            "video_id": video_id,
+            "url_type": "watch",
+            "watch_url": f"https://www.dailymotion.com/video/{video_id}",
+            "embed_url": f"https://www.dailymotion.com/embed/video/{video_id}",
+            "thumbnail_url": f"https://www.dailymotion.com/thumbnail/video/{video_id}"
+        }
+
+    elif platform == "generic":
+        return {
+            "valid": True,
+            "platform": "generic",
+            "video_id": None,
+            "url_type": "generic",
+            "watch_url": url.strip(),
+            "embed_url": None,
+            "thumbnail_url": None
+        }
+
     return {"valid": False, "error": "Unsupported platform"}
 
 

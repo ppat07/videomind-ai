@@ -71,7 +71,7 @@ class YouTubeService:
         print("⚠️  Warning: Could not find ffmpeg location")
         return None
     
-    def _get_enhanced_ydl_opts(self, for_download: bool = False) -> Dict:
+    def _get_enhanced_ydl_opts(self, for_download: bool = False, platform: str = "youtube") -> Dict:
         """Get enhanced yt-dlp options with latest anti-detection techniques."""
         
         # Rotate user agent randomly
@@ -102,19 +102,19 @@ class YouTubeService:
                 'Pragma': 'no-cache',
             },
             
-            # Enhanced extractor arguments for bot bypass
+            # Extractor arguments — only include YouTube-specific args for YouTube URLs
             'extractor_args': {
                 'youtube': {
-                    'skip': ['hls', 'dash'],  # Skip problematic formats
-                    'player_skip': [],  # Don't skip configs to appear more legitimate
-                    'player_client': ['android', 'ios', 'web'],  # Use mobile clients to bypass
+                    'skip': ['hls', 'dash'],
+                    'player_skip': [],
+                    'player_client': ['android', 'ios', 'web'],
                     'innertube_host': 'www.youtube.com',
-                    'innertube_key': None,  # Let yt-dlp discover
+                    'innertube_key': None,
                 },
                 'youtubetab': {
                     'skip': []
                 }
-            },
+            } if platform == "youtube" else {},
             
             # Cookie handling for session persistence
             'cookiefile': str(self.cookies_file) if self.cookies_file.exists() else None,
@@ -223,10 +223,10 @@ class YouTubeService:
     def get_video_info(self, url: str) -> Tuple[bool, Dict]:
         """
         Get video information without downloading with enhanced anti-detection.
-        
+
         Args:
-            url: YouTube URL
-            
+            url: Video URL (any supported platform)
+
         Returns:
             Tuple of (success, info_dict or error_dict)
         """
@@ -235,9 +235,11 @@ class YouTubeService:
             is_valid, result = validate_video_url(url)
             if not is_valid:
                 return False, {"error": result}
-            
+
+            platform = result.get("platform", "generic") if isinstance(result, dict) else "generic"
+
             def _extract_info():
-                ydl_opts = self._get_enhanced_ydl_opts(for_download=False)
+                ydl_opts = self._get_enhanced_ydl_opts(for_download=False, platform=platform)
                 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
@@ -298,12 +300,12 @@ class YouTubeService:
     
     def download_audio(self, url: str, job_id: str) -> Tuple[bool, Dict]:
         """
-        Download audio from YouTube video with enhanced anti-detection.
-        
+        Download audio from video with enhanced anti-detection.
+
         Args:
-            url: YouTube URL
+            url: Video URL (any supported platform)
             job_id: Unique job identifier
-            
+
         Returns:
             Tuple of (success, result_dict)
         """
@@ -312,16 +314,20 @@ class YouTubeService:
             success, info = self.get_video_info(url)
             if not success:
                 return False, info
-            
+
+            # Detect platform for yt-dlp option tuning
+            is_valid, val_result = validate_video_url(url)
+            platform = val_result.get("platform", "generic") if isinstance(val_result, dict) else "generic"
+
             # Prepare output directory and path
             output_dir = self.temp_dir / f"job_{job_id}"
             output_dir.mkdir(exist_ok=True)
-            
+
             # Random delay to appear more human-like
             time.sleep(random.uniform(0.5, 2))
-            
+
             def _download_audio():
-                ydl_opts = self._get_enhanced_ydl_opts(for_download=True)
+                ydl_opts = self._get_enhanced_ydl_opts(for_download=True, platform=platform)
                 
                 # Set output template with job-specific directory
                 ydl_opts['outtmpl'] = str(output_dir / 'audio.%(ext)s')
@@ -591,30 +597,29 @@ class YouTubeService:
     def determine_processing_method(self, url: str) -> str:
         """
         Determine the best processing method for a given URL.
-        
+
         Args:
             url: Video URL
-            
+
         Returns:
             Processing method: 'youtube_transcript', 'download_audio'
         """
         try:
-            # Validate and get platform info
             is_valid, result = validate_video_url(url)
             if not is_valid:
-                return 'youtube_transcript'  # Default to transcript API for safety
-            
+                return 'download_audio'
+
             platform = result.get('platform', 'unknown')
-            
+
             if platform == 'youtube':
-                # For YouTube, prioritize YouTube Transcript API (more reliable, no bot detection)
+                # YouTube Transcript API is more reliable, avoids bot detection
                 return 'youtube_transcript'
             else:
-                # For other platforms (Rumble, etc.), use audio download with Whisper
+                # All other platforms: audio download + Whisper
                 return 'download_audio'
-                
+
         except Exception:
-            return 'youtube_transcript'  # Safe fallback to transcript API
+            return 'download_audio'
 
     def process_whisper_first(self, url: str, job_id: str) -> Tuple[bool, Dict]:
         """

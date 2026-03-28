@@ -294,7 +294,11 @@ async def demo_process(
 
     # --- Fresh processing ---
     if not video_id:
-        raise HTTPException(status_code=400, detail="Could not extract YouTube video ID from URL")
+        # Non-YouTube URLs don't have a simple video_id for transcript API — not supported in free demo
+        raise HTTPException(
+            status_code=400,
+            detail="Free demo currently supports YouTube URLs only. Sign up to process X, Vimeo, and other platforms.",
+        )
 
     # Step 1: Get transcript (timeout: 8s)
     try:

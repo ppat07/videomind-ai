@@ -366,7 +366,7 @@
                 <div class="batch-input-group">
                     <textarea 
                         id="batch-urls" 
-                        placeholder="Paste YouTube URLs (one per line). We'll process transcripts + summaries and auto-publish to this directory."
+                        placeholder="Paste video URLs (one per line) — YouTube, X, Vimeo, etc. We'll process transcripts + summaries and auto-publish to this directory."
                         rows="6"
                     ></textarea>
                     
@@ -435,7 +435,7 @@
             const enhancement = document.getElementById('batch-enhancement').value;
             
             if (!urls.trim()) {
-                showMessage('Please paste some YouTube URLs', 'error');
+                showMessage('Please paste some video URLs', 'error');
                 return;
             }
             

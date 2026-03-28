@@ -16,7 +16,7 @@
         
         <div class="bg-white p-6 rounded-lg shadow">
             <h2 class="text-lg font-semibold mb-4">Batch Ingest via VideoMind Pipeline</h2>
-            <p class="text-gray-600 mb-4">Paste YouTube URLs (one per line). We'll process transcripts + summaries and auto-publish to this directory.</p>
+            <p class="text-gray-600 mb-4">Paste video URLs (one per line) — YouTube, X, Vimeo, etc. We'll process transcripts + summaries and auto-publish to this directory.</p>
             
             <form id="adminBatchForm" class="space-y-4">
                 <div>
@@ -34,9 +34,9 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-2">YouTube URLs (one per line)</label>
-                    <textarea id="urls" rows="8" class="w-full p-2 border rounded" 
-                        placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/watch?v=..."></textarea>
+                    <label class="block text-sm font-medium mb-2">Video URLs (one per line)</label>
+                    <textarea id="urls" rows="8" class="w-full p-2 border rounded"
+                        placeholder="https://www.youtube.com/watch?v=...&#10;https://x.com/user/status/...&#10;https://vimeo.com/..."></textarea>
                 </div>
                 
                 <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
@@ -60,7 +60,7 @@
             const urls = document.getElementById('urls').value.split('\n').filter(u => u.trim());
             
             if (urls.length === 0) {
-                alert('Please enter at least one YouTube URL');
+                alert('Please enter at least one video URL');
                 return;
             }
             
