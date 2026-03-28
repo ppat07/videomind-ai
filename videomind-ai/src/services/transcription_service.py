@@ -238,33 +238,44 @@ class TranscriptionService:
             if binary is None:
                 return False, {"error": "insanely-fast-whisper binary not found. Run: pip install insanely-fast-whisper==0.0.15"}
 
-            # Pick device: prefer MPS (Apple Silicon) or CUDA, fall back to CPU (device 0)
+            # Pick device, model, and batch-size based on available hardware
             import torch
-            if torch.backends.mps.is_available():
-                device_id = "mps"
-            elif torch.cuda.is_available():
+            if torch.cuda.is_available():
                 device_id = "0"
+                model_name = "openai/whisper-large-v3"
+                batch_size = "24"
+            elif torch.backends.mps.is_available():
+                device_id = "mps"
+                # large-v3 OOMs on most Macs; distil-large-v3 is ~50% smaller and 6x faster
+                model_name = "distil-whisper/distil-large-v3"
+                batch_size = "4"
             else:
-                device_id = "0"  # CPU path still works, just slower
-
-            # Flash Attention 2 requires CUDA — disable on MPS/CPU
-            use_flash = "True" if torch.cuda.is_available() else "False"
+                device_id = "0"
+                model_name = "distil-whisper/distil-large-v3"
+                batch_size = "4"
 
             file_size = os.path.getsize(audio_file_path)
-            print(f"⚡ Insanely Fast Whisper: transcribing {file_size // 1024}KB on device={device_id}...")
+            print(f"⚡ Insanely Fast Whisper: transcribing {file_size // 1024}KB on device={device_id} model={model_name}...")
+
+            # Allow MPS to use all available memory instead of capping at ~9GB
+            env = os.environ.copy()
+            if device_id == "mps":
+                env["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
 
             cmd = [
                 binary,
                 "--file-name", audio_file_path,
                 "--device-id", device_id,
-                "--model-name", "openai/whisper-large-v3",
-                "--batch-size", "24",
-                "--flash", use_flash,
+                "--model-name", model_name,
+                "--batch-size", batch_size,
                 "--timestamp", "chunk",
                 "--transcript-path", transcript_path,
             ]
+            # --flash uses type=bool in argparse, so bool("False") == True — only add when we want flash (CUDA only)
+            if torch.cuda.is_available():
+                cmd += ["--flash", "True"]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, env=env)
 
             if result.returncode != 0:
                 return False, {"error": f"insanely-fast-whisper failed: {result.stderr}"}
@@ -304,7 +315,7 @@ class TranscriptionService:
             }
 
         except subprocess.TimeoutExpired:
-            return False, {"error": "insanely-fast-whisper timed out (>10 min)"}
+            return False, {"error": "insanely-fast-whisper timed out (>30 min)"}
         except Exception as e:
             return False, {"error": f"insanely-fast-whisper error: {str(e)}"}
         finally:
