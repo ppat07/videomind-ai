@@ -217,6 +217,24 @@ async def startup_event():
         else:
             print(f"📚 Directory contains {count} stable-ID entries, no seeding needed")
 
+        # Boost OpenClaw featured videos to top signal scores so they appear first
+        _featured_boosts = {
+            "Qkqe-uRhQJE": 100,
+            "Aj6hoC9JaLI": 100,
+            "i13XK-uUOLQ": 100,
+        }
+        boosted = 0
+        for vid_id, target_score in _featured_boosts.items():
+            entry = db.query(DirectoryEntry).filter(
+                DirectoryEntry.source_url.like(f"%{vid_id}%")
+            ).first()
+            if entry and entry.signal_score < target_score:
+                entry.signal_score = target_score
+                boosted += 1
+        if boosted:
+            db.commit()
+            print(f"✅ Boosted signal scores for {boosted} OpenClaw featured videos")
+
         db.close()
     except Exception as e:
         print(f"⚠️ Startup seeding check failed: {e}")
