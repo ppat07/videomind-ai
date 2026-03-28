@@ -2,11 +2,12 @@
 Real transcription and AI enhancement services.
 Handles YouTube transcript extraction, local Whisper, and AI enhancement.
 Priority order:
-  Transcription: YouTube captions (free) → faster-whisper local → OpenAI Whisper API
+  Transcription: YouTube captions (free) → insanely-fast-whisper (19x speed) → faster-whisper local → OpenAI Whisper API
   Enrichment:    Ollama local (free) → Claude → OpenAI GPT fallback
 """
 import openai
 import os
+import shutil
 import subprocess
 import time
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -209,6 +210,110 @@ class TranscriptionService:
         except Exception as e:
             return False, f"Audio conversion error: {str(e)}"
     
+    def transcribe_audio_with_insane_whisper(self, audio_file_path: str) -> Tuple[bool, Dict]:
+        """
+        Transcribe using insanely-fast-whisper CLI — up to 19x speed boost on GPU.
+        Uses MPS on Apple Silicon, CUDA on Nvidia, falls back to CPU.
+
+        Args:
+            audio_file_path: Path to audio file
+
+        Returns:
+            Tuple of (success, transcript_data or error_dict)
+        """
+        import json
+
+        transcript_path = f"{audio_file_path}_ifw_transcript.json"
+        try:
+            if not os.path.exists(audio_file_path):
+                return False, {"error": "Audio file does not exist"}
+
+            # Locate the binary — pipx or pip install puts it in different places
+            binary = shutil.which("insanely-fast-whisper")
+            if binary is None:
+                # Common pip install location on macOS system Python
+                candidate = os.path.expanduser("~/Library/Python/3.9/bin/insanely-fast-whisper")
+                if os.path.exists(candidate):
+                    binary = candidate
+            if binary is None:
+                return False, {"error": "insanely-fast-whisper binary not found. Run: pip install insanely-fast-whisper==0.0.15"}
+
+            # Pick device: prefer MPS (Apple Silicon) or CUDA, fall back to CPU (device 0)
+            import torch
+            if torch.backends.mps.is_available():
+                device_id = "mps"
+            elif torch.cuda.is_available():
+                device_id = "0"
+            else:
+                device_id = "0"  # CPU path still works, just slower
+
+            # Flash Attention 2 requires CUDA — disable on MPS/CPU
+            use_flash = "True" if torch.cuda.is_available() else "False"
+
+            file_size = os.path.getsize(audio_file_path)
+            print(f"⚡ Insanely Fast Whisper: transcribing {file_size // 1024}KB on device={device_id}...")
+
+            cmd = [
+                binary,
+                "--file-name", audio_file_path,
+                "--device-id", device_id,
+                "--model-name", "openai/whisper-large-v3",
+                "--batch-size", "24",
+                "--flash", use_flash,
+                "--timestamp", "chunk",
+                "--transcript-path", transcript_path,
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
+            if result.returncode != 0:
+                return False, {"error": f"insanely-fast-whisper failed: {result.stderr}"}
+
+            if not os.path.exists(transcript_path):
+                return False, {"error": "Transcript file not created"}
+
+            with open(transcript_path, "r") as f:
+                data = json.load(f)
+
+            # Normalise the output into the standard segment format
+            chunks = data.get("chunks", [])
+            segments = []
+            for chunk in chunks:
+                ts = chunk.get("timestamp", [0, 0])
+                segments.append({
+                    "start": ts[0] if ts[0] is not None else 0,
+                    "end": ts[1] if ts[1] is not None else 0,
+                    "text": chunk.get("text", "").strip(),
+                })
+
+            full_text = data.get("text", " ".join(s["text"] for s in segments)).strip()
+            duration = segments[-1]["end"] if segments else 0
+
+            print(f"✅ Insanely Fast Whisper complete: {len(full_text.split())} words")
+
+            return True, {
+                "success": True,
+                "method": "insanely_fast_whisper",
+                "language": data.get("language", "en"),
+                "duration": duration,
+                "full_text": full_text,
+                "segments": segments,
+                "segment_count": len(segments),
+                "word_count": len(full_text.split()),
+                "char_count": len(full_text),
+            }
+
+        except subprocess.TimeoutExpired:
+            return False, {"error": "insanely-fast-whisper timed out (>10 min)"}
+        except Exception as e:
+            return False, {"error": f"insanely-fast-whisper error: {str(e)}"}
+        finally:
+            if os.path.exists(transcript_path):
+                try:
+                    os.remove(transcript_path)
+                except Exception:
+                    pass
+
     def transcribe_audio_with_local_whisper(self, audio_file_path: str, model_size: str = "base") -> Tuple[bool, Dict]:
         """
         Transcribe audio using faster-whisper running fully locally — zero API cost.
@@ -270,8 +375,8 @@ class TranscriptionService:
 
     def transcribe_audio_with_production_ai(self, audio_file_path: str, prefer_assembly: bool = True) -> Tuple[bool, Dict]:
         """
-        PRODUCTION TRANSCRIPTION: Try local faster-whisper first (free), then cloud fallbacks.
-        Priority: local Whisper → Assembly.ai → OpenAI Whisper API
+        PRODUCTION TRANSCRIPTION: Try fast local methods first (free), then cloud fallbacks.
+        Priority: insanely-fast-whisper (GPU, 19x) → faster-whisper (CPU) → Assembly.ai → OpenAI Whisper API
 
         Args:
             audio_file_path: Path to audio file
@@ -280,8 +385,15 @@ class TranscriptionService:
         Returns:
             Tuple of (success, transcript_data or error_dict)
         """
-        # Try local faster-whisper first — zero cost
-        print(f"🏠 Attempting local Whisper transcription (free)...")
+        # Try insanely-fast-whisper first — fastest local option (up to 19x speed boost)
+        print(f"⚡ Attempting insanely-fast-whisper (GPU-accelerated, free)...")
+        insane_success, insane_result = self.transcribe_audio_with_insane_whisper(audio_file_path)
+        if insane_success:
+            return True, insane_result
+        print(f"⚠️ Insanely Fast Whisper failed: {insane_result.get('error')} — trying faster-whisper")
+
+        # Try local faster-whisper as second option — still zero cost
+        print(f"🏠 Attempting local faster-whisper transcription (free)...")
         local_success, local_result = self.transcribe_audio_with_local_whisper(audio_file_path)
         if local_success:
             return True, local_result
