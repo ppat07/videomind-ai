@@ -281,20 +281,26 @@ class YouTubeService:
             
         except yt_dlp.DownloadError as e:
             error_msg = str(e)
+            platform_label = platform.capitalize() if platform != "generic" else "Video"
             # Handle specific error cases
             if "HTTP Error 403" in error_msg or "Forbidden" in error_msg:
                 return False, {
-                    "error": "YouTube blocked access to this video (403 Forbidden). This may be due to region restrictions or YouTube's anti-bot measures.",
-                    "error_type": "youtube_blocked",
+                    "error": f"{platform_label} access denied (403 Forbidden). This may be due to region restrictions or anti-bot measures.",
+                    "error_type": "access_denied",
                     "suggestion": "Try a different video or wait a few minutes and try again."
                 }
             elif "Private video" in error_msg or "Video unavailable" in error_msg:
                 return False, {
-                    "error": "This video is private or unavailable. Please use a public YouTube video.",
+                    "error": f"This video is private or unavailable on {platform_label}.",
                     "error_type": "video_unavailable"
                 }
+            elif "No video formats found" in error_msg:
+                return False, {
+                    "error": f"Could not extract video from this {platform_label} URL. The video may have been removed or the platform may not be fully supported.",
+                    "error_type": "extraction_failed"
+                }
             else:
-                return False, {"error": f"YouTube error: {error_msg}"}
+                return False, {"error": f"{platform_label} error: {error_msg}"}
         except Exception as e:
             return False, {"error": f"Unexpected error: {str(e)}"}
     
@@ -352,11 +358,11 @@ class YouTubeService:
             # Use the first (and hopefully only) matching file
             actual_audio_path = str(possible_files[0])
             
-            # Check if we got an .mhtml file (YouTube blocking)
+            # Check if we got an .mhtml file (platform blocking)
             if actual_audio_path.endswith('.mhtml') or actual_audio_path.endswith('.html'):
                 return False, {
-                    "error": "YouTube blocked the download (received HTML instead of audio). This video may be restricted or YouTube is detecting automated access.",
-                    "error_type": "youtube_blocked",
+                    "error": "Download was blocked (received HTML instead of audio). This video may be restricted or the platform is detecting automated access.",
+                    "error_type": "download_blocked",
                     "suggestion": "Try a different video or wait before retrying."
                 }
             
@@ -394,13 +400,13 @@ class YouTubeService:
             # Handle specific error cases
             if "HTTP Error 403" in error_msg or "Forbidden" in error_msg:
                 return False, {
-                    "error": "YouTube blocked the download (403 Forbidden). Enhanced anti-detection failed for this video.",
-                    "error_type": "youtube_blocked",
-                    "retry_suggestion": "Try using a different YouTube video or wait 5-10 minutes before retrying."
+                    "error": "Download blocked (403 Forbidden). The platform may be restricting automated access.",
+                    "error_type": "access_denied",
+                    "retry_suggestion": "Try a different video or wait 5-10 minutes before retrying."
                 }
             elif "Private video" in error_msg or "Video unavailable" in error_msg:
                 return False, {
-                    "error": "This video is private or unavailable. Please use a public YouTube video.",
+                    "error": "This video is private or unavailable.",
                     "error_type": "video_unavailable"
                 }
             elif "age-restricted" in error_msg.lower():
